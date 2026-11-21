@@ -119,7 +119,7 @@ export default function RequestQueue() {
       {requests === null && !error && <p className="hint">Loading…</p>}
       {requests && visible.length === 0 && (
         <p className="empty-state">
-          {filter === 'active' ? 'No active requests. 🎉' : 'Nothing here.'}
+          {filter === 'active' ? 'No active requests.' : 'Nothing here.'}
         </p>
       )}
 

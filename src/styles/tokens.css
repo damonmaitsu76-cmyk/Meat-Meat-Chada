@@ -1,0 +1,31 @@
+/* Design tokens. Change a value here and the whole app follows. */
+:root {
+  /* colour: charcoal = structure, brand red = action and "dining", neutrals for the rest */
+  --charcoal: #1d1b1a;
+  --brand: #b3261e;
+  --brand-dark: #8c1d17;
+  --brand-soft: #fbeceb;
+  --bg: #f6f5f3;
+  --card: #ffffff;
+  --text: #25201e;
+  --muted: #5f5854;
+  --line: #e3dfda;
+  --ok: #1e7a3c;
+  --ok-soft: #e8f4ec;
+  --warn: #a15c00;
+  --warn-soft: #fff2d9;
+
+  /* radius by role, not one radius for everything */
+  --r-ctrl: 10px;
+  --r-card: 14px;
+  --r-tile: 16px;
+  --r-sheet: 22px;
+  --r-pill: 999px;
+
+  /* only floating things get a shadow */
+  --shadow-float: 0 10px 40px rgba(29, 27, 26, 0.28);
+
+  /* type: Bricolage Grotesque for headings and numbers, Figtree for reading */
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
+  --font-body: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}

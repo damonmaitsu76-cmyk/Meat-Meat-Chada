@@ -1,42 +1,53 @@
-/* Shared styles used across customer and staff pages. */
+/* Shared by customer and staff pages. */
 
 /* ---------- reservation status tags (extends .tag in global.css) ---------- */
-.tag.pending        { background: #fff1d6; color: var(--warn); }
+.tag.pending        { background: var(--warn-soft); color: var(--warn); }
 .tag.approved       { background: #dcecff; color: #1d5fb4; }
 .tag.declined       { background: #f9dedc; color: var(--brand); }
-.tag.cancelled      { background: #eee; color: #555; }
-.tag.arrived        { background: #e8f5ec; color: var(--ok); }
+.tag.cancelled      { background: #ebe8e4; color: #4d4642; }
+.tag.arrived        { background: var(--ok-soft); color: var(--ok); }
 .tag.auto_cancelled { background: #f3e5d0; color: #8a5a00; }
 
 /* ---------- buttons ---------- */
-a.btn { display: inline-block; text-decoration: none; }
-.btn.secondary { background: var(--card); color: var(--brand); border: 1px solid var(--brand); }
-.btn.secondary:hover:not(:disabled) { background: #fbeceb; }
+a.btn { text-decoration: none; }
+.btn.secondary { background: var(--card); color: var(--text); border: 1px solid #c9c4be; }
+.btn.secondary:hover:not(:disabled) { background: #efedea; }
 
 .dim { display: block; color: var(--muted); font-size: 0.85rem; }
 
-/* ---------- summary cards ---------- */
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+/* ---------- summary numbers ---------- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .stat {
   display: grid;
   gap: 2px;
-  padding: 14px;
+  padding: 14px 16px;
   background: var(--card);
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--r-card);
   color: inherit;
   text-decoration: none;
 }
-a.stat:hover { border-color: var(--brand); }
-.stat-num { font-size: 1.9rem; font-weight: 700; color: var(--brand); line-height: 1.1; }
-.stat-label { color: var(--muted); font-size: 0.85rem; }
+a.stat:hover { border-color: var(--text); }
+.stat-num { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+.stat-label { color: var(--muted); font-size: 0.88rem; }
 
-.tile-status { font-size: 0.8rem; font-weight: 700; }
-.tile-status.available { color: var(--ok); }
-.tile-status.reserved  { color: var(--warn); }
-.tile-status.dining    { color: var(--brand); }
+/* ---------- table status (floor tiles and the tables list) ---------- */
+.tile-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.tile-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.tile-status.available { background: var(--ok-soft); color: var(--ok); }
+.tile-status.reserved  { background: var(--warn-soft); color: var(--warn); }
+.tile-status.dining    { background: var(--brand-soft); color: var(--brand); }
 
-/* ---------- table panel (opens when a table is clicked) ---------- */
+/* ---------- dialog: centred on desktop, a bottom sheet on phones ---------- */
 .backdrop {
   position: fixed;
   inset: 0;
@@ -44,7 +55,7 @@ a.stat:hover { border-color: var(--brand); }
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(35, 31, 30, 0.45);
+  background: rgba(29, 27, 26, 0.55);
 }
 .modal {
   width: 100%;
@@ -53,15 +64,28 @@ a.stat:hover { border-color: var(--brand); }
   overflow: auto;
   padding: 20px;
   background: var(--card);
-  border-radius: 16px;
+  border-radius: var(--r-sheet);
+  box-shadow: var(--shadow-float);
+  animation: modal-in 0.18s ease-out;
 }
 .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.modal-head h2 { margin: 0; font-size: 1.25rem; }
+.modal-head h2 { margin: 0; font-size: 1.35rem; }
 .modal-close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
   border: 0;
+  border-radius: 50%;
   background: none;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   line-height: 1;
   color: var(--muted);
-  padding: 4px 8px;
+}
+.modal-close:hover { background: #efedea; color: var(--text); }
+@keyframes modal-in { from { opacity: 0; transform: translateY(12px); } }
+
+@media (max-width: 560px) {
+  .backdrop { place-items: end stretch; padding: 0; }
+  .modal { max-width: none; max-height: 88vh; border-radius: var(--r-sheet) var(--r-sheet) 0 0; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
 }

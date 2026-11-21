@@ -164,8 +164,7 @@ export default function MenuManagement() {
       </div>
 
       <p className="hint">
-        Switch a dish off when the kitchen runs out. Customers see the change within about 10
-        seconds.
+        Switch a dish off when the kitchen runs out.
         {!canEdit && ' The manager or owner can add, edit, and delete dishes.'}
       </p>
 
