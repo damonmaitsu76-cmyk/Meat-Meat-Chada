@@ -1,7 +1,7 @@
 # Meat Me at Chada
 
 QR-based dining and reservation system for Samgyup Chada (IT 14 project).
-React + Vite on the front end, Supabase (PostgreSQL, Auth, Realtime, pg_cron) behind it.
+React + Vite on the front end, Supabase (PostgreSQL, Auth, Realtime, pg_cron, Edge Functions) behind it.
 
 ## Run it locally
 
@@ -22,9 +22,28 @@ Other scripts: `npm run lint`, `npm run build`, `npm run preview`.
 In the Supabase SQL Editor, run the files in `db/` in this order:
 
 1. `01_schema.sql` – tables, security rules, and functions
-2. `02_seed.sql` – settings, sample tables and dishes, and the login accounts (follow the steps inside the file)
-3. `03_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
-4. `04_decline_reason.sql` – saves the reason staff give when they decline a reservation, so customers can see it
+2. `03_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
+3. `04_decline_reason.sql` – saves the reason staff give when they decline a reservation
+4. `05_reports.sql` – the totals behind the Reports screen
+5. `06_accounts.sql` – account safety rules and activity records
+6. `07_merge_roles.sql` – one `admin` role instead of manager and owner
+7. `02_seed.sql` – settings, sample tables and dishes, and the first login account (follow the steps inside the file)
+
+## Deploy the account function
+
+Creating logins and resetting passwords runs on the server (`supabase/functions/manage-staff`).
+With the Supabase CLI installed and the project linked:
+
+```
+supabase functions deploy manage-staff
+```
+
+## Roles
+
+| Role | Can do |
+| --- | --- |
+| Staff | Dashboard, request queue, reservations, dish availability |
+| Administrator | Everything staff can do, plus tables and QR codes, import, reports, accounts, settings, and editing the menu |
 
 ## Pages
 
@@ -32,13 +51,16 @@ In the Supabase SQL Editor, run the files in `db/` in this order:
 | --- | --- | --- |
 | `/menu/<qr-token>` | Customers | QR menu, tray, request status |
 | `/reserve` | Customers | Reserve a table, check or cancel a reservation |
-| `/login` | Staff, manager, owner | Sign in with a username (the app adds `@chada.app`) |
-| `/staff/dashboard` | All staff roles | Floor view, walk-ins, seating |
-| `/staff/requests` | All staff roles | Refill request queue |
-| `/staff/reservations` | All staff roles | Approve, decline, confirm arrival |
-| `/staff/menu` | All staff roles | Dish availability; manager and owner also add, edit, delete |
-| `/staff/tables` | Manager, owner | Tables and printable QR codes |
-| `/staff/settings` | Manager, owner | Grace period, slot length, opening hours |
+| `/login` | Staff, administrator | Sign in with a username (the app adds `@chada.app`) |
+| `/staff/dashboard` | All logged-in roles | Floor view, walk-ins, seating |
+| `/staff/requests` | All logged-in roles | Refill request queue |
+| `/staff/reservations` | All logged-in roles | Approve, decline, confirm arrival |
+| `/staff/menu` | All logged-in roles | Dish availability; administrators also add, edit, delete |
+| `/staff/tables` | Administrator | Tables and printable QR codes |
+| `/staff/import` | Administrator | Load the menu or table list from a CSV file |
+| `/staff/reports` | Administrator | Reservations, no-shows, guests served, busy days, activity log |
+| `/staff/accounts` | Administrator | Create accounts, reset passwords, change roles, deactivate |
+| `/staff/settings` | Administrator | Grace period, slot length, opening hours |
 
 ## Deploying
 
@@ -51,5 +73,5 @@ address box so the codes do not point to `localhost`.
 
 ## Before the restaurant uses it
 
-The tables and dishes from `02_seed.sql` are placeholders. Replace them with the real ones on the
-**Tables & QR** and **Menu** pages.
+The tables and dishes from `02_seed.sql` are placeholders. Replace them with the real ones through
+**Import** or the **Tables & QR** and **Menu** pages.

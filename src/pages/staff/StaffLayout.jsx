@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.js'
-import { ADMIN_ROLES, STAFF_ROLES } from '../../auth/roles.js'
+import { ADMIN_ROLES, ROLE_LABEL, STAFF_ROLES } from '../../auth/roles.js'
 import '../../staff.css'
 
 // Add each new staff page here. The side menu only shows the pages the user's role may open.
@@ -10,6 +10,9 @@ const NAV = [
   { to: '/staff/reservations', label: 'Reservations', roles: STAFF_ROLES },
   { to: '/staff/menu', label: 'Menu', roles: STAFF_ROLES },
   { to: '/staff/tables', label: 'Tables & QR', roles: ADMIN_ROLES },
+  { to: '/staff/import', label: 'Import', roles: ADMIN_ROLES },
+  { to: '/staff/reports', label: 'Reports', roles: ADMIN_ROLES },
+  { to: '/staff/accounts', label: 'Accounts', roles: ADMIN_ROLES },
   { to: '/staff/settings', label: 'Settings', roles: ADMIN_ROLES },
 ]
 
@@ -28,7 +31,7 @@ export default function StaffLayout() {
       <header className="staff-top">
         <span className="brand">Samgyup Chada</span>
         <span className="staff-user">
-          {profile.username} · <span className="role">{profile.role}</span>
+          {profile.username} · <span className="role">{ROLE_LABEL[profile.role] || profile.role}</span>
         </span>
         <button className="btn-link" onClick={logout}>
           Log out

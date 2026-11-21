@@ -1,0 +1,48 @@
+/* Staff Accounts. Table, button, field, and modal styles come from staff.css, index.css,
+   reserve.css, and dashboard.css. */
+
+.acc-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 8px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.acc-add .field { margin: 0; }
+.acc-add input[type='text'],
+.acc-add input[type='password'] { width: 200px; max-width: 100%; }
+.acc-add select,
+.acc-select {
+  font: inherit;
+  color: var(--text);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+.acc-select { padding: 6px 8px; border-radius: 8px; }
+.acc-help { max-width: 720px; margin: 0 0 16px; color: var(--muted); font-size: 0.85rem; }
+
+.acc-you {
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eee;
+  color: #555;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.acc-state { font-size: 0.85rem; font-weight: 600; color: var(--warn); }
+.acc-state.on { color: var(--ok); }
+.acc-off td { opacity: 0.7; }
+.acc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.modal .field input { width: 100%; }
+
+@media (max-width: 720px) {
+  .acc-actions { justify-content: flex-end; }
+}

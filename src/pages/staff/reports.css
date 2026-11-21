@@ -1,0 +1,43 @@
+/* Reports and Insights. Page head, chips, tables, and the summary cards come from
+   staff.css, reserve.css, and dashboard.css. */
+
+.rep-filters { margin-bottom: 12px; }
+.rep-filters .filters { margin-bottom: 8px; }
+.rep-dates { display: flex; flex-wrap: wrap; gap: 12px; }
+.rep-dates .field { margin: 0; }
+.rep-dates .field input {
+  font: inherit;
+  color: var(--text);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+
+.stat-sub { color: var(--muted); font-size: 0.75rem; }
+
+.rep-card {
+  margin: 0 0 16px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.rep-card h2 { margin: 0 0 10px; font-size: 1.1rem; }
+.rep-chart { width: 100%; min-width: 0; }
+.rep-note { margin: 8px 0 0; color: var(--muted); font-size: 0.9rem; }
+
+.rep-list { list-style: none; margin: 0; padding: 0; }
+.rep-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rep-list li:last-child { border-bottom: 0; }
+
+.rep-card .q-table { border: 1px solid var(--line); }
+@media (max-width: 720px) {
+  .rep-card .q-table { border: 0; }
+}

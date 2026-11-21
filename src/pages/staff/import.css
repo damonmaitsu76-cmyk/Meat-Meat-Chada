@@ -1,0 +1,17 @@
+/* Import Data. Buttons, chips, fields, tables, and the summary cards come from
+   staff.css, index.css, reserve.css, and dashboard.css (.stats / .stat). */
+
+.imp-card {
+  max-width: 760px;
+  margin: 0 0 16px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.imp-card h2 { margin: 0 0 4px; font-size: 1.1rem; }
+.imp-help { margin: 0 0 12px; color: var(--muted); font-size: 0.9rem; }
+.imp-actions { margin: 0 0 14px; }
+.imp-card .field input[type='file'] { padding: 8px; width: 100%; }
+.imp-card .stats { margin: 12px 0; }
+.imp-table { margin: 4px 0 8px; }

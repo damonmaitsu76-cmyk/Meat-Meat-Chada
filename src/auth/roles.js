@@ -1,8 +1,14 @@
-// Roles that may open the staff workspace.
-export const STAFF_ROLES = ['staff', 'manager', 'owner']
+// The two roles. "admin" is the merged owner + manager role.
+export const ROLES = ['staff', 'admin']
 
-// Roles that may open the management pages (tables, settings, accounts, reports, import).
-export const ADMIN_ROLES = ['manager', 'owner']
+// Names shown on screen.
+export const ROLE_LABEL = { staff: 'Staff', admin: 'Administrator' }
+
+// Roles that may open the staff workspace.
+export const STAFF_ROLES = ['staff', 'admin']
+
+// Roles that may open the management pages (tables, import, reports, accounts, settings).
+export const ADMIN_ROLES = ['admin']
 
 // Where each role lands after logging in. Every role starts at the live dashboard (floor view).
 export function homeFor() {

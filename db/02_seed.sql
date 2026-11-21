@@ -35,27 +35,25 @@ insert into public.menu_items (item_name, category) values
 on conflict do nothing;
 
 -- =====================================================================
--- LOGIN ACCOUNTS
+-- FIRST LOGIN ACCOUNT
 -- Supabase Auth needs an email, so the app logs people in as
 -- <username>@chada.app (the login screen adds the "@chada.app" itself).
 --
 -- STEP 1: Supabase dashboard > Authentication > Users > Add user > "Create new user"
---         Tick "Auto Confirm User". Create these (use any password you like):
---             owner@chada.app
---             manager@chada.app
---             staff1@chada.app
--- STEP 2: Run the block below (re-run it any time you add more accounts that
---         follow the same pattern). owner@ -> owner, manager@ -> manager,
+--         Tick "Auto Confirm User". Create one account:
+--             admin@chada.app      (use any password you like)
+-- STEP 2: Run the block below. admin@, owner@ and manager@ -> admin,
 --         everything else -> staff.
+--
+-- Run 07_merge_roles.sql BEFORE this block (it allows the 'admin' role).
+-- After that, every other account (staff or admin) is created from the
+-- Staff Accounts screen, so this block is only needed once.
 -- =====================================================================
 insert into public.users (user_id, username, role)
 select id,
        split_part(email, '@', 1),
-       case split_part(email, '@', 1)
-         when 'owner'   then 'owner'
-         when 'manager' then 'manager'
-         else 'staff'
-       end
+       case when split_part(email, '@', 1) in ('admin', 'owner', 'manager')
+            then 'admin' else 'staff' end
 from auth.users
 where email like '%@chada.app'
 on conflict (user_id) do nothing;
