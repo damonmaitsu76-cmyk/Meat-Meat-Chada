@@ -946,6 +946,16 @@ end $$;
 
 revoke all on all tables in schema public from anon;
 
+-- Newer Supabase projects do not give the logged-in role access to new tables
+-- automatically, so grant exactly what is needed. Row Level Security (section 4)
+-- still decides which rows each role may see or change.
+grant usage on schema public to anon, authenticated;
+revoke all on all tables in schema public from authenticated;
+grant select on all tables in schema public to authenticated;
+grant insert, update, delete on public.users, public.restaurant_tables, public.menu_items
+  to authenticated;
+grant update on public.settings to authenticated;
+
 -- start from nothing, then grant only what each side needs
 revoke execute on all functions in schema public from public, anon, authenticated;
 

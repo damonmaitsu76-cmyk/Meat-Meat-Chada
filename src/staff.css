@@ -1,0 +1,102 @@
+/* Styles for the login screen and the staff workspace. Customer styles live in index.css. */
+
+/* ---------- login ---------- */
+.login-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 24px;
+}
+.login-card h1 { margin: 0 0 4px; color: var(--brand); font-size: 1.5rem; }
+.field input {
+  font: inherit;
+  color: var(--text);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* ---------- shell ---------- */
+.staff-shell { min-height: 100vh; display: grid; grid-template-rows: auto auto 1fr; }
+.staff-top {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--brand);
+  color: #fff;
+}
+.staff-top .brand { margin-right: auto; }
+.staff-user { font-size: 0.9rem; }
+.staff-user .role { text-transform: capitalize; opacity: 0.9; }
+.btn-link {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: none;
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+.staff-nav {
+  display: flex;
+  gap: 4px;
+  padding: 8px 20px 0;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.staff-nav a {
+  padding: 10px 14px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+.staff-nav a.active { color: var(--brand); border-bottom-color: var(--brand); }
+.staff-main { padding: 20px; max-width: 1100px; width: 100%; margin: 0 auto; }
+
+/* ---------- request queue ---------- */
+.page-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.page-head h1 { margin: 0; font-size: 1.4rem; }
+.live { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+.live.on { color: var(--ok); }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.chip {
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.chip.active { background: var(--brand); border-color: var(--brand); color: #fff; }
+
+.q-table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 12px; overflow: hidden; }
+.q-table th, .q-table td { padding: 12px 14px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.q-table th { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); background: #fbf8f6; }
+.q-table tr.late td { background: #fff4f2; }
+.q-table .items { margin: 0; padding-left: 18px; }
+
+/* phones: each request becomes a card */
+@media (max-width: 720px) {
+  .q-table, .q-table tbody, .q-table tr, .q-table td { display: block; width: 100%; }
+  .q-table thead { display: none; }
+  .q-table { background: none; }
+  .q-table tr {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .q-table td { border-bottom: 0; padding: 8px 14px; display: flex; justify-content: space-between; gap: 12px; }
+  .q-table td::before { content: attr(data-label); color: var(--muted); font-size: 0.8rem; font-weight: 600; flex-shrink: 0; }
+  .q-table td[data-label='Action'] { justify-content: flex-end; padding-bottom: 12px; }
+  .q-table td[data-label='Action']::before { content: none; }
+  .q-table td[data-label='Items'] .items { text-align: right; list-style: none; padding: 0; }
+}

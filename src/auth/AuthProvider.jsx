@@ -62,7 +62,12 @@ export default function AuthProvider({ children }) {
     setAuthMessage('')
     const email = `${username.trim().toLowerCase()}@${EMAIL_DOMAIN}`
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return error ? 'Wrong username or password.' : ''
+    if (!error) return ''
+    // Show Supabase's real reason for anything other than a plain wrong password
+    // (e.g. "Email not confirmed"), so problems with an account are easy to spot.
+    return error.message === 'Invalid login credentials'
+      ? 'Wrong username or password.'
+      : error.message
   }, [])
 
   const signOut = useCallback(async () => {
