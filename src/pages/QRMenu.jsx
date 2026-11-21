@@ -10,7 +10,8 @@ const CATEGORIES = [
 const STATUS_ORDER = ['sent', 'accepted', 'ready', 'served']
 const STATUS_LABELS = { sent: 'Sent', accepted: 'Accepted', ready: 'Ready', served: 'Served' }
 const MAX_QTY = 20
-const POLL_MS = 4000
+const POLL_MS = 4000 // request status refresh
+const MENU_POLL_MS = 10000 // menu availability refresh
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function formatTime(iso) {
@@ -230,7 +231,7 @@ export default function QRMenu() {
   const validToken = UUID_RE.test(qrToken || '')
 
   const [menu, setMenu] = useState(null) // { table_number, items: [...] }
-  const [loadError, setLoadError] = useState('')
+  const [fetchError, setFetchError] = useState('')
   const [view, setView] = useState('menu') // 'menu' | 'tray' | 'status'
   const [tray, setTray] = useState({}) // { [item_id]: quantity }
   const [note, setNote] = useState('')
@@ -238,22 +239,35 @@ export default function QRMenu() {
   const [sendError, setSendError] = useState('')
   const [justSent, setJustSent] = useState('')
 
-  const loadMenu = useCallback(async () => {
-    if (!validToken) {
-      setLoadError('This QR code is not valid. Please ask a staff member for help.')
-      return
-    }
-    const { data, error } = await supabase.rpc('get_menu', { p_qr_token: qrToken })
-    if (error) setLoadError(error.message)
-    else {
-      setMenu(data)
-      setLoadError('')
-    }
+  const loadMenu = useCallback(() => {
+    if (!validToken) return Promise.resolve()
+    return supabase.rpc('get_menu', { p_qr_token: qrToken }).then(({ data, error }) => {
+      if (error) setFetchError(error.message)
+      else {
+        setMenu(data)
+        setFetchError('')
+      }
+    })
   }, [qrToken, validToken])
 
-  // Load on first open, and refresh the availability whenever the customer returns to the menu or tray.
+  // Load when the menu or tray opens, then keep availability fresh: every 10 seconds
+  // while the page is visible, and right away when the customer switches back to this tab.
   useEffect(() => {
-    if (view === 'menu' || view === 'tray') loadMenu()
+    if (view === 'status') return // the status screen does its own polling
+
+    loadMenu()
+    const timer = setInterval(() => {
+      if (!document.hidden) loadMenu()
+    }, MENU_POLL_MS)
+    const onVisible = () => {
+      if (!document.hidden) loadMenu()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [view, loadMenu])
 
   const itemsById = useMemo(() => {
@@ -261,6 +275,10 @@ export default function QRMenu() {
     for (const item of menu?.items || []) map[item.item_id] = item
     return map
   }, [menu])
+
+  const loadError = validToken
+    ? fetchError
+    : 'This QR code is not valid. Please ask a staff member for help.'
 
   const trayCount = Object.values(tray).reduce((sum, q) => sum + q, 0)
 
