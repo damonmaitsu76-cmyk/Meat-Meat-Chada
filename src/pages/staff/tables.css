@@ -1,0 +1,90 @@
+/* Table and QR Management. Table, button, and modal styles come from staff.css,
+   index.css, and dashboard.css. */
+
+.tm-base { max-width: 520px; margin-bottom: 16px; }
+.tm-base input {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.tm-warn {
+  max-width: 520px;
+  margin: -6px 0 16px;
+  padding: 10px 14px;
+  background: #fff4e0;
+  border: 1px solid #f0d9a8;
+  color: #7a4b00;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.tm-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.tm-add .field { margin: 0; }
+.tm-add input { width: 110px; }
+
+.tm-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 12px;
+}
+.tm-check { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
+
+.tm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.tm-edit-input {
+  width: 90px;
+  font: inherit;
+  color: var(--text);
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.tm-removed td { opacity: 0.6; }
+
+.tm-qr { display: grid; justify-items: center; gap: 10px; margin-top: 12px; }
+.tm-qr img { width: 260px; height: 260px; max-width: 100%; }
+.tm-url { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; text-align: center; }
+.tm-qr-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+
+@media (max-width: 720px) {
+  .tm-actions { justify-content: flex-end; }
+}
+
+/* ---------- printing: one card per table, the rest of the page is hidden ---------- */
+.print-sheet { display: none; }
+
+@media print {
+  .staff-top, .staff-nav, .no-print { display: none !important; }
+  .staff-main { padding: 0; max-width: none; }
+  body { background: #fff; }
+  .print-sheet {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10mm;
+  }
+  .print-card {
+    break-inside: avoid;
+    padding: 8mm;
+    text-align: center;
+    border: 1px dashed #888; /* cut line */
+  }
+  .print-brand { font-weight: 700; color: var(--brand); }
+  .print-table { margin: 2mm 0; font-size: 28pt; font-weight: 700; }
+  .print-card img { width: 62mm; height: 62mm; }
+  .print-hint { margin-top: 2mm; font-size: 11pt; }
+}

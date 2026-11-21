@@ -1,0 +1,64 @@
+/* Reservation page (customers). Also holds the status tag colors and the secondary
+   button that the staff Reservation List reuses. */
+
+/* ---------- reservation status tags (extends .tag in index.css) ---------- */
+.tag.pending        { background: #fff1d6; color: var(--warn); }
+.tag.approved       { background: #dcecff; color: #1d5fb4; }
+.tag.declined       { background: #f9dedc; color: var(--brand); }
+.tag.cancelled      { background: #eee; color: #555; }
+.tag.arrived        { background: #e8f5ec; color: var(--ok); }
+.tag.auto_cancelled { background: #f3e5d0; color: #8a5a00; }
+
+/* ---------- buttons ---------- */
+a.btn { display: inline-block; text-decoration: none; }
+.btn.secondary { background: var(--card); color: var(--brand); border: 1px solid var(--brand); }
+.btn.secondary:hover:not(:disabled) { background: #fbeceb; }
+
+/* ---------- form ---------- */
+.reserve h2 { margin: 0 0 8px; font-size: 1.2rem; }
+.reserve .field input,
+.reserve .field select {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+}
+.reserve .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.reserve .divider { margin: 28px 0 16px; border: 0; border-top: 1px solid var(--line); }
+.reserve .lookup { display: flex; gap: 8px; align-items: stretch; }
+.reserve .lookup input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  text-transform: uppercase;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* ---------- reservation status card ---------- */
+.res-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px 16px;
+}
+.res-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.res-code {
+  text-align: center;
+  margin: 14px 0;
+  padding: 14px;
+  border: 2px dashed var(--brand);
+  border-radius: 12px;
+}
+.res-code small { display: block; margin-bottom: 4px; color: var(--muted); font-size: 0.8rem; }
+.res-code strong { font-size: 1.8rem; letter-spacing: 0.08em; color: var(--brand); }
+.res-code.waiting { border-color: var(--line); }
+.res-code.waiting strong { font-size: 1rem; letter-spacing: 0; color: var(--muted); font-weight: 600; }
+.res-details { margin: 0 0 12px; display: grid; gap: 6px; }
+.res-details > div { display: flex; justify-content: space-between; gap: 12px; }
+.res-details dt { color: var(--muted); font-size: 0.9rem; }
+.res-details dd { margin: 0; font-weight: 600; text-align: right; }

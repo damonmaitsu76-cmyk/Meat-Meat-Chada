@@ -1,0 +1,42 @@
+/* Staff Reservation List. Table, chip, and page-head styles come from staff.css;
+   status tag colors come from reserve.css. */
+
+.search {
+  width: 100%;
+  max-width: 360px;
+  font: inherit;
+  color: var(--text);
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.notice {
+  background: #fff4e0;
+  border: 1px solid #f0d9a8;
+  color: #7a4b00;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+}
+.notice strong { display: block; margin-bottom: 4px; }
+.notice ul { margin: 0; padding-left: 18px; }
+
+.sub { display: block; color: var(--muted); font-size: 0.85rem; }
+
+.row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row-actions select {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+}
+
+/* phones: guest and date cells hold two lines, keep them as one right-aligned block */
+@media (max-width: 720px) {
+  .q-table td > div { text-align: right; }
+  .row-actions { justify-content: flex-end; }
+}

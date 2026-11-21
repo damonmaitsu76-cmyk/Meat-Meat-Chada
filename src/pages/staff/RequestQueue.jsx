@@ -31,7 +31,8 @@ function waitedText(createdAt, now) {
 
 export default function RequestQueue() {
   const [requests, setRequests] = useState(null)
-  const [error, setError] = useState('')
+  const [error, setError] = useState('') // problems loading the list
+  const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
   const [filter, setFilter] = useState('active')
   const [busyId, setBusyId] = useState(null)
   const [live, setLive] = useState(false)
@@ -85,7 +86,7 @@ export default function RequestQueue() {
       p_status: next.status,
     })
     setBusyId(null)
-    setError(error ? error.message : '')
+    setActionError(error ? error.message : '')
     load() // also refreshes the list if someone else already moved it
   }
 
@@ -114,7 +115,7 @@ export default function RequestQueue() {
         ))}
       </div>
 
-      {error && <p className="error">{error}</p>}
+      {(actionError || error) && <p className="error">{actionError || error}</p>}
       {requests === null && !error && <p className="hint">Loading…</p>}
       {requests && visible.length === 0 && (
         <p className="empty-state">
