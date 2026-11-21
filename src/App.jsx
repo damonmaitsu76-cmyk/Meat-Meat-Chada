@@ -5,8 +5,10 @@ import Login from './pages/Login.jsx'
 import QRMenu from './pages/QRMenu.jsx'
 import Reserve from './pages/Reserve.jsx'
 import Dashboard from './pages/staff/Dashboard.jsx'
+import MenuManagement from './pages/staff/MenuManagement.jsx'
 import RequestQueue from './pages/staff/RequestQueue.jsx'
 import Reservations from './pages/staff/Reservations.jsx'
+import Settings from './pages/staff/Settings.jsx'
 import StaffLayout from './pages/staff/StaffLayout.jsx'
 import TableManagement from './pages/staff/TableManagement.jsx'
 
@@ -49,8 +51,10 @@ export default function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="requests" element={<RequestQueue />} />
           <Route path="reservations" element={<Reservations />} />
+          <Route path="menu" element={<MenuManagement />} />
           <Route element={<RequireAuth roles={ADMIN_ROLES} />}>
             <Route path="tables" element={<TableManagement />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Route>
       </Route>

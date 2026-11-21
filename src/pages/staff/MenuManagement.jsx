@@ -1,0 +1,332 @@
+import { useCallback, useEffect, useState } from 'react'
+import { supabase } from '../../supabaseClient.js'
+import { useAuth } from '../../auth/AuthContext.js'
+import { ADMIN_ROLES } from '../../auth/roles.js'
+import '../../reserve.css' // the secondary button
+import './menu.css'
+
+const CATEGORIES = [
+  { key: 'meats', label: 'Meats' },
+  { key: 'sides', label: 'Sides' },
+  { key: 'drinks', label: 'Drinks' },
+]
+const SAFETY_POLL_MS = 30000 // in case the live connection silently drops
+
+let channelSeq = 0
+
+function friendly(error) {
+  if (error.code === '23505') return 'That dish already exists in this category.'
+  if (error.code === '23514') return 'Enter a dish name.'
+  return error.message
+}
+
+export default function MenuManagement() {
+  const { profile } = useAuth()
+  const canEdit = ADMIN_ROLES.includes(profile.role) // staff only get the availability switches
+
+  const [items, setItems] = useState(null)
+  const [error, setError] = useState('') // problems loading the list
+  const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
+  const [info, setInfo] = useState('')
+  const [live, setLive] = useState(false)
+  const [busyId, setBusyId] = useState(null)
+  const [newName, setNewName] = useState('')
+  const [newCategory, setNewCategory] = useState('meats')
+  const [adding, setAdding] = useState(false)
+  const [edit, setEdit] = useState(null) // { id, name, category }
+
+  const load = useCallback(
+    () =>
+      supabase
+        .from('menu_items')
+        .select('item_id, item_name, category, is_available')
+        .order('item_name')
+        .then(({ data, error }) => {
+          if (error) setError(error.message)
+          else {
+            setItems(data)
+            setError('')
+          }
+        }),
+    []
+  )
+
+  // Load, then stay up to date: Supabase Realtime pushes a change, we reload the list.
+  useEffect(() => {
+    load()
+    const channel = supabase
+      .channel(`menu-items-${++channelSeq}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, load)
+      .subscribe((status) => setLive(status === 'SUBSCRIBED'))
+    const poll = setInterval(load, SAFETY_POLL_MS)
+    return () => {
+      clearInterval(poll)
+      supabase.removeChannel(channel)
+    }
+  }, [load])
+
+  async function toggle(item) {
+    setInfo('')
+    setBusyId(item.item_id)
+    // switch right away; the reload below puts things right if the change was refused
+    setItems((list) =>
+      list.map((i) => (i.item_id === item.item_id ? { ...i, is_available: !i.is_available } : i))
+    )
+    const { error } = await supabase.rpc('set_dish_availability', {
+      p_item_id: item.item_id,
+      p_available: !item.is_available,
+    })
+    setBusyId(null)
+    setActionError(error ? error.message : '')
+    load()
+  }
+
+  async function addDish(e) {
+    e.preventDefault()
+    const name = newName.trim()
+    if (!name) {
+      setInfo('')
+      setActionError('Enter a dish name.')
+      return
+    }
+    setAdding(true)
+    const { error } = await supabase
+      .from('menu_items')
+      .insert({ item_name: name, category: newCategory })
+    setAdding(false)
+    if (error) {
+      setInfo('')
+      setActionError(friendly(error))
+      return
+    }
+    setActionError('')
+    setInfo(`${name} added.`)
+    setNewName('')
+    load()
+  }
+
+  async function saveEdit() {
+    const name = edit.name.trim()
+    if (!name) {
+      setInfo('')
+      setActionError('Enter a dish name.')
+      return
+    }
+    setBusyId(edit.id)
+    const { data, error } = await supabase
+      .from('menu_items')
+      .update({ item_name: name, category: edit.category })
+      .eq('item_id', edit.id)
+      .select('item_id')
+    setBusyId(null)
+    if (error || data.length === 0) {
+      setInfo('')
+      setActionError(error ? friendly(error) : 'The change was not saved. Check your account role.')
+      return
+    }
+    setActionError('')
+    setInfo(`${name} saved.`)
+    setEdit(null)
+    load()
+  }
+
+  async function remove(item) {
+    if (
+      !window.confirm(
+        `Delete ${item.item_name}? It leaves the menu for good. Past requests keep its name.`
+      )
+    ) {
+      return
+    }
+    setBusyId(item.item_id)
+    setInfo('')
+    const { data, error } = await supabase
+      .from('menu_items')
+      .delete()
+      .eq('item_id', item.item_id)
+      .select('item_id')
+    setBusyId(null)
+    if (error || data.length === 0) {
+      setActionError(error ? friendly(error) : 'The dish was not deleted. Check your account role.')
+      return
+    }
+    setActionError('')
+    setInfo(`${item.item_name} deleted.`)
+    load()
+  }
+
+  const all = items || []
+
+  return (
+    <>
+      <div className="page-head">
+        <h1>Menu</h1>
+        <span className={`live ${live ? 'on' : ''}`}>{live ? '● Live' : '○ Reconnecting…'}</span>
+      </div>
+
+      <p className="hint">
+        Switch a dish off when the kitchen runs out. Customers see the change within about 10
+        seconds.
+        {!canEdit && ' The manager or owner can add, edit, and delete dishes.'}
+      </p>
+
+      {canEdit && (
+        <form className="mm-add" onSubmit={addDish}>
+          <label className="field">
+            <span>Dish name</span>
+            <input
+              type="text"
+              maxLength={80}
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+          </label>
+          <label className="field">
+            <span>Category</span>
+            <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
+              {CATEGORIES.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button className="btn" type="submit" disabled={adding}>
+            {adding ? 'Adding…' : 'Add dish'}
+          </button>
+        </form>
+      )}
+
+      {info && <div className="success">{info}</div>}
+      {(actionError || error) && <p className="error">{actionError || error}</p>}
+      {items === null && !error && <p className="hint">Loading…</p>}
+
+      {items &&
+        CATEGORIES.map((c) => {
+          const list = all.filter((i) => i.category === c.key)
+          const on = list.filter((i) => i.is_available).length
+          return (
+            <section className="mm-section" key={c.key}>
+              <h2>
+                {c.label}
+                <small>
+                  {list.length === 0 ? 'none yet' : `${on} of ${list.length} available`}
+                </small>
+              </h2>
+
+              {list.length === 0 && <p className="empty-state">No dishes in this category.</p>}
+
+              {list.length > 0 && (
+                <table className="q-table">
+                  <thead>
+                    <tr>
+                      <th>Dish</th>
+                      <th>Available</th>
+                      {canEdit && <th>Action</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {list.map((item) => {
+                      const editing = edit?.id === item.item_id
+                      const busy = busyId === item.item_id
+                      return (
+                        <tr key={item.item_id} className={item.is_available ? '' : 'mm-off'}>
+                          <td data-label="Dish">
+                            {editing ? (
+                              <div className="mm-edit">
+                                <input
+                                  className="mm-edit-input"
+                                  type="text"
+                                  maxLength={80}
+                                  aria-label="Dish name"
+                                  value={edit.name}
+                                  onChange={(e) => setEdit({ ...edit, name: e.target.value })}
+                                />
+                                <select
+                                  className="mm-edit-input"
+                                  aria-label="Category"
+                                  value={edit.category}
+                                  onChange={(e) => setEdit({ ...edit, category: e.target.value })}
+                                >
+                                  {CATEGORIES.map((cat) => (
+                                    <option key={cat.key} value={cat.key}>
+                                      {cat.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            ) : (
+                              <strong className="mm-name">{item.item_name}</strong>
+                            )}
+                          </td>
+                          <td data-label="Available">
+                            <div className="mm-avail">
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={item.is_available}
+                                aria-label={`${item.item_name} is available`}
+                                className="switch"
+                                disabled={busy}
+                                onClick={() => toggle(item)}
+                              />
+                              <span className={`mm-state ${item.is_available ? 'on' : ''}`}>
+                                {item.is_available ? 'Available' : 'Unavailable'}
+                              </span>
+                            </div>
+                          </td>
+                          {canEdit && (
+                            <td data-label="Action">
+                              <div className="mm-actions">
+                                {editing ? (
+                                  <>
+                                    <button className="btn small" disabled={busy} onClick={saveEdit}>
+                                      Save
+                                    </button>
+                                    <button
+                                      className="btn small secondary"
+                                      disabled={busy}
+                                      onClick={() => setEdit(null)}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <button
+                                      className="btn small secondary"
+                                      disabled={busy}
+                                      onClick={() =>
+                                        setEdit({
+                                          id: item.item_id,
+                                          name: item.item_name,
+                                          category: item.category,
+                                        })
+                                      }
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className="btn small secondary"
+                                      disabled={busy}
+                                      onClick={() => remove(item)}
+                                    >
+                                      Delete
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </td>
+                          )}
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              )}
+            </section>
+          )
+        })}
+    </>
+  )
+}

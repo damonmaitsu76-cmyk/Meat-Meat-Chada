@@ -118,8 +118,8 @@ export default function Reservations() {
   }
 
   function decline(r) {
-    const reason = window.prompt(`Decline ${r.reservation_code}? Reason (optional):`, '')
-    if (reason === null) return // staff pressed Cancel
+const reason = window.prompt(`Decline ${r.reservation_code}? Reason shown to the customer (optional):`, '')    
+ if (reason === null) return // staff pressed Cancel
     act(
       r,
       () =>

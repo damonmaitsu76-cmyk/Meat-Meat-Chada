@@ -132,6 +132,7 @@ function ReservationForm({ onCreated }) {
         reservation ID once it is approved.
       </p>
 
+
       <label className="field">
         <span>Your name</span>
         <input
@@ -309,6 +310,7 @@ function StatusCard({ code, onReset }) {
     return error ? <p className="error">{error}</p> : <p className="hint">Loading…</p>
   }
 
+
   if (res === null) {
     return (
       <div className="empty-state">
@@ -357,6 +359,11 @@ function StatusCard({ code, onReset }) {
       </dl>
 
       <p className="hint">{info.text}</p>
+      {res.status === 'declined' && res.decline_reason && (
+        <p className="decline-reason">
+          <strong>Message from the restaurant:</strong> {res.decline_reason}
+        </p>
+      )}
       {error && <p className="error">{error}</p>}
 
       {canCancel ? (

@@ -8,8 +8,9 @@ const NAV = [
   { to: '/staff/dashboard', label: 'Dashboard', roles: STAFF_ROLES },
   { to: '/staff/requests', label: 'Request Queue', roles: STAFF_ROLES },
   { to: '/staff/reservations', label: 'Reservations', roles: STAFF_ROLES },
+  { to: '/staff/menu', label: 'Menu', roles: STAFF_ROLES },
   { to: '/staff/tables', label: 'Tables & QR', roles: ADMIN_ROLES },
-  // { to: '/staff/settings', label: 'Settings', roles: ['manager', 'owner'] },
+  { to: '/staff/settings', label: 'Settings', roles: ADMIN_ROLES },
 ]
 
 export default function StaffLayout() {

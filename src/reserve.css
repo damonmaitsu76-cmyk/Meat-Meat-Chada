@@ -62,3 +62,4 @@ a.btn { display: inline-block; text-decoration: none; }
 .res-details > div { display: flex; justify-content: space-between; gap: 12px; }
 .res-details dt { color: var(--muted); font-size: 0.9rem; }
 .res-details dd { margin: 0; font-weight: 600; text-align: right; }
+.decline-reason { margin: 0 0 12px; padding: 10px 12px; background: #f9dedc; color: var(--brand-dark); border-radius: 10px; font-size: 0.9rem; }
