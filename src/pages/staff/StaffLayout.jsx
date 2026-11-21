@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES, ROLE_LABEL, STAFF_ROLES } from '../../auth/roles.js'
-import '../../staff.css'
+import '../../styles/staff.css'
 
 // Add each new staff page here. The side menu only shows the pages the user's role may open.
 const NAV = [

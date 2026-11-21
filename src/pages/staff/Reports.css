@@ -1,5 +1,5 @@
-/* Reports and Insights. Page head, chips, tables, and the summary cards come from
-   staff.css, reserve.css, and dashboard.css. */
+/* Reports and Insights. Page head, chips, tables, and summary cards come from
+   global.css, staff.css, and shared.css. */
 
 .rep-filters { margin-bottom: 12px; }
 .rep-filters .filters { margin-bottom: 8px; }

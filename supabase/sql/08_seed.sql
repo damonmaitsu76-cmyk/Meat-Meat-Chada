@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MEAT ME AT CHADA - starter data
--- Run after 01_schema.sql. Safe to run again (it skips rows that exist).
+-- Run after supabase/sql/01_schema.sql. Safe to run again (it skips rows that exist).
 -- The tables and dishes below are PLACEHOLDERS for testing. Replace them
 -- with the real ones later (manually or through the CSV import).
 -- =====================================================================
@@ -45,7 +45,7 @@ on conflict do nothing;
 -- STEP 2: Run the block below. admin@, owner@ and manager@ -> admin,
 --         everything else -> staff.
 --
--- Run 07_merge_roles.sql BEFORE this block (it allows the 'admin' role).
+-- Run supabase/sql/06_merge_roles.sql BEFORE this block (it allows the 'admin' role).
 -- After that, every other account (staff or admin) is created from the
 -- Staff Accounts screen, so this block is only needed once.
 -- =====================================================================

@@ -1,5 +1,5 @@
-/* Table and QR Management. Table, button, and modal styles come from staff.css,
-   index.css, and dashboard.css. */
+/* Table and QR Management. Table, button, and modal styles come from global.css,
+   staff.css, and shared.css. */
 
 .tm-base { max-width: 520px; margin-bottom: 16px; }
 .tm-base input {

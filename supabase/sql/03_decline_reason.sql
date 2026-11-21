@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MEAT ME AT CHADA - decline reason shown to customers
--- Run after 01_schema.sql (any time). Safe to run again.
+-- Run after supabase/sql/01_schema.sql (any time). Safe to run again.
 --
 -- Staff can type a reason when they decline a reservation. It is now saved on
 -- the reservation and returned by get_reservation, so the customer's status

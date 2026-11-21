@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../supabaseClient.js'
-import { fmtDate, fmtTime, manilaDate, shiftDate } from '../lib/dates.js'
-import '../reserve.css'
+import { supabase } from '../../supabaseClient.js'
+import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
+import './Reserve.css'
 
 const STORAGE_KEY = 'chada_reservation_code'
 const POLL_MS = 5000 // how often a waiting customer's status refreshes
@@ -280,7 +280,7 @@ function StatusCard({ code, onReset }) {
   }, [code])
 
   useEffect(() => {
-    load()
+    const initialLoad = setTimeout(load, 0)
     const timer = setInterval(() => {
       if (!document.hidden) load()
     }, POLL_MS)
@@ -289,6 +289,7 @@ function StatusCard({ code, onReset }) {
     }
     document.addEventListener('visibilitychange', onVisible)
     return () => {
+      clearTimeout(initialLoad)
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
     }

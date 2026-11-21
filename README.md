@@ -19,15 +19,16 @@ Other scripts: `npm run lint`, `npm run build`, `npm run preview`.
 
 ## Set up the database
 
-In the Supabase SQL Editor, run the files in `db/` in this order:
+In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 08:
 
 1. `01_schema.sql` – tables, security rules, and functions
-2. `03_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
-3. `04_decline_reason.sql` – saves the reason staff give when they decline a reservation
-4. `05_reports.sql` – the totals behind the Reports screen
-5. `06_accounts.sql` – account safety rules and activity records
-6. `07_merge_roles.sql` – one `admin` role instead of manager and owner
-7. `02_seed.sql` – settings, sample tables and dishes, and the first login account (follow the steps inside the file)
+2. `02_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
+3. `03_decline_reason.sql` – saves the reason staff give when they decline a reservation
+4. `04_reports.sql` – the totals behind the Reports screen
+5. `05_accounts.sql` – account safety rules and activity records
+6. `06_merge_roles.sql` – one `admin` role instead of manager and owner
+7. `07_staff_cancel_and_slot_fixes.sql` – staff cancellation and table availability fixes
+8. `08_seed.sql` – settings, sample tables and dishes, and the first login account (follow the steps inside the file; it needs the admin role from 06)
 
 ## Deploy the account function
 
@@ -73,5 +74,5 @@ address box so the codes do not point to `localhost`.
 
 ## Before the restaurant uses it
 
-The tables and dishes from `02_seed.sql` are placeholders. Replace them with the real ones through
+The tables and dishes from `supabase/sql/08_seed.sql` are placeholders. Replace them with the real ones through
 **Import** or the **Tables & QR** and **Menu** pages.

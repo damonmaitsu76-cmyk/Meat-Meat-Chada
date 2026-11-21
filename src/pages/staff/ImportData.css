@@ -1,5 +1,5 @@
-/* Import Data. Buttons, chips, fields, tables, and the summary cards come from
-   staff.css, index.css, reserve.css, and dashboard.css (.stats / .stat). */
+/* Import Data. Buttons, chips, fields, tables, and summary cards come from global.css,
+   staff.css, and shared.css. */
 
 .imp-card {
   max-width: 760px;

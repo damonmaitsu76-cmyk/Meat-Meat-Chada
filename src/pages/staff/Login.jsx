@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext.js'
-import { homeFor } from '../auth/roles.js'
-import '../staff.css'
+import { useAuth } from '../../auth/AuthContext.js'
+import { homeFor } from '../../auth/roles.js'
+import '../../styles/staff.css'
 
 export default function Login() {
   const { profile, loading, authMessage, signIn } = useAuth()

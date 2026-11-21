@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { supabase } from '../supabaseClient.js'
+import { supabase } from '../../supabaseClient.js'
 
 const CATEGORIES = [
   { key: 'meats', label: 'Meats' },

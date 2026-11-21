@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MEAT ME AT CHADA - report totals (Reports and Insights screen)
--- Run after 01_schema.sql (any time). Safe to run again.
+-- Run after supabase/sql/01_schema.sql (any time). Safe to run again.
 --
 -- One function returns every number the Reports screen shows, already added up,
 -- so the browser never has to download thousands of rows. Only the manager and

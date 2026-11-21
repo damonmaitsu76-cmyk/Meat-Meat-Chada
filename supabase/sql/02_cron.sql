@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MEAT ME AT CHADA - scheduled task (arrival grace period)
--- Run after 01_schema.sql. Kept separate so that a problem enabling
+-- Run after supabase/sql/01_schema.sql. Kept separate so that a problem enabling
 -- pg_cron cannot undo the schema.
 --
 -- If the first line fails, enable it in the dashboard instead:

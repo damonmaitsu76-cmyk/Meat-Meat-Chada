@@ -1,5 +1,5 @@
-/* Staff Accounts. Table, button, field, and modal styles come from staff.css, index.css,
-   reserve.css, and dashboard.css. */
+/* Staff Accounts. Table, button, field, and modal styles come from global.css, staff.css,
+   and shared.css. */
 
 .acc-add {
   display: flex;

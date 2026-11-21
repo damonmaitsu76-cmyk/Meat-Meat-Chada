@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MEAT ME AT CHADA - staff account safety and activity records
--- Run after 01_schema.sql (any time). Safe to run again.
+-- Run after supabase/sql/01_schema.sql (any time). Safe to run again.
 --
 -- 1) Nobody can change their own role or deactivate their own account,
 --    so the system can never be left without a working owner or manager.

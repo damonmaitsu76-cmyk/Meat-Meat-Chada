@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { fmtTime } from '../../lib/dates.js'
-import '../../reserve.css' // the secondary button
-import './settings.css'
+import './Settings.css'
 
 const KEYS = ['arrival_grace_minutes', 'slot_length_minutes', 'opening_time', 'closing_time']
-// Used only if a setting row is missing from the database (the same values as 02_seed.sql).
+// Used only if a setting row is missing from the database (the same values as supabase/sql/08_seed.sql).
 const DEFAULTS = {
   arrival_grace_minutes: '15',
   slot_length_minutes: '90',
@@ -126,7 +125,7 @@ export default function Settings() {
       setActionError(
         r.error
           ? r.error.message
-          : `The setting "${changed[failedIndex]}" was not saved. Check your account role, and that db/02_seed.sql was run.`
+          : `The setting "${changed[failedIndex]}" was not saved. Check your account role, and that supabase/sql/08_seed.sql was run.`
       )
       load(true)
       return

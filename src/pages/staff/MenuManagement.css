@@ -1,5 +1,5 @@
-/* Menu Management. Table, button, and page-head styles come from staff.css, index.css,
-   and reserve.css (secondary button). */
+/* Menu Management. Table, button, and page-head styles come from global.css,
+   staff.css, and shared.css. */
 
 .mm-add {
   display: flex;

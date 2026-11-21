@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { dayLabel, fmtTime, manilaDate, shiftDate, startMs } from '../../lib/dates.js'
-import '../../reserve.css' // status tag colors and the secondary button
-import './reservations.css'
+import './Reservations.css'
 
 const FILTERS = [
   { key: 'pending', label: 'Pending' },
@@ -118,8 +117,11 @@ export default function Reservations() {
   }
 
   function decline(r) {
-const reason = window.prompt(`Decline ${r.reservation_code}? Reason shown to the customer (optional):`, '')    
- if (reason === null) return // staff pressed Cancel
+    const reason = window.prompt(
+      `Decline ${r.reservation_code}? Reason shown to the customer (optional):`,
+      ''
+    )
+    if (reason === null) return // staff pressed Cancel
     act(
       r,
       () =>
@@ -128,6 +130,20 @@ const reason = window.prompt(`Decline ${r.reservation_code}? Reason shown to the
           p_reason: reason,
         }),
       () => `Declined ${r.reservation_code}.`
+    )
+  }
+
+  function cancel(r) {
+    const reason = window.prompt(`Cancel ${r.reservation_code}? Reason (optional):`, '')
+    if (reason === null) return // staff pressed Cancel
+    act(
+      r,
+      () =>
+        supabase.rpc('staff_cancel_reservation', {
+          p_reservation_id: r.reservation_id,
+          p_reason: reason,
+        }),
+      () => `Cancelled ${r.reservation_code}.`
     )
   }
 
@@ -292,14 +308,24 @@ const reason = window.prompt(`Decline ${r.reservation_code}? Reason shown to the
                         </button>
                       </div>
                     )}
-                    {r.status === 'approved' &&
-                      (r.reservation_date === today ? (
-                        <button className="btn small" disabled={busy} onClick={() => arrive(r)}>
-                          Confirm arrival
+                    {r.status === 'approved' && (
+                      <div className="row-actions">
+                        {r.reservation_date === today ? (
+                          <button className="btn small" disabled={busy} onClick={() => arrive(r)}>
+                            Confirm arrival
+                          </button>
+                        ) : (
+                          <span className="sub">Not for today</span>
+                        )}
+                        <button
+                          className="btn small secondary"
+                          disabled={busy}
+                          onClick={() => cancel(r)}
+                        >
+                          Cancel
                         </button>
-                      ) : (
-                        <span className="sub">Not for today</span>
-                      ))}
+                      </div>
+                    )}
                   </td>
                 </tr>
               )

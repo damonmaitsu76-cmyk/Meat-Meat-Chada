@@ -4,9 +4,7 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { supabase } from '../../supabaseClient.js'
 import { fmtDate, manilaDate, shiftDate } from '../../lib/dates.js'
 import { downloadText } from '../../lib/download.js'
-import '../../reserve.css' // the secondary button
-import './dashboard.css' // summary cards (.stats)
-import './reports.css'
+import './Reports.css'
 
 const BRAND = '#b3261e'
 const MAX_DAYS = 92 // longest range, so the chart stays readable
@@ -57,6 +55,8 @@ function describe(log) {
       return `Approved ${d.reservation_code}${d.table_number ? ` for Table ${d.table_number}` : ''}`
     case 'decline:reservation':
       return `Declined ${d.reservation_code}${d.reason ? `: ${d.reason}` : ''}`
+    case 'staff_cancel:reservation':
+      return `Cancelled ${d.reservation_code} by staff${d.reason ? `: ${d.reason}` : ''}`
     case 'arrive:reservation':
       return `Seated ${d.reservation_code} at Table ${d.table_number}`
     case 'auto_cancel:reservation':
@@ -318,7 +318,7 @@ export default function Reports() {
               <li><span>Approved, not arrived yet</span><strong>{res.approved}</strong></li>
               <li><span>Waiting for approval</span><strong>{res.pending}</strong></li>
               <li><span>Declined</span><strong>{res.declined}</strong></li>
-              <li><span>Cancelled by the customer</span><strong>{res.cancelled}</strong></li>
+              <li><span>Cancelled (customer or staff)</span><strong>{res.cancelled}</strong></li>
             </ul>
             <p className="rep-note">Reservations are counted on the date they are booked for.</p>
           </section>

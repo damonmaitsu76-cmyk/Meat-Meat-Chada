@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { supabase } from '../../supabaseClient.js'
-import './dashboard.css' // modal and table-status styles
-import './tables.css'
+import './TableManagement.css'
 
 const BASE_KEY = 'chada_qr_base'
 const QR_OPTIONS = { width: 600, margin: 2, errorCorrectionLevel: 'M' }

@@ -1,6 +1,6 @@
 -- =====================================================================
 -- MEAT ME AT CHADA - one administrator role (owner + manager merged)
--- Run after 01_schema.sql ... 06_accounts.sql. Safe to run again.
+-- Run after supabase/sql/01_schema.sql ... supabase/sql/05_accounts.sql. Safe to run again.
 --
 -- Before: staff / manager / owner.   After: staff / admin.
 --   * Existing manager and owner accounts become admin.

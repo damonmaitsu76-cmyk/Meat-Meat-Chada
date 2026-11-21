@@ -1,5 +1,5 @@
-/* Staff Reservation List. Table, chip, and page-head styles come from staff.css;
-   status tag colors come from reserve.css. */
+/* Staff Reservation List. Table, chip, page-head, and status tag styles come from
+   global.css, staff.css, and shared.css. */
 
 .search {
   width: 100%;

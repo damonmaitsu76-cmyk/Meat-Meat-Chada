@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES } from '../../auth/roles.js'
-import '../../reserve.css' // the secondary button
-import './menu.css'
+import './MenuManagement.css'
 
 const CATEGORIES = [
   { key: 'meats', label: 'Meats' },

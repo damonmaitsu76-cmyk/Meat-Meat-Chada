@@ -1,10 +1,7 @@
 -- =====================================================================
 -- MEAT ME AT CHADA - database schema (Supabase / PostgreSQL)
 --
--- Run ORDER in the Supabase SQL Editor (fresh project):
---   1) 01_schema.sql   (this file)
---   2) 02_seed.sql
---   3) 03_cron.sql
+-- Run the files in supabase/sql in filename order, 01 to 08.
 --
 -- Design rules:
 --   * Customers are NOT logged in. They never touch tables directly;
@@ -877,7 +874,7 @@ end $$;
 
 -- =====================================================================
 -- 8. SCHEDULED TASK FUNCTION (arrival grace period)
--- Scheduled every minute in 03_cron.sql. Nobody else can call it.
+-- Scheduled every minute in supabase/sql/02_cron.sql. Nobody else can call it.
 -- =====================================================================
 
 create or replace function public.release_late_reservations()

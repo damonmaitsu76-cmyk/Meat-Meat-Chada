@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../supabaseClient.js'
 import { fmtTime, manilaDate } from '../../lib/dates.js'
-import './dashboard.css'
+import './Dashboard.css'
 
 const STATUS_LABEL = { available: 'Available', reserved: 'Reserved', dining: 'Dining' }
 const NOTICE_HOURS = 2 // how long a released no-show stays in the notice box
@@ -163,7 +163,8 @@ function TablePanel({ table, session, bookings, requestCount, now, onClose, onDo
             <h3>Seat a walk-in</h3>
             {nextBooking && (
               <p className="hint">
-                This table is booked for {fmtTime(nextBooking.reservation_time)} today.
+                This table is booked for {fmtTime(nextBooking.reservation_time)} today. Seating a
+                walk-in here may be refused until that booking is done.
               </p>
             )}
             <label className="field">
@@ -277,7 +278,7 @@ export default function Dashboard() {
   }, [load])
 
   useEffect(() => {
-    load()
+    const initialLoad = setTimeout(load, 0)
     let channel = supabase.channel(`dashboard-${++channelSeq}`)
     for (const table of WATCHED_TABLES) {
       channel = channel.on('postgres_changes', { event: '*', schema: 'public', table }, reloadSoon)
@@ -285,6 +286,7 @@ export default function Dashboard() {
     channel.subscribe((status) => setLive(status === 'SUBSCRIBED'))
     const poll = setInterval(load, SAFETY_POLL_MS)
     return () => {
+      clearTimeout(initialLoad)
       clearInterval(poll)
       clearTimeout(reloadTimer.current)
       supabase.removeChannel(channel)

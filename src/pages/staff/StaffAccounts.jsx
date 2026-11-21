@@ -2,9 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ROLES, ROLE_LABEL } from '../../auth/roles.js'
-import '../../reserve.css' // the secondary button
-import './dashboard.css' // modal styles
-import './accounts.css'
+import './StaffAccounts.css'
 
 const USERNAME_RE = /^[a-z0-9._-]{3,30}$/ // same rule as the manage-staff function
 

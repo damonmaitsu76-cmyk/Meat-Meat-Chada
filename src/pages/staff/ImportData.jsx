@@ -3,9 +3,7 @@ import Papa from 'papaparse'
 import { supabase } from '../../supabaseClient.js'
 import { downloadText } from '../../lib/download.js'
 import { IMPORT_TYPES, MAX_ROWS, existingKey, planImport } from '../../lib/importRules.js'
-import '../../reserve.css' // the secondary button
-import './dashboard.css' // summary cards (.stats)
-import './import.css'
+import './ImportData.css'
 
 const MAX_BYTES = 1024 * 1024 // 1 MB is far more than a menu needs
 const SHOW_ROWS = 50 // how many problem rows are listed on screen

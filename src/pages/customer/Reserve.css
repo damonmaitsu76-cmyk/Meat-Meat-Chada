@@ -1,18 +1,4 @@
-/* Reservation page (customers). Also holds the status tag colors and the secondary
-   button that the staff Reservation List reuses. */
-
-/* ---------- reservation status tags (extends .tag in index.css) ---------- */
-.tag.pending        { background: #fff1d6; color: var(--warn); }
-.tag.approved       { background: #dcecff; color: #1d5fb4; }
-.tag.declined       { background: #f9dedc; color: var(--brand); }
-.tag.cancelled      { background: #eee; color: #555; }
-.tag.arrived        { background: #e8f5ec; color: var(--ok); }
-.tag.auto_cancelled { background: #f3e5d0; color: #8a5a00; }
-
-/* ---------- buttons ---------- */
-a.btn { display: inline-block; text-decoration: none; }
-.btn.secondary { background: var(--card); color: var(--brand); border: 1px solid var(--brand); }
-.btn.secondary:hover:not(:disabled) { background: #fbeceb; }
+/* Reservation page styles for customers. */
 
 /* ---------- form ---------- */
 .reserve h2 { margin: 0 0 8px; font-size: 1.2rem; }
