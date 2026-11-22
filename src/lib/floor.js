@@ -4,9 +4,17 @@ import { dayLabel, fmtTime, startMs } from './dates.js'
 import { displayName, formatDuration } from './format.js'
 
 export const MAX_SEATS_SHOWN = 12
+export const DEFAULT_SLOT_MINUTES = 90 // same default as the slot_length_minutes setting
 
 export function minutesSince(iso, now) {
   return Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60000))
+}
+
+// Minutes a seated party has stayed past the time slot; 0 while they are still inside it.
+// A session never ends by itself, so this is what tells staff a table has run over.
+export function minutesOver(seatedAt, slotMinutes, now) {
+  if (!seatedAt || !(slotMinutes > 0)) return 0
+  return Math.max(0, minutesSince(seatedAt, now) - slotMinutes)
 }
 
 // 'just now' or '12 min ago'

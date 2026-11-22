@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
 import Modal from '../../components/Modal.jsx'
-import { Field, Notice, PageToolbar, Segmented, Switch } from '../../components/ui.jsx'
+import { EmptyState, Field, Notice, PageToolbar, Segmented, Switch } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES } from '../../auth/roles.js'
 import './MenuManagement.css'
@@ -60,6 +60,7 @@ export default function MenuManagement() {
   const [addOpen, setAddOpen] = useState(false)
   const [adding, setAdding] = useState(false)
   const [edit, setEdit] = useState(null) // { id, name, category }
+  const [search, setSearch] = useState('')
 
   const load = useCallback(
     () =>
@@ -181,6 +182,10 @@ export default function MenuManagement() {
   }
 
   const all = items || []
+  // While searching, only dishes whose name matches are listed and empty categories are hidden.
+  const query = search.trim().toLowerCase()
+  const matches = (item) => !query || item.item_name.toLowerCase().includes(query)
+  const nothingMatches = Boolean(items && query && !all.some(matches))
 
   return (
     <>
@@ -195,9 +200,23 @@ export default function MenuManagement() {
       {(actionError || error) && <Notice tone="warn" action={!items ? <button className="btn secondary small" type="button" onClick={load}>Try again</button> : undefined}>{actionError || error}</Notice>}
       {items === null && !error && <p className="hint">Loading dishes…</p>}
 
+      {items && (
+        <input
+          className="search mm-search"
+          type="search"
+          aria-label="Search dishes by name"
+          placeholder="Search dishes"
+          autoComplete="off"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      )}
+      {nothingMatches && <EmptyState>No dish matches your search. Check the spelling and try again.</EmptyState>}
+
       {items &&
         CATEGORIES.map((c) => {
-          const list = all.filter((i) => i.category === c.key)
+          const list = all.filter((i) => i.category === c.key && matches(i))
+          if (query && list.length === 0) return null
           const unavailable = list.filter((i) => !i.is_available).length
           return (
             <section className="mm-section" key={c.key}>

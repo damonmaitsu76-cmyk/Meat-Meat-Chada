@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   agoText,
   glue,
+  minutesOver,
   nextReservation,
   requestSummary,
   reservationLine,
@@ -136,6 +137,28 @@ describe('agoText', () => {
     expect(agoText(0)).toBe('just now')
     expect(agoText(12)).toBe('12 min ago')
     expect(agoText(65)).toBe('1 h 05 min ago')
+  })
+})
+
+describe('minutesOver', () => {
+  const now = Date.parse('2026-11-22T12:00:00Z')
+  const seatedMinutesAgo = (minutes) => new Date(now - minutes * 60000).toISOString()
+
+  it('is 0 while the party is inside the time slot, including exactly at its end', () => {
+    expect(minutesOver(seatedMinutesAgo(12), 90, now)).toBe(0)
+    expect(minutesOver(seatedMinutesAgo(90), 90, now)).toBe(0)
+  })
+
+  it('counts the minutes past the slot', () => {
+    expect(minutesOver(seatedMinutesAgo(91), 90, now)).toBe(1)
+    expect(minutesOver(seatedMinutesAgo(104), 90, now)).toBe(14)
+    expect(minutesOver(seatedMinutesAgo(104), 120, now)).toBe(0)
+  })
+
+  it('stays quiet when the slot length or seating time is missing', () => {
+    expect(minutesOver(seatedMinutesAgo(500), undefined, now)).toBe(0)
+    expect(minutesOver(seatedMinutesAgo(500), 0, now)).toBe(0)
+    expect(minutesOver(undefined, 90, now)).toBe(0)
   })
 })
 

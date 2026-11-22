@@ -90,6 +90,9 @@
 .tile.reserved .tile-state-word { color: var(--warn); }
 .tile-stamp { color: var(--text-2); font-size: var(--fs-meta); white-space: nowrap; }
 .tile.dining .tile-stamp, .tile.dining .tile-party { color: var(--neutral-line); }
+/* A party past its time slot: same tile, amber outline and text, so it stands out in the room. */
+.tile.dining.over { border-color: var(--warn-line); }
+.tile.dining.over .tile-state-word, .tile.dining.over .tile-stamp { color: var(--warn-line); }
 .tile-guest { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; }
 .tile-party { color: var(--text-2); font-size: var(--fs-meta); }
 .tile-capacity { color: var(--text-3); font-size: var(--fs-meta); }

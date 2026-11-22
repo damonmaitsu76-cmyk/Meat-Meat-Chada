@@ -4,7 +4,7 @@ import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { Notice, PageToolbar } from '../../components/ui.jsx'
 import { fmtTime, manilaDate } from '../../lib/dates.js'
-import { minutesSince } from '../../lib/floor.js'
+import { DEFAULT_SLOT_MINUTES, minutesOver, minutesSince } from '../../lib/floor.js'
 import { displayName, formatDuration } from '../../lib/format.js'
 import './Dashboard.css'
 import AttentionList from './AttentionList.jsx'
@@ -23,7 +23,7 @@ function sinceText(iso, now) {
 /* ------------------------------------------------------------------ */
 /* Panel that opens when a table is clicked                            */
 /* ------------------------------------------------------------------ */
-function TablePanel({ table, session, bookings, now, onClose, onDone }) {
+function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDone }) {
   const [name, setName] = useState('')
   const [party, setParty] = useState('2')
   const [busy, setBusy] = useState(false)
@@ -71,6 +71,7 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
   // A table that is "dining" with a session can only be freed by ending the session.
   const canOverride = table.status !== 'dining' || !session
   const overrideTo = table.status === 'available' ? 'reserved' : 'available'
+  const over = session ? minutesOver(session.seated_at, slotMinutes, now) : 0
 
   return (
     <Modal title={`Table ${table.table_number}`} onClose={onClose}>
@@ -88,6 +89,11 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
               {session.source === 'walk_in' ? 'Walk-in' : 'Reservation'}, seated{' '}
               {sinceText(session.seated_at, now)} ago
             </span>
+            {over > 0 && (
+              <span className="dim">
+                {formatDuration(over)} past the {slotMinutes} minute time slot. The table stays taken until you end the session.
+              </span>
+            )}
           </p>
           <button
             className="btn full"
@@ -220,7 +226,7 @@ export default function Dashboard() {
 
   const load = useCallback(async () => {
     const noticeSince = new Date(Date.now() - NOTICE_HOURS * 3600 * 1000).toISOString()
-    const [t, s, r, q] = await Promise.all([
+    const [t, s, r, q, slot] = await Promise.all([
       supabase
         .from('restaurant_tables')
         .select('table_id, table_number, capacity, status')
@@ -243,13 +249,16 @@ export default function Dashboard() {
         .from('refill_requests')
         .select('request_id, table_id, status, created_at')
         .in('status', ['sent', 'accepted', 'ready']),
+      supabase.from('settings').select('setting_value').eq('setting_key', 'slot_length_minutes').maybeSingle(),
     ])
     const failed = [t, s, r, q].find((x) => x.error)
     if (failed) {
       setError(failed.error.message)
       return
     }
-    setData({ tables: t.data, sessions: s.data, reservations: r.data, requests: q.data })
+    // If the setting cannot be read, fall back to the default instead of blocking the floor.
+    const slotMinutes = Number(slot.data?.setting_value) > 0 ? Number(slot.data.setting_value) : DEFAULT_SLOT_MINUTES
+    setData({ tables: t.data, sessions: s.data, reservations: r.data, requests: q.data, slotMinutes })
     setError('')
   }, [])
 
@@ -293,6 +302,7 @@ export default function Dashboard() {
   const sessions = data?.sessions || []
   const reservations = data?.reservations || []
   const requests = data?.requests || []
+  const slotMinutes = data?.slotMinutes ?? DEFAULT_SLOT_MINUTES
   const today = manilaDate(new Date(now))
 
   const tablesById = {}
@@ -368,6 +378,7 @@ export default function Dashboard() {
             sessionByTable={sessionByTable}
             bookingsByTable={bookingsByTable}
             requestCountByTable={requestCountByTable}
+            slotMinutes={slotMinutes}
             now={now}
             onSelect={selectTable}
           />
@@ -380,6 +391,7 @@ export default function Dashboard() {
           table={selected}
           session={sessionByTable[selected.table_id]}
           bookings={bookingsByTable[selected.table_id] || []}
+          slotMinutes={slotMinutes}
           now={now}
           onClose={closePanel}
           onDone={onDone}

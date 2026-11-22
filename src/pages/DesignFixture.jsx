@@ -153,6 +153,7 @@ export default function DesignFixture() {
           sessionByTable={floor.sessionByTable}
           bookingsByTable={floor.bookingsByTable}
           requestCountByTable={floor.requestCountByTable}
+          slotMinutes={90}
           now={now}
           onSelect={() => {}}
         />

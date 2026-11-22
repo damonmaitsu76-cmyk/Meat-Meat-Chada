@@ -1,4 +1,5 @@
 /* Dish availability list and inline editing. */
+.mm-search { display: block; max-width: 720px; margin: 0 0 var(--s5); }
 .mm-section { max-width: 720px; margin: 0 0 var(--s6); }
 .mm-section h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1); margin: 0 0 var(--s2); font-size: var(--fs-title); }
 .mm-section h2 .mm-unavailable { color: var(--warn); font-size: var(--fs-sm); font-weight: 600; }

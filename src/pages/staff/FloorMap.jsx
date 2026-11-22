@@ -4,7 +4,7 @@ import FloorTile from './FloorTile.jsx'
 import './Dashboard.css'
 
 // The room: a heading with a one-line count, then every active table in number order.
-export default function FloorMap({ tables, sessionByTable, bookingsByTable, requestCountByTable, now, onSelect }) {
+export default function FloorMap({ tables, sessionByTable, bookingsByTable, requestCountByTable, slotMinutes, now, onSelect }) {
   const summary = summarizeFloor(tables, sessionByTable)
 
   return (
@@ -31,6 +31,7 @@ export default function FloorMap({ tables, sessionByTable, bookingsByTable, requ
                 session={sessionByTable[table.table_id]}
                 booking={(bookingsByTable[table.table_id] || [])[0]}
                 requestCount={requestCountByTable[table.table_id] || 0}
+                slotMinutes={slotMinutes}
                 now={now}
                 onSelect={() => onSelect(table.table_id)}
               />
