@@ -220,7 +220,6 @@ export default function Reports() {
               <li><span>Declined</span><strong>{reservations.declined}</strong></li>
               <li><span>Cancelled (customer or staff)</span><strong>{reservations.cancelled}</strong></li>
             </ul>
-            <p className="rep-note">Reservations are counted on the date they are booked for.</p>
           </section>
 
           <section className="rep-card">
