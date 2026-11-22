@@ -138,6 +138,8 @@ export default function Reports() {
   const busiest = daily.filter((day) => day.guests > 0).slice().sort((a, b) => b.guests - a.guests || b.day.localeCompare(a.day)).slice(0, 3)
   const busiestDay = busiest[0]
   const activityGroups = groupActivity(loaded?.logs || [], today)
+  const selectedPreset = presets.find((preset) => preset.from === from && preset.to === to)
+  const customRangeLabel = !selectedPreset && from && to ? rangeText(from, to) : 'Custom range'
 
   function exportCsv() {
     const sum = (keyName) => daily.reduce((total, day) => total + day[keyName], 0)
@@ -157,15 +159,18 @@ export default function Reports() {
 
   return (
     <>
-      <PageToolbar title="Reports" action={<button className="btn secondary small" type="button" disabled={!report} onClick={exportCsv}>Export CSV</button>} />
+      <PageToolbar title="Reports" />
       <div className="rep-controls">
-        <FilterTabs label="Report date range" value={presets.find((preset) => preset.from === from && preset.to === to)?.key || ''} onChange={(selected) => applyPreset(presets.find((preset) => preset.key === selected))} items={presets} />
-        <Disclosure label="Custom range" className="rep-custom-range">
-          <div className="rep-dates">
-            <Field label="From" type="date" value={from} max={to || undefined} onChange={(event) => setFrom(event.target.value)} />
-            <Field label="To" type="date" value={to} min={from || undefined} onChange={(event) => setTo(event.target.value)} />
-          </div>
-        </Disclosure>
+        <FilterTabs label="Report date range" value={selectedPreset?.key || ''} onChange={(selected) => applyPreset(presets.find((preset) => preset.key === selected))} items={presets} />
+        <div className="rep-actions">
+          <Disclosure label={customRangeLabel} className="rep-custom-range disclosure-button">
+            <div className="rep-dates">
+              <Field label="From" type="date" value={from} max={to || undefined} onChange={(event) => setFrom(event.target.value)} />
+              <Field label="To" type="date" value={to} min={from || undefined} onChange={(event) => setTo(event.target.value)} />
+            </div>
+          </Disclosure>
+          <button className="btn secondary" type="button" disabled={!report} onClick={exportCsv}>Export CSV</button>
+        </div>
       </div>
 
       {rangeProblem && <p className="error">{rangeProblem}</p>}
@@ -174,17 +179,18 @@ export default function Reports() {
 
       {report && (
         <>
-          <p className="rep-range">{rangeText(from, to)}</p>
           <div className="rep-summary">
-            <article className="rep-figure"><strong className="rep-number">{sessions.guests}</strong><span>Guests served</span><small>{sessions.parties} {sessions.parties === 1 ? 'party' : 'parties'}</small></article>
-            <article className="rep-figure"><strong className="rep-number">{reservations.total}</strong><span>Reservation requests</span></article>
-            <article className="rep-figure"><strong className="rep-number">{serveTime}</strong><span>Average time to serve</span></article>
+            <div className="rep-summary-tier primary">
+              <article className="rep-figure"><strong className="rep-number">{sessions.guests}</strong><span>Guests served</span><small>{sessions.parties} {sessions.parties === 1 ? 'party' : 'parties'}</small></article>
+              <article className="rep-figure"><strong className="rep-number">{reservations.total}</strong><span>Reservation requests</span></article>
+              <article className="rep-figure"><strong className="rep-number">{reservations.no_show}</strong><span>No-shows</span></article>
+            </div>
+            <div className="rep-summary-tier secondary">
+              <article className="rep-figure"><strong className="rep-number">{arrivalRate}</strong><span>Arrival rate</span><small>{reservations.arrived} of {resolved} arrived</small></article>
+              <article className="rep-figure"><strong className="rep-number">{requests.total}</strong><span>Refill requests</span></article>
+              <article className="rep-figure"><strong className="rep-number">{serveTime}</strong><span>Average time to serve</span></article>
+            </div>
           </div>
-          <dl className="rep-key-values">
-            <div><dt>No-shows</dt><dd>{reservations.no_show}</dd></div>
-            <div><dt>Arrival rate</dt><dd>{arrivalRate} · {reservations.arrived} arrived, {reservations.no_show} no-shows</dd></div>
-            <div><dt>Refill requests</dt><dd>{requests.total}</dd></div>
-          </dl>
 
           <section className="rep-card">
             <h2>Guests per day</h2>
