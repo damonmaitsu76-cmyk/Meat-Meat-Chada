@@ -1,53 +1,50 @@
-/* Live Dashboard and Floor View. Common styles come from global.css, staff.css and shared.css. */
-
-/* ---------- no-show notice ---------- */
-.dash-notice { background: var(--warn-soft); border: 1px solid #f0d9a8; color: #7a4b00; border-radius: var(--r-card); padding: 10px 14px; margin-bottom: 16px; }
-.dash-notice strong { display: block; margin-bottom: 4px; }
-.dash-notice ul { margin: 0; padding-left: 18px; }
-
-/* ---------- floor map: the tile surface shows each table's state ---------- */
-.legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; }
-.legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; background: currentColor; }
-.legend .available { color: var(--ok); }
-.legend .reserved  { color: var(--warn); }
-.legend .dining    { color: var(--brand); }
-
-.floor { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+/* Live floor view. Shared controls and states live in components.css. */
+.load-error { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s4); }
+.load-error .error { margin: 0; }
+.attention { margin: 0 0 var(--s6); }
+.attention h2, .floor-heading h2 { margin: 0; font-size: var(--fs-title); }
+.attention-list { display: grid; margin-top: var(--s2); }
+.attention-row { display: flex; align-items: center; gap: var(--s3); min-height: 48px; border-bottom: 1px solid var(--line); color: var(--text); text-decoration: none; }
+.attention-row strong { min-width: 32px; color: var(--brand); font-family: var(--font-display); font-size: var(--fs-title); font-variant-numeric: tabular-nums; }
+.attention-row:hover span { text-decoration: underline; }
+.quiet-line { margin: var(--s2) 0 0; color: var(--text-2); }
+.floor-section { margin-top: var(--s4); }
+.floor-heading { margin-bottom: var(--s3); }
+.floor-heading p { margin: var(--s1) 0 0; color: var(--text-3); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.floor { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--s3); }
 .tile {
   display: grid;
-  gap: 6px;
   align-content: start;
-  min-height: 96px;
-  padding: 12px;
-  text-align: left;
-  font: inherit;
-  color: var(--text);
+  gap: var(--s2);
+  min-width: 0;
+  min-height: 104px;
+  padding: var(--s3);
   border: 1px solid var(--line);
   border-radius: var(--r-tile);
-  transition: transform 0.1s;
+  font: inherit;
+  text-align: left;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
 .tile:active { transform: scale(0.98); }
-.tile.available { background: var(--card); border-color: var(--line); }
-.tile.reserved  { background: var(--warn-soft); border-color: var(--warn); }
-.tile.dining    { background: var(--brand-soft); border-color: var(--brand); }
-.tile-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.tile-top strong { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: -0.01em; }
-.tile-seats { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 0.85rem; }
-.floor .tile.available .tile-status {
-  position: static;
-  width: fit-content;
-  height: auto;
-  margin: 0;
-  padding: 2px 10px;
-  border: 0;
-  overflow: visible;
-  clip: auto;
-  white-space: normal;
-}
-.tile-line { font-size: 0.85rem; color: var(--text); overflow-wrap: anywhere; }
-.tile-badge { width: fit-content; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill); background: var(--warn-soft); color: var(--warn); }
+.tile.available { background: var(--card); border-color: var(--line); color: var(--text); }
+.tile.reserved { background: var(--warn-soft); border-color: var(--warn-line); color: var(--text); }
+.tile.dining { background: var(--charcoal); border-color: var(--charcoal); color: var(--white); }
+.tile-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); }
+.tile-top strong { min-width: 0; font-family: var(--font-display); font-size: var(--fs-title); font-weight: 600; overflow-wrap: anywhere; }
+.tile-seats { flex: 0 0 auto; color: var(--text-3); font-size: var(--fs-meta); }
+.tile.dining .tile-seats, .tile.dining .tile-line { color: var(--white); }
+.tile-state { color: var(--text); font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; }
+.tile.dining .tile-state { color: var(--white); }
+.tile-line { color: var(--text-2); font-size: var(--fs-meta); overflow-wrap: anywhere; }
+.tile-requests { color: var(--text-2); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
+.tile.dining .tile-requests { color: var(--white); }
 
-.panel-section { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
-.panel-section h3 { margin: 0 0 8px; font-size: 1.05rem; }
-.panel-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
-.panel-list li { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.panel-section { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.panel-section h3 { margin: 0 0 var(--s2); font-size: var(--fs-row); }
+.panel-list { display: grid; gap: var(--s3); margin: 0; padding: 0; list-style: none; }
+.panel-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+
+@media (max-width: 360px) {
+  .floor { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+  .tile { padding: var(--s2); }
+}

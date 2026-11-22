@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Users } from 'lucide-react'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
+import { Notice, PageToolbar } from '../../components/ui.jsx'
 import { fmtTime, manilaDate } from '../../lib/dates.js'
+import { displayName, formatDuration } from '../../lib/format.js'
 import './Dashboard.css'
 
-const STATUS_LABEL = { available: 'Available', reserved: 'Reserved', dining: 'Dining' }
 const NOTICE_HOURS = 2 // how long a released no-show stays in the notice box
 const SAFETY_POLL_MS = 30000 // in case the live connection silently drops
 const WATCHED_TABLES = ['restaurant_tables', 'dining_sessions', 'reservations', 'refill_requests']
@@ -15,9 +15,7 @@ let channelSeq = 0
 
 function sinceText(iso, now) {
   const mins = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60000))
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins} min`
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`
+  return formatDuration(mins)
 }
 
 /* ------------------------------------------------------------------ */
@@ -78,7 +76,7 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
           <section className="panel-section">
             <h3>Seated now</h3>
             <p style={{ margin: '0 0 10px' }}>
-              <strong>{session.guest_name}</strong>, party of {session.party_size}
+              <strong>{displayName(session.guest_name)}</strong>, party of {session.party_size}
               <span className="dim">
                 {session.source === 'walk_in' ? 'Walk-in' : 'Reservation'}, seated{' '}
                 {sinceText(session.seated_at, now)} ago
@@ -106,7 +104,7 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
               {bookings.map((b) => (
                 <li key={b.reservation_id}>
                   <div>
-                    <strong>{b.customer_name}</strong> ({b.reservation_code})
+                    <strong>{displayName(b.customer_name)}</strong> (<span className="ticket">{b.reservation_code}</span>)
                     <span className="dim">
                       {b.guest_count} guests at {fmtTime(b.reservation_time)}
                     </span>
@@ -322,62 +320,50 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="page-head">
-        <h1>Dashboard</h1>
-        <span className={`live ${live ? 'on' : ''}`}>{live ? '● Live' : '○ Reconnecting…'}</span>
-      </div>
+      <PageToolbar title="Dashboard" live={live} />
 
       {info && <div className="success">{info}</div>}
-      {error && <p className="error">{error}</p>}
-      {data === null && !error && <p className="hint">Loading…</p>}
+      {error && <div className="load-error"><p className="error">{error}</p><button className="btn secondary small" type="button" onClick={load}>Try again</button></div>}
+      {data === null && !error && <p className="hint">Loading floor…</p>}
 
       {data && (
         <>
-          <div className="stats">
-            <Link className="stat" to="/staff/requests">
-              <span className="stat-num">{requests.length}</span>
-              <span className="stat-label">Active requests</span>
-            </Link>
-            <div className="stat">
-              <span className="stat-num">
-                {occupied}/{tables.length}
-              </span>
-              <span className="stat-label">Occupied tables</span>
-            </div>
-            <Link className="stat" to="/staff/reservations">
-              <span className="stat-num">{pendingCount}</span>
-              <span className="stat-label">Awaiting approval</span>
-            </Link>
-            <div className="stat">
-              <span className="stat-num">{guestsDining}</span>
-              <span className="stat-label">Guests dining</span>
-            </div>
-          </div>
+          <section className="attention" aria-labelledby="attention-title">
+            <h2 id="attention-title">Needs attention</h2>
+            {requests.length === 0 && pendingCount === 0 ? (
+              <p className="quiet-line">Nothing waiting.</p>
+            ) : (
+              <div className="attention-list">
+                {requests.length > 0 && <Link className="attention-row" to="/staff/requests"><strong>{requests.length}</strong><span>Active refill requests</span></Link>}
+                {pendingCount > 0 && <Link className="attention-row" to="/staff/reservations"><strong>{pendingCount}</strong><span>Reservations waiting for approval</span></Link>}
+              </div>
+            )}
+          </section>
 
           {noShows.length > 0 && (
-            <div className="dash-notice" role="status">
-              <strong>No-show reservations</strong>
+            <Notice tone="warn">
+              <strong>Released after the grace period</strong>
               <ul>
                 {noShows.map((r) => (
                   <li key={r.reservation_id}>
-                    {r.customer_name} ({r.reservation_code}), booked for{' '}
+                    {displayName(r.customer_name)} (<span className="ticket">{r.reservation_code}</span>), booked for{' '}
                     {fmtTime(r.reservation_time)}
                     {tablesById[r.table_id] ? `, Table ${tablesById[r.table_id].table_number} released` : ''}
                   </li>
                 ))}
               </ul>
-            </div>
+            </Notice>
           )}
 
-          <div className="legend">
-            <span className="available">Available</span>
-            <span className="reserved">Reserved</span>
-            <span className="dining">Dining</span>
-          </div>
+          <section className="floor-section" aria-labelledby="floor-title">
+            <div className="floor-heading">
+              <h2 id="floor-title">Floor</h2>
+              <p>{occupied} of {tables.length} tables occupied · {guestsDining} guests dining</p>
+            </div>
 
-          {tables.length === 0 && <p className="empty-state">No tables yet.</p>}
+            {tables.length === 0 && <p className="empty-state">No active tables. Add tables in Tables &amp; QR.</p>}
 
-          <div className="floor">
+            <div className="floor">
             {tables.map((t) => {
               const session = sessionByTable[t.table_id]
               const booking = (bookingsByTable[t.table_id] || [])[0]
@@ -386,37 +372,31 @@ export default function Dashboard() {
                 <button
                   key={t.table_id}
                   className={`tile ${t.status}`}
+                  type="button"
+                  aria-label={`Table ${t.table_number}, ${t.capacity} seats, ${t.status}${session ? `, ${displayName(session.guest_name)}` : booking ? `, held for ${displayName(booking.customer_name)} at ${fmtTime(booking.reservation_time)}` : ''}`}
                   onClick={() => setSelectedId(t.table_id)}
                 >
                   <span className="tile-top">
                     <strong>Table {t.table_number}</strong>
-                    <span className="tile-seats" aria-label={`${t.capacity} seats`}>
-                      <Users size={15} aria-hidden="true" />
-                      <span>{t.capacity}</span>
-                    </span>
+                    <span className="tile-seats">{t.capacity} seats</span>
                   </span>
-                  <span className={`tile-status ${t.status}`}>{STATUS_LABEL[t.status]}</span>
                   {session && (
-                    <span className="tile-line">
-                      {session.guest_name}, party of {session.party_size}, seated{' '}
-                      {sinceText(session.seated_at, now)} ago
-                    </span>
+                    <><span className="tile-state">Dining · {sinceText(session.seated_at, now)}</span><span className="tile-line">{displayName(session.guest_name)} · {session.party_size} guests</span></>
                   )}
                   {!session && booking && (
-                    <span className="tile-line">
-                      {t.status === 'reserved' ? 'Held for' : 'Booked'} {booking.customer_name},{' '}
-                      {fmtTime(booking.reservation_time)}
-                    </span>
+                    <span className="tile-state">{t.status === 'reserved' ? 'Held for' : 'Booked'} {displayName(booking.customer_name)}, {fmtTime(booking.reservation_time)}</span>
                   )}
+                  {!session && !booking && t.status === 'reserved' && <span className="tile-state">Reserved</span>}
                   {reqCount > 0 && (
-                    <span className="tile-badge">
+                    <span className="tile-requests">
                       {reqCount} request{reqCount > 1 ? 's' : ''}
                     </span>
                   )}
                 </button>
               )
             })}
-          </div>
+            </div>
+          </section>
         </>
       )}
 
