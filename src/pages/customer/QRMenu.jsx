@@ -26,7 +26,6 @@ function MenuView({ items, tray, onAdd, onChangeQty, tableNumber }) {
   return (
     <>
       <h1 className="sr-only">Menu for Table {tableNumber}</h1>
-      <p className="menu-intro">Add refills, then send them to staff.</p>
       <div className="tabs menu-tabs" role="tablist" aria-label="Menu categories" onKeyDown={(event) => {
         if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
         event.preventDefault()

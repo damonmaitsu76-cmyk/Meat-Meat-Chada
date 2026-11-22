@@ -144,7 +144,6 @@ button:disabled { cursor: not-allowed; }
 .reserve .res-details > div { align-items: baseline; }
 
 .customer-title { margin: 0 0 var(--s4); font-size: var(--fs-title); }
-.menu-intro { margin: 0 0 var(--s4); color: var(--text-2); }
 .menu-tabs { gap: 0; padding: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
 .menu-tabs .tab { border-bottom: 1px solid transparent; border-radius: 0; color: var(--text-2); }
 .menu-tabs .tab.active { background: transparent; border-bottom-color: var(--brand); color: var(--text); }
