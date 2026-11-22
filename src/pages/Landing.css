@@ -1,0 +1,118 @@
+/* Landing page: one screen. Red field, the dining room as a framed photo, the emblem stamped across its edge.
+   Colours come from tokens.css only. Motion runs once on load. */
+
+/* Condensed + heavy cut of the brand font, used on this page only. */
+@font-face {
+  font-family: 'Chada Display';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  font-stretch: 75% 100%;
+  src: url('../../node_modules/@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wdth-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.landing {
+  --gutter: clamp(20px, 4vw, 56px);
+  --emblem: clamp(132px, 15vw, 200px);
+  --display: 'Chada Display', var(--font-display);
+  position: relative;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 100svh;
+  background: var(--brand);
+  color: var(--bg);
+  overflow-x: clip;
+}
+.landing :focus-visible { outline-color: var(--white); }
+
+.landing-top { position: absolute; z-index: 2; inset: 0 0 auto 0; padding: var(--s6) var(--gutter); }
+.landing-brand { font-family: var(--display); font-size: 1.25rem; font-weight: 800; font-stretch: 75%; letter-spacing: 0.01em; }
+
+/* ---------- hero: copy on the left, the room on the right ---------- */
+.landing-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  align-items: stretch;
+  gap: clamp(var(--s6), 5vw, 80px);
+  padding: 88px var(--gutter) var(--s8);
+}
+.landing-copy { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; min-width: 0; }
+.landing-kicker {
+  margin: 0 0 var(--s5);
+  padding: var(--s1) var(--s3);
+  border: 1px dashed currentColor;
+  border-radius: var(--r-chip);
+  font-size: var(--fs-meta);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.landing-title {
+  margin: 0 0 var(--s8);
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: clamp(4.25rem, 11.5vw, 11rem);
+  line-height: 0.84;
+  letter-spacing: -0.03em;
+}
+.landing-title span { display: block; }
+
+.landing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s6); }
+.landing-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  padding: 0 var(--s10);
+  border-radius: var(--r-ctrl);
+  background: var(--bg);
+  color: var(--charcoal);
+  font-size: var(--fs-row);
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--t-fast), transform var(--t-fast);
+}
+.landing-btn:hover { background: var(--white); }
+.landing-btn:active { transform: scale(0.98); }
+.landing-link { display: inline-flex; align-items: center; min-height: 44px; color: var(--bg); font-weight: 600; text-underline-offset: 4px; }
+
+/* ---------- the photo ---------- */
+.landing-photo { position: relative; margin: 0; min-height: 360px; min-width: 0; }
+.landing-room { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 60% 50%; border-radius: var(--r-sheet); background: var(--charcoal); }
+.landing-emblem {
+  position: absolute;
+  left: calc(var(--emblem) / -2);
+  bottom: var(--s10);
+  width: var(--emblem);
+  height: var(--emblem);
+  border: 6px solid var(--brand);
+  border-radius: var(--r-pill);
+  background: var(--charcoal);
+}
+
+/* ---------- facts strip, cut like a ticket ---------- */
+.landing-facts { background: var(--charcoal); color: var(--bg); }
+.landing-facts dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.landing-facts div { display: grid; gap: var(--s1); padding: var(--s5) var(--gutter); }
+.landing-facts div + div { border-left: 1px dashed var(--control); }
+.landing-facts dt { color: var(--neutral-line); font-size: var(--fs-meta); letter-spacing: 0.08em; text-transform: uppercase; }
+.landing-facts dd { margin: 0; font-family: var(--display); font-size: var(--fs-title); font-weight: 600; line-height: 1.2; }
+
+/* ---------- one-time entrance ---------- */
+.landing-rise { animation: landing-rise 640ms cubic-bezier(0.2, 0.8, 0.25, 1) both; animation-delay: calc(80ms + var(--i, 0) * 110ms); }
+@keyframes landing-rise { from { opacity: 0; transform: translateY(var(--s6)); } }
+
+/* ---------- phones and portrait tablets: copy, then the photo with the emblem across its top edge ---------- */
+@media (max-width: 859px) {
+  .landing-hero { grid-template-columns: minmax(0, 1fr); gap: var(--s6); padding-top: 80px; }
+  .landing-copy { align-items: stretch; }
+  .landing-title { font-size: min(24vw, 9.5rem); margin-bottom: var(--s6); }
+  .landing-btn { width: 100%; }
+  .landing-photo { min-height: 0; margin-top: calc(var(--emblem) / 2); }
+  .landing-room { aspect-ratio: 4 / 3; }
+  .landing-emblem { left: auto; right: var(--s4); bottom: auto; top: calc(var(--emblem) / -2); }
+  .landing-facts dl { grid-template-columns: minmax(0, 1fr); }
+  .landing-facts div { padding-block: var(--s4); }
+  .landing-facts div + div { border-left: 0; border-top: 1px dashed var(--control); }
+}

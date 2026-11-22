@@ -15,7 +15,7 @@ import StaffAccounts from './pages/staff/StaffAccounts.jsx'
 import StaffLayout from './pages/staff/StaffLayout.jsx'
 import TableManagement from './pages/staff/TableManagement.jsx'
 import DesignFixture from './pages/DesignFixture.jsx'
-import Home from './pages/Home.jsx'
+import Landing from './pages/Landing.jsx'
 
 function Message({ title, text }) {
   return (
@@ -31,7 +31,7 @@ export default function App() {
     <Routes>
       {import.meta.env.DEV && <Route path="/__design" element={<DesignFixture />} />}
       {/* customers (no login) */}
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/menu/:qrToken" element={<QRMenu />} />
       <Route path="/reserve" element={<Reserve />} />
 
