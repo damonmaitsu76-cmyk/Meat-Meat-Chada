@@ -30,7 +30,23 @@ function formatTime(iso) {
 function servedText(request) {
   if (!request.served_at) return 'Served'
   const minutes = (new Date(request.served_at).getTime() - new Date(request.created_at).getTime()) / 60000
+  if (minutes < 1) return 'Served in under 1 min'
   return `Served in ${formatDuration(minutes)}`
+}
+
+function ServedRow({ request, items }) {
+  const table = request.restaurant_tables?.table_number ?? '—'
+  return (
+    <div className="served-request-row">
+      <span>Table {table} · <span className="ticket">{request.request_number}</span> · {formatTime(request.created_at)} · {servedText(request)}</span>
+      <details className="served-items">
+        <summary>Items</summary>
+        <ul className="ticket-items">
+          {items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
+        </ul>
+      </details>
+    </div>
+  )
 }
 
 export default function RequestQueue() {
@@ -120,6 +136,7 @@ export default function RequestQueue() {
             const waited = Math.max(0, Math.floor((now - new Date(request.created_at).getTime()) / 60000))
             const late = request.status === 'sent' && waited >= LATE_MINUTES
             const items = request.request_items || []
+            if (request.status === 'served') return <ServedRow key={request.request_id} request={request} items={items} />
             return (
               <RecordCard
                 key={request.request_id}
@@ -138,7 +155,6 @@ export default function RequestQueue() {
                   {items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
                 </ul>
                 {request.note && <p className="ticket-note">{request.note}</p>}
-                {request.status === 'served' && <p className="served-time">{servedText(request)}</p>}
               </RecordCard>
             )
           })}
