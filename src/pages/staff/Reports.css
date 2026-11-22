@@ -43,6 +43,7 @@
   .rep-actions > .btn, .rep-custom-range > summary { width: 100%; }
   .rep-custom-range > summary { justify-content: center; padding-inline: var(--s2); }
   .rep-custom-range[open] .disclosure-body { right: auto; left: 0; }
+  .rep-dates { grid-template-columns: minmax(0, 1fr); }
   .rep-summary-tier { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rep-figure:not(:nth-child(3n)) { border-right: 0; }
   .rep-figure:not(:nth-child(2n)) { border-right: 1px solid var(--line); }
@@ -50,6 +51,3 @@
   .activity-list li { grid-template-columns: minmax(0, 1fr); gap: var(--s1); }
 }
 
-@media (max-width: 360px) {
-  .rep-dates { grid-template-columns: minmax(0, 1fr); }
-}
