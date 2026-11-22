@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
+import { confirmDialog } from '../../components/dialogs.js'
 import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
 import './Reserve.css'
 
@@ -296,7 +297,12 @@ function StatusCard({ code, onReset }) {
   }, [load])
 
   async function cancel() {
-    if (!window.confirm('Cancel this reservation?')) return
+    const ok = await confirmDialog({
+      title: 'Cancel this reservation?',
+      confirmLabel: 'Cancel reservation',
+      cancelLabel: 'Keep it',
+    })
+    if (!ok) return
     setBusy(true)
     setError('')
     const { error } = await supabase.rpc('cancel_reservation', { p_code: code })

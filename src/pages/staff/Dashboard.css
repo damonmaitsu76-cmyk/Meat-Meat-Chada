@@ -5,7 +5,7 @@
 .dash-notice strong { display: block; margin-bottom: 4px; }
 .dash-notice ul { margin: 0; padding-left: 18px; }
 
-/* ---------- floor map: a coloured edge shows each table's state ---------- */
+/* ---------- floor map: the tile surface shows each table's state ---------- */
 .legend { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 0 12px; color: var(--muted); font-size: 0.85rem; }
 .legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; background: currentColor; }
 .legend .available { color: var(--ok); }
@@ -18,24 +18,32 @@
   gap: 6px;
   align-content: start;
   min-height: 96px;
-  padding: 12px 12px 12px 14px;
+  padding: 12px;
   text-align: left;
   font: inherit;
   color: var(--text);
-  background: var(--card);
   border: 1px solid var(--line);
-  border-left-width: 6px;
   border-radius: var(--r-tile);
-  transition: border-color 0.15s, transform 0.1s;
+  transition: transform 0.1s;
 }
-.tile:hover { border-color: var(--text); }
 .tile:active { transform: scale(0.98); }
-.tile.available { border-left-color: #b9dcc6; }
-.tile.reserved  { border-left-color: var(--warn); background: #fffaf0; }
-.tile.dining    { border-left-color: var(--brand); background: #fdf3f2; }
+.tile.available { background: var(--card); border-color: var(--line); }
+.tile.reserved  { background: var(--warn-soft); border-color: var(--warn); }
+.tile.dining    { background: var(--brand-soft); border-color: var(--brand); }
 .tile-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.tile-top strong { font-family: var(--font-display); font-size: 1.2rem; letter-spacing: -0.01em; }
-.tile-seats { color: var(--muted); font-size: 0.8rem; }
+.tile-top strong { font-family: var(--font-display); font-size: 1.3rem; letter-spacing: -0.01em; }
+.tile-seats { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 0.85rem; }
+.floor .tile.available .tile-status {
+  position: static;
+  width: fit-content;
+  height: auto;
+  margin: 0;
+  padding: 2px 10px;
+  border: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
 .tile-line { font-size: 0.85rem; color: var(--text); overflow-wrap: anywhere; }
 .tile-badge { width: fit-content; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill); background: var(--warn-soft); color: var(--warn); }
 

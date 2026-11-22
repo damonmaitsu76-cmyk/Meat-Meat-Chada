@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
+import { promptDialog } from '../../components/dialogs.js'
 import { dayLabel, fmtTime, manilaDate, shiftDate, startMs } from '../../lib/dates.js'
 import './Reservations.css'
 
@@ -116,11 +117,12 @@ export default function Reservations() {
     )
   }
 
-  function decline(r) {
-    const reason = window.prompt(
-      `Decline ${r.reservation_code}? Reason shown to the customer (optional):`,
-      ''
-    )
+  async function decline(r) {
+    const reason = await promptDialog({
+      title: `Decline ${r.reservation_code}`,
+      label: 'Reason shown to the customer (optional)',
+      confirmLabel: 'Decline',
+    })
     if (reason === null) return // staff pressed Cancel
     act(
       r,
@@ -133,8 +135,13 @@ export default function Reservations() {
     )
   }
 
-  function cancel(r) {
-    const reason = window.prompt(`Cancel ${r.reservation_code}? Reason (optional):`, '')
+  async function cancel(r) {
+    const reason = await promptDialog({
+      title: `Cancel ${r.reservation_code}`,
+      label: 'Reason (optional)',
+      confirmLabel: 'Cancel reservation',
+      cancelLabel: 'Keep it',
+    })
     if (reason === null) return // staff pressed Cancel
     act(
       r,

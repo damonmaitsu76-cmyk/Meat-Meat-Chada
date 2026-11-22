@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
+import { confirmDialog } from '../../components/dialogs.js'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES } from '../../auth/roles.js'
 import './MenuManagement.css'
@@ -131,9 +132,11 @@ export default function MenuManagement() {
 
   async function remove(item) {
     if (
-      !window.confirm(
-        `Delete ${item.item_name}? It leaves the menu for good. Past requests keep its name.`
-      )
+      !(await confirmDialog({
+        title: `Delete ${item.item_name}?`,
+        message: 'It leaves the menu for good. Past requests keep its name.',
+        confirmLabel: 'Delete dish',
+      }))
     ) {
       return
     }

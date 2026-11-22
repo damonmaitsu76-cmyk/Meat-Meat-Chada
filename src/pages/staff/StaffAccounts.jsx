@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
+import Modal from '../../components/Modal.jsx'
+import { confirmDialog } from '../../components/dialogs.js'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ROLES, ROLE_LABEL } from '../../auth/roles.js'
 import './StaffAccounts.css'
@@ -33,13 +35,6 @@ function ResetModal({ user, onClose, onDone }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   async function submit(e) {
     e.preventDefault()
@@ -64,21 +59,8 @@ function ResetModal({ user, onClose, onDone }) {
   }
 
   return (
-    <div className="backdrop" onClick={onClose}>
-      <form
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`New password for ${user.username}`}
-        onClick={(e) => e.stopPropagation()}
-        onSubmit={submit}
-      >
-        <div className="modal-head">
-          <h2>New password</h2>
-          <button type="button" className="modal-close" aria-label="Close" onClick={onClose}>
-            ×
-          </button>
-        </div>
+    <Modal title="New password" onClose={onClose}>
+      <form onSubmit={submit}>
         <span className="dim">Account: {user.username}</span>
 
         <label className="field" style={{ marginTop: 14 }}>
@@ -96,7 +78,7 @@ function ResetModal({ user, onClose, onDone }) {
           {busy ? 'Saving…' : 'Save password'}
         </button>
       </form>
-    </div>
+    </Modal>
   )
 }
 
@@ -189,17 +171,25 @@ export default function StaffAccounts() {
     load()
   }
 
-  function changeRole(u, role) {
+  async function changeRole(u, role) {
     if (role === u.role) return
-    if (!window.confirm(`Change ${u.username} to ${ROLE_LABEL[role]}?`)) return
+    const ok = await confirmDialog({
+      title: `Change ${u.username} to ${ROLE_LABEL[role]}?`,
+      confirmLabel: 'Change role',
+    })
+    if (!ok) return
     updateUser(u, { role }, `${u.username} is now ${ROLE_LABEL[role]}.`)
   }
 
-  function changeStatus(u) {
+  async function changeStatus(u) {
     const deactivate = u.status === 'active'
     if (
       deactivate &&
-      !window.confirm(`Deactivate ${u.username}? They are logged out and cannot log in again.`)
+      !(await confirmDialog({
+        title: `Deactivate ${u.username}?`,
+        message: 'They are logged out and cannot log in again.',
+        confirmLabel: 'Deactivate',
+      }))
     ) {
       return
     }

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Users } from 'lucide-react'
 import { supabase } from '../../supabaseClient.js'
+import Modal from '../../components/Modal.jsx'
 import { fmtTime, manilaDate } from '../../lib/dates.js'
 import './Dashboard.css'
 
@@ -21,19 +23,12 @@ function sinceText(iso, now) {
 /* ------------------------------------------------------------------ */
 /* Panel that opens when a table is clicked                            */
 /* ------------------------------------------------------------------ */
-function TablePanel({ table, session, bookings, requestCount, now, onClose, onDone }) {
+function TablePanel({ table, session, bookings, now, onClose, onDone }) {
   const [name, setName] = useState('')
   const [party, setParty] = useState('2')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   // Runs one staff action. Errors stay inside the panel; success closes it.
   async function run(call, message) {
@@ -78,32 +73,14 @@ function TablePanel({ table, session, bookings, requestCount, now, onClose, onDo
   const overrideTo = table.status === 'available' ? 'reserved' : 'available'
 
   return (
-    <div className="backdrop" onClick={onClose}>
-      <div
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`Table ${table.table_number}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-head">
-          <h2>Table {table.table_number}</h2>
-          <button className="modal-close" aria-label="Close" onClick={onClose}>
-            ×
-          </button>
-        </div>
-        <span className="dim">
-          Seats {table.capacity} · {STATUS_LABEL[table.status]}
-          {requestCount > 0 ? ` · ${requestCount} open request${requestCount > 1 ? 's' : ''}` : ''}
-        </span>
-
+    <Modal title={`Table ${table.table_number}`} onClose={onClose}>
         {session && (
           <section className="panel-section">
             <h3>Seated now</h3>
             <p style={{ margin: '0 0 10px' }}>
               <strong>{session.guest_name}</strong>, party of {session.party_size}
               <span className="dim">
-                {session.source === 'walk_in' ? 'Walk-in' : 'Reservation'} · seated{' '}
+                {session.source === 'walk_in' ? 'Walk-in' : 'Reservation'}, seated{' '}
                 {sinceText(session.seated_at, now)} ago
               </span>
             </p>
@@ -131,7 +108,7 @@ function TablePanel({ table, session, bookings, requestCount, now, onClose, onDo
                   <div>
                     <strong>{b.customer_name}</strong> ({b.reservation_code})
                     <span className="dim">
-                      {b.guest_count} guests · {fmtTime(b.reservation_time)}
+                      {b.guest_count} guests at {fmtTime(b.reservation_time)}
                     </span>
                   </div>
                   {table.status !== 'dining' && (
@@ -163,8 +140,8 @@ function TablePanel({ table, session, bookings, requestCount, now, onClose, onDo
             <h3>Seat a walk-in</h3>
             {nextBooking && (
               <p className="hint">
-                This table is booked for {fmtTime(nextBooking.reservation_time)} today. Seating a
-                walk-in here may be refused until that booking is done.
+                Booked for {fmtTime(nextBooking.reservation_time)} today. Walk-ins may not get this
+                table before then.
               </p>
             )}
             <label className="field">
@@ -219,8 +196,7 @@ function TablePanel({ table, session, bookings, requestCount, now, onClose, onDo
             {error}
           </p>
         )}
-      </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -380,7 +356,7 @@ export default function Dashboard() {
 
           {noShows.length > 0 && (
             <div className="dash-notice" role="status">
-              <strong>Released after the grace period (no-show)</strong>
+              <strong>No-show reservations</strong>
               <ul>
                 {noShows.map((r) => (
                   <li key={r.reservation_id}>
@@ -414,12 +390,16 @@ export default function Dashboard() {
                 >
                   <span className="tile-top">
                     <strong>Table {t.table_number}</strong>
-                    <span className="tile-seats">{t.capacity} seats</span>
+                    <span className="tile-seats" aria-label={`${t.capacity} seats`}>
+                      <Users size={15} aria-hidden="true" />
+                      <span>{t.capacity}</span>
+                    </span>
                   </span>
                   <span className={`tile-status ${t.status}`}>{STATUS_LABEL[t.status]}</span>
                   {session && (
                     <span className="tile-line">
-                      {session.guest_name} · {session.party_size} · {sinceText(session.seated_at, now)}
+                      {session.guest_name}, party of {session.party_size}, seated{' '}
+                      {sinceText(session.seated_at, now)} ago
                     </span>
                   )}
                   {!session && booking && (
@@ -446,7 +426,6 @@ export default function Dashboard() {
           table={selected}
           session={sessionByTable[selected.table_id]}
           bookings={bookingsByTable[selected.table_id] || []}
-          requestCount={requestCountByTable[selected.table_id] || 0}
           now={now}
           onClose={closePanel}
           onDone={onDone}

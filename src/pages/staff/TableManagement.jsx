@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 import { supabase } from '../../supabaseClient.js'
+import Modal from '../../components/Modal.jsx'
+import { confirmDialog } from '../../components/dialogs.js'
 import './TableManagement.css'
 
 const BASE_KEY = 'chada_qr_base'
@@ -81,32 +83,11 @@ function QrModal({ table, baseUrl, onClose, onPrint }) {
     }
   }, [url])
 
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') onClose()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
 
   const img = result?.url === url ? result.img : null // null = still drawing
 
   return (
-    <div className="backdrop" onClick={onClose}>
-      <div
-        className="modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`QR code for Table ${table.table_number}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="modal-head">
-          <h2>Table {table.table_number}</h2>
-          <button className="modal-close" aria-label="Close" onClick={onClose}>
-            ×
-          </button>
-        </div>
-
+    <Modal title={`Table ${table.table_number}`} onClose={onClose}>
         <div className="tm-qr">
           {img === null && <p className="hint">Drawing the QR code…</p>}
           {img === '' && <p className="error">Could not draw the QR code.</p>}
@@ -123,8 +104,7 @@ function QrModal({ table, baseUrl, onClose, onPrint }) {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   )
 }
 
@@ -239,9 +219,11 @@ export default function TableManagement() {
   async function setActive(t, active) {
     if (
       !active &&
-      !window.confirm(
-        `Remove Table ${t.table_number}? It leaves the floor view and its QR code stops working. Past records are kept.`
-      )
+      !(await confirmDialog({
+        title: `Remove Table ${t.table_number}?`,
+        message: 'It leaves the floor view and its QR code stops working. Past records are kept.',
+        confirmLabel: 'Remove table',
+      }))
     ) {
       return
     }
