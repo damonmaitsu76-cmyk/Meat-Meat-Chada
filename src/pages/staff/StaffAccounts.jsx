@@ -236,12 +236,18 @@ export default function StaffAccounts() {
     )
   }
 
+  function openRole(user) {
+    setActionError('')
+    setInfo('')
+    setRoleFor(user)
+  }
+
   const list = users || []
 
   function userActions(user, me) {
     const busy = busyId === user.user_id
     return <div className="acc-actions">
-      {!me && <button className="btn ghost small" type="button" disabled={busy} onClick={() => setRoleFor(user)}>Change role</button>}
+      {!me && <button className="btn ghost small" type="button" disabled={busy} onClick={() => openRole(user)}>Change role</button>}
       <button className="btn ghost small" type="button" disabled={busy} onClick={() => setResetFor(user)}>Reset password</button>
       {!me && <button className={`btn ghost small ${user.status === 'active' ? 'acc-deactivate' : ''}`} type="button" disabled={busy} onClick={() => changeStatus(user)}>{user.status === 'active' ? 'Deactivate' : 'Reactivate'}</button>}
     </div>

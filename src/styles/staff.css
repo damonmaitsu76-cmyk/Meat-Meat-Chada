@@ -58,7 +58,6 @@
 .q-table .items { margin: 0; padding-left: var(--s5); }
 .q-table td[data-label='Action'] .btn { min-width: 44px; }
 .q-table td::before { content: none; }
-.tm-add { width: fit-content; max-width: 100%; }
 
 @media (max-width: 560px) {
   .staff-top { gap: var(--s2); }
