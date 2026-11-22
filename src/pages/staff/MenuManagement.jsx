@@ -183,11 +183,11 @@ export default function MenuManagement() {
       {items &&
         CATEGORIES.map((c) => {
           const list = all.filter((i) => i.category === c.key)
-          const on = list.filter((i) => i.is_available).length
+          const unavailable = list.filter((i) => !i.is_available).length
           return (
             <section className="mm-section" key={c.key}>
               <h2>
-                {c.label}<small> · {on} of {list.length} available</small>
+                {c.label}{unavailable > 0 && <small className="mm-unavailable">{unavailable} unavailable</small>}
               </h2>
 
               {list.length === 0 && <p className="empty-state">No dishes in this category.</p>}
