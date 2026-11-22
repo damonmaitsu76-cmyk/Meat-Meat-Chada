@@ -59,6 +59,8 @@ const pairs = [
   ['brand focus / white', 'brand', 'white', 3],
   ['control / card', 'control', 'card', 3],
   ['control / bg', 'control', 'bg', 3],
+  ['ok-line / charcoal', 'ok-line', 'charcoal', 3],
+  ['warn-line / charcoal', 'warn-line', 'charcoal', 3],
 ]
 
 let failures = 0

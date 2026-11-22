@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES, ROLE_LABEL, STAFF_ROLES } from '../../auth/roles.js'
 import Modal from '../../components/Modal.jsx'
+import { LiveStatusContext } from '../../components/liveStatus.js'
+import { LiveIndicator } from '../../components/ui.jsx'
 import useStaffCounts from './useStaffCounts.js'
 import '../../styles/staff.css'
 
@@ -30,6 +32,8 @@ export default function StaffLayout() {
   const location = useLocation()
   const counts = useStaffCounts()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [live, setLive] = useState(false)
+  const reportLive = useCallback((value) => setLive(value === true), [])
   const links = NAV.filter((item) => item.roles.includes(profile.role))
   const dailyLinks = links.filter((item) => item.daily)
   const adminLinks = links.filter((item) => !item.daily)
@@ -41,11 +45,13 @@ export default function StaffLayout() {
   }
 
   return (
-      <div className="staff-shell">
+    <LiveStatusContext.Provider value={reportLive}>
+    <div className="staff-shell">
         <header className="staff-top">
           <span className="brand">Samgyup Chada</span>
           <span className="staff-user">
-            {profile.username}<span className="role"> · {ROLE_LABEL[profile.role] || profile.role}</span>
+            <span className="staff-identity">{profile.username}<span className="role"> · {ROLE_LABEL[profile.role] || profile.role}</span></span>
+            <LiveIndicator live={live} />
           </span>
           <button className="btn-link" type="button" onClick={logout}>Log out</button>
         </header>
@@ -79,5 +85,6 @@ export default function StaffLayout() {
           </Modal>
         )}
       </div>
+    </LiveStatusContext.Provider>
   )
 }

@@ -1,4 +1,5 @@
 import { useId } from 'react'
+import { useReportLive } from './liveStatus.js'
 
 const STATUS = {
   sent: ['neutral', 'New'],
@@ -199,15 +200,23 @@ export function EmptyState({ children, action, className = '' }) {
 }
 
 export function PageToolbar({ title, live, action, className = '' }) {
+  useReportLive(live)
+  if (!action) return <h1 className="sr-only">{title}</h1>
+
   return (
     <div className={`page-toolbar ${className}`.trim()}>
       <h1 className="sr-only">{title}</h1>
-      {live !== undefined && <span className={`live ${live === true ? 'on' : ''}`}>
-        <span className="live-dot" aria-hidden="true" />
-        <span className="sr-only">Connection: </span>{live === true ? 'Live' : 'Reconnecting'}
-      </span>}
-      {action && <div className="page-toolbar-action">{action}</div>}
+      <div className="page-toolbar-action">{action}</div>
     </div>
+  )
+}
+
+export function LiveIndicator({ live }) {
+  return (
+    <span className={`staff-live ${live ? 'on' : 'off'}`} aria-live="polite">
+      <span className="live-dot" aria-hidden="true" />
+      {live ? <span className="sr-only">Live</span> : <span>Reconnecting</span>}
+    </span>
   )
 }
 

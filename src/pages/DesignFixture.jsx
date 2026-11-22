@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Button, Disclosure, EmptyState, Field, FilterTabs, Notice, PageToolbar, RecordCard, ResponsiveRecords, StatusChip, Stepper, Switch } from '../components/ui.jsx'
+import { Button, Disclosure, EmptyState, Field, FilterTabs, LiveIndicator, Notice, PageToolbar, RecordCard, ResponsiveRecords, StatusChip, Stepper, Switch } from '../components/ui.jsx'
 import './DesignFixture.css'
 
 const LONG_NAME = 'Alexandria Maria Dela Cruz-Santos, Junior'
@@ -19,6 +19,7 @@ export default function DesignFixture() {
   return (
     <main className="design-fixture">
       <PageToolbar title="Design fixture" live={false} />
+      <header className="fixture-staff-top"><span className="brand">Samgyup Chada</span><span className="staff-user"><span className="staff-identity">manager</span><LiveIndicator live={false} /></span></header>
       <h2 className="fixture-heading">Components and states</h2>
       <p className="hint">A local fixture for the restaurant interface. It uses sample records and does not load restaurant data.</p>
 
@@ -78,7 +79,6 @@ export default function DesignFixture() {
         <div className="fixture-state-grid">
           <p className="hint">Loading requests…</p>
           <Notice tone="warn" action={<Button variant="secondary" size="small">Try again</Button>}>The floor could not be loaded.</Notice>
-          <p className="live"><span className="live-dot" aria-hidden="true" />Reconnecting</p>
           <div className="fixture-no-access"><strong>Not allowed</strong><p>Your account does not have access to this page.</p></div>
           <EmptyState>No open requests. New ones appear here live.</EmptyState>
           <p className="fixture-state-empty">No tables yet. Add your first table from the toolbar.</p>
