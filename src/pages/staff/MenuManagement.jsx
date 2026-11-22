@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Disclosure, Field, Notice, PageToolbar, Switch } from '../../components/ui.jsx'
+import { Disclosure, Field, Notice, PageToolbar, Segmented, Switch } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES } from '../../auth/roles.js'
 import './MenuManagement.css'
@@ -169,12 +169,7 @@ export default function MenuManagement() {
           <Disclosure label="Add dish" className="toolbar-disclosure">
             <form className="mm-add" onSubmit={addDish}>
               <Field label="Dish name" type="text" maxLength={80} required value={newName} onChange={(event) => setNewName(event.target.value)} />
-              <label className="field">
-                <span>Category</span>
-                <select value={newCategory} onChange={(event) => setNewCategory(event.target.value)}>
-                  {CATEGORIES.map((category) => <option key={category.key} value={category.key}>{category.label}</option>)}
-                </select>
-              </label>
+              <div className="field"><span>Category</span><Segmented label="Category" items={CATEGORIES} value={newCategory} onChange={setNewCategory} /></div>
               <button className="btn secondary" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add dish'}</button>
             </form>
           </Disclosure>
@@ -211,9 +206,7 @@ export default function MenuManagement() {
                       {editing ? (
                         <div className="mm-edit">
                           <input className="mm-edit-input" type="text" maxLength={80} aria-label="Dish name" value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} />
-                          <select className="mm-edit-input" aria-label="Category" value={edit.category} onChange={(event) => setEdit({ ...edit, category: event.target.value })}>
-                            {CATEGORIES.map((category) => <option key={category.key} value={category.key}>{category.label}</option>)}
-                          </select>
+                          <Segmented label="Category" items={CATEGORIES} value={edit.category} onChange={(category) => setEdit({ ...edit, category })} />
                           <div className="mm-actions">
                             <button className="btn small" type="button" disabled={busy} onClick={saveEdit}>Save</button>
                             <button className="btn small secondary" type="button" disabled={busy} onClick={() => setEdit(null)}>Cancel</button>

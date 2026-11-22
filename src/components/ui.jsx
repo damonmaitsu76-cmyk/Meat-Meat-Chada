@@ -131,8 +131,9 @@ export function FilterTabs({ items, value, onChange, label = 'Filters' }) {
   )
 }
 
-export function Segmented({ items, value, onChange, label }) {
+export function Segmented({ items, value, onChange, label, disabled = false }) {
   function move(event) {
+    if (disabled) return
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
     event.preventDefault()
     const buttons = Array.from(event.currentTarget.querySelectorAll('[data-segmented-radio]'))
@@ -152,6 +153,7 @@ export function Segmented({ items, value, onChange, label }) {
           data-segmented-radio
           aria-checked={value === item.key}
           tabIndex={value === item.key ? 0 : -1}
+          disabled={disabled}
           className="segmented-option"
           onClick={() => onChange(item.key)}
         >

@@ -29,7 +29,7 @@ a.btn { text-decoration: none; }
 
 .field { display: grid; gap: var(--s2); margin: 0 0 var(--s4); color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; }
 .field input, .field select, .field textarea, .field-control,
-.search, .lookup input, .tm-edit-input, .mm-edit-input, .acc-select, .row-actions select {
+.search, .lookup input, .tm-edit-input, .mm-edit-input {
   width: 100%;
   min-height: 44px;
   padding: 0 var(--s3);
@@ -93,6 +93,7 @@ a.btn { text-decoration: none; }
 .segmented { display: flex; flex-wrap: wrap; gap: var(--s1); }
 .segmented-option { min-height: 44px; padding: 0 var(--s3); border: 1px solid transparent; border-radius: var(--r-chip); background: transparent; color: var(--text-2); font: inherit; font-weight: 600; }
 .segmented-option[aria-checked='true'] { background: var(--charcoal); color: var(--white); }
+.segmented-option:disabled { background: var(--ink-soft); color: var(--disabled-text); cursor: not-allowed; }
 
 .disclosure { margin: 0 0 var(--s4); }
 .disclosure > summary { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s4); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; list-style-position: inside; }

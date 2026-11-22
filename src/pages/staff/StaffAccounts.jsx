@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Disclosure, Field, Notice, PageToolbar, RecordCard, ResponsiveRecords } from '../../components/ui.jsx'
+import { Disclosure, Field, Notice, PageToolbar, RecordCard, ResponsiveRecords, Segmented } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ROLES, ROLE_LABEL } from '../../auth/roles.js'
 import './StaffAccounts.css'
@@ -201,9 +201,7 @@ export default function StaffAccounts() {
       return <div className="account-role"><span>{ROLE_LABEL[user.role]}</span>{!me && <button className="btn ghost small" type="button" onClick={() => setRoleEditId(user.user_id)}>Change role</button>}</div>
     }
     return <div className="account-role">
-      <select className="acc-select" aria-label={`Role of ${user.username}`} value={user.role} disabled={busyId === user.user_id} onChange={(event) => changeRole(user, event.target.value)}>
-        {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABEL[role]}</option>)}
-      </select>
+      <Segmented label={`Role of ${user.username}`} items={ROLES.map((role) => ({ key: role, label: ROLE_LABEL[role] }))} value={user.role} disabled={busyId === user.user_id} onChange={(role) => changeRole(user, role)} />
       <button className="btn ghost small" type="button" onClick={() => setRoleEditId(null)}>Cancel</button>
     </div>
   }
@@ -232,7 +230,7 @@ export default function StaffAccounts() {
         <form className="acc-add" onSubmit={createAccount}>
           <Field label="Username" hint="3–30 letters, numbers, dots, dashes or underscores" type="text" autoCapitalize="none" autoComplete="off" maxLength={30} value={newUsername} onChange={(event) => setNewUsername(event.target.value)} />
           <Field label="Password" hint="8–72 characters" type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
-          <label className="field"><span>Role</span><select value={newRole} onChange={(event) => setNewRole(event.target.value)}>{ROLES.map((role) => <option key={role} value={role}>{ROLE_LABEL[role]}</option>)}</select></label>
+          <div className="field"><span>Role</span><Segmented label="Role" items={ROLES.map((role) => ({ key: role, label: ROLE_LABEL[role] }))} value={newRole} onChange={setNewRole} /></div>
           <button className="btn" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create account'}</button>
         </form>
       </Disclosure>} />

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { promptDialog } from '../../components/dialogs.js'
+import Modal from '../../components/Modal.jsx'
 import { EmptyState, FilterTabs, Notice, PageToolbar, RecordCard, ResponsiveRecords, StatusChip } from '../../components/ui.jsx'
 import { dayLabel, fmtTime, manilaDate, shiftDate, startMs } from '../../lib/dates.js'
 import { displayName } from '../../lib/format.js'
@@ -32,7 +33,8 @@ export default function Reservations() {
   const [info, setInfo] = useState('')
   const [filter, setFilter] = useState('pending')
   const [search, setSearch] = useState('')
-  const [choice, setChoice] = useState({})
+  const [tablePicker, setTablePicker] = useState(null)
+  const [tableChoice, setTableChoice] = useState('')
   const [busyId, setBusyId] = useState(null)
   const [live, setLive] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -85,8 +87,7 @@ export default function Reservations() {
     load()
   }
 
-  function approve(reservation) {
-    const picked = choice[reservation.reservation_id]
+  function approve(reservation, picked = '') {
     act(reservation, () => supabase.rpc('approve_reservation', {
       p_reservation_id: reservation.reservation_id,
       p_table_id: picked ? Number(picked) : null,
@@ -123,16 +124,12 @@ export default function Reservations() {
 
   function actionsFor(reservation) {
     const busy = busyId === reservation.reservation_id
-    const fits = tables.filter((table) => table.capacity >= reservation.guest_count)
     if (reservation.status === 'pending') {
       return (
         <div className="reservation-actions">
-          <select aria-label={`Table for ${displayName(reservation.customer_name)}`} value={choice[reservation.reservation_id] ?? ''} disabled={busy} onChange={(event) => setChoice((current) => ({ ...current, [reservation.reservation_id]: event.target.value }))}>
-            <option value="">Auto table</option>
-            {fits.map((table) => <option key={table.table_id} value={table.table_id}>Table {table.table_number} · {table.capacity} seats</option>)}
-          </select>
           <button className="btn small" type="button" disabled={busy} onClick={() => approve(reservation)}>Approve</button>
           <button className="btn small secondary" type="button" disabled={busy} onClick={() => decline(reservation)}>Decline</button>
+          <button className="btn small ghost" type="button" disabled={busy} onClick={() => { setTableChoice(''); setTablePicker(reservation) }}>Choose table</button>
         </div>
       )
     }
@@ -186,6 +183,22 @@ export default function Reservations() {
     }
   })
 
+  const pickerTables = tablePicker ? tables.filter((table) => table.capacity >= tablePicker.guest_count) : []
+  const pickerOptions = tablePicker ? [
+    { value: '', label: 'Automatic' },
+    ...pickerTables.map((table) => ({ value: String(table.table_id), label: `Table ${table.table_number} · ${table.capacity} seats` })),
+  ] : []
+
+  function moveTableChoice(event) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const buttons = Array.from(event.currentTarget.querySelectorAll('[data-table-choice]'))
+    const current = buttons.indexOf(event.target)
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length
+    if (pickerOptions[next]) setTableChoice(pickerOptions[next].value)
+    buttons[next]?.focus()
+  }
+
   return (
     <>
       <PageToolbar title="Reservations" live={live} />
@@ -197,6 +210,27 @@ export default function Reservations() {
       {rows === null && !error && <p className="hint">Loading reservations…</p>}
       {rows && records.length === 0 && <EmptyState>{query ? 'No reservation matches your search. Check the ID, name, or phone and try again.' : filter === 'pending' ? 'No pending reservations. New requests appear here live.' : filter === 'approved' ? 'No approved reservations.' : 'No reservation history for the last 7 days.'}</EmptyState>}
       {records.length > 0 && <ResponsiveRecords className="reservation-records" headers={['ID', 'Guest', 'Party', 'When', 'Table', 'Status', 'Actions']} records={records} />}
+      {tablePicker && (
+        <Modal title={`Table for ${displayName(tablePicker.customer_name)}`} onClose={() => setTablePicker(null)}>
+          <div className="reservation-table-options" role="radiogroup" aria-label="Choose a table" onKeyDown={moveTableChoice}>
+            {pickerOptions.map((option) => (
+              <button
+                key={option.value || 'automatic'}
+                type="button"
+                role="radio"
+                data-table-choice
+                aria-checked={tableChoice === option.value}
+                tabIndex={tableChoice === option.value ? 0 : -1}
+                className={`reservation-table-option ${tableChoice === option.value ? 'selected' : ''}`}
+                onClick={() => setTableChoice(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <button className="btn full" type="button" disabled={busyId === tablePicker.reservation_id} onClick={() => { const reservation = tablePicker; setTablePicker(null); approve(reservation, tableChoice) }}>Approve</button>
+        </Modal>
+      )}
     </>
   )
 }
