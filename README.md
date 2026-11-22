@@ -19,7 +19,7 @@ Other scripts: `npm run lint`, `npm run build`, `npm run preview`.
 
 ## Set up the database
 
-In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 10:
+In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 11:
 
 1. `01_schema.sql` – tables, security rules, and functions
 2. `02_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
@@ -31,6 +31,7 @@ In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 0
 8. `08_seed.sql` – settings, sample tables and dishes, and the first login account (follow the steps inside the file; it needs the admin role from 06)
 9. `09_add_on_category.sql` – adds the `add-on` menu category (meats, sides, drinks, add-on)
 10. `10_samgyup_menu.sql` – a starter samgyupsal menu: more meats, sides, drinks, and add-ons (needs 09)
+11. `11_phone_validation.sql` – reservations only accept a Philippine mobile number (09XXXXXXXXX)
 
 ## Deploy the account function
 
@@ -56,7 +57,7 @@ supabase functions deploy manage-staff
 | `/reserve` | Customers | Reserve a table, check or cancel a reservation |
 | `/login` | Staff, manager | Sign in with a username (the app adds `@chada.app`) |
 | `/staff/dashboard` | All logged-in roles | Floor view, walk-ins, seating |
-| `/staff/requests` | All logged-in roles | Refill request queue |
+| `/staff/requests` | All logged-in roles | Request queue |
 | `/staff/reservations` | All logged-in roles | Approve, decline, confirm arrival |
 | `/staff/menu` | All logged-in roles | Dish availability; managers also add, edit, delete |
 | `/staff/tables` | Manager | Tables and printable QR codes |

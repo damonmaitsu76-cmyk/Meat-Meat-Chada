@@ -32,9 +32,7 @@
   background: var(--card);
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
-  scrollbar-width: none;
 }
-.staff-nav::-webkit-scrollbar { display: none; }
 .staff-nav a { padding: var(--s3) var(--s3); color: var(--text-2); text-decoration: none; font-weight: 600; white-space: nowrap; border-bottom: 1px solid transparent; }
 .staff-nav a:hover { color: var(--text); }
 .staff-nav a.active { color: var(--text); border-bottom-color: var(--brand); }

@@ -40,7 +40,7 @@ export default function AttentionList({ requests, pendingReservations, tablesByI
           <Row
             to="/staff/requests"
             count={requests.length}
-            label={`Active refill ${requests.length === 1 ? 'request' : 'requests'}`}
+            label={`Active ${requests.length === 1 ? 'request' : 'requests'}`}
             detail={glue(requestSummary(requests, tablesById, now))}
           />
         )}

@@ -8,7 +8,7 @@ import './DesignFixture.css'
 const LONG_NAME = 'Alexandria Maria Dela Cruz-Santos, Junior'
 
 // Every floor state in one room: open, booked later, held, reserved, dining, a long name,
-// several refills, and a table with more chairs than the drawing shows.
+// several requests, and a table with more chairs than the drawing shows.
 function floorFixture(now) {
   const minutesAgo = (minutes) => new Date(now - minutes * 60000).toISOString()
   const today = manilaDate(new Date(now))
@@ -40,7 +40,7 @@ function floorFixture(now) {
   const tablesById = Object.fromEntries(tables.map((t) => [t.table_id, t]))
   return { today, tables, tablesById, sessionByTable, bookingsByTable, requests, requestCountByTable, pendingReservations }
 }
-const REQUEST_ITEMS = Array.from({ length: 12 }, (_, index) => ({ name: `Grill refill item ${index + 1}`, quantity: index % 3 + 1 }))
+const REQUEST_ITEMS = Array.from({ length: 12 }, (_, index) => ({ name: `Grill item ${index + 1}`, quantity: index % 3 + 1 }))
 const MANY_RECORDS = Array.from({ length: 120 }, (_, index) => ({ key: `fixture-${index + 1}`, name: `Guest ${String(index + 1).padStart(3, '0')}`, party: index % 8 + 1 }))
 
 export default function DesignFixture() {

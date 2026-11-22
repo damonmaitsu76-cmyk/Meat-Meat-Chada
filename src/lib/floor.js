@@ -85,7 +85,7 @@ export function tableList(numbers, limit = 3) {
   return `${label} ${shown[0]}`
 }
 
-// The line under "Active refill requests": which tables, and how long the oldest has waited.
+// The line under "Active requests": which tables, and how long the oldest has waited.
 export function requestSummary(requests, tablesById, now) {
   const numbers = new Set()
   let oldest = Infinity

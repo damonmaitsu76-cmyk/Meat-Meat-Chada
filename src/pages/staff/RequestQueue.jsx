@@ -169,10 +169,10 @@ export default function RequestQueue() {
       ))}
 
       {served.length > 0 && (
-        <details className="served-group">
-          <summary>Served in the last 12 hours ({served.length})</summary>
+        <section className="served-group" aria-labelledby="queue-served">
+          <h2 className="queue-group-heading" id="queue-served">Served in the last {SERVED_HOURS} hours <span>{served.length}</span></h2>
           <div className="served-list">{served.map((request) => <ServedRow key={request.request_id} request={request} items={request.request_items || []} />)}</div>
-        </details>
+        </section>
       )}
     </>
   )

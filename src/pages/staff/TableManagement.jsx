@@ -356,7 +356,7 @@ export default function TableManagement() {
               <div className="print-brand">Samgyup Chada</div>
               <div className="print-table">Table {c.number}</div>
               <img src={c.img} alt={`QR code for Table ${c.number}`} />
-              <div className="print-hint">Scan to see the menu and ask for refills</div>
+              <div className="print-hint">Scan to see the menu and send a request</div>
             </div>
           ))}
         </div>

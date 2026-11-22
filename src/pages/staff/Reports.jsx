@@ -143,8 +143,8 @@ export default function Reports() {
 
   function exportCsv() {
     const sum = (keyName) => daily.reduce((total, day) => total + day[keyName], 0)
-    const rows = daily.map((day) => ({ Date: day.day, 'Reservation requests': day.reservations, Arrived: day.arrived, 'No-shows': day.no_shows, 'Guests served': day.guests, 'Refill requests': day.requests }))
-    rows.push({ Date: 'Total', 'Reservation requests': sum('reservations'), Arrived: sum('arrived'), 'No-shows': sum('no_shows'), 'Guests served': sum('guests'), 'Refill requests': sum('requests') })
+    const rows = daily.map((day) => ({ Date: day.day, 'Reservation requests': day.reservations, Arrived: day.arrived, 'No-shows': day.no_shows, 'Guests served': day.guests, 'Table requests': day.requests }))
+    rows.push({ Date: 'Total', 'Reservation requests': sum('reservations'), Arrived: sum('arrived'), 'No-shows': sum('no_shows'), 'Guests served': sum('guests'), 'Table requests': sum('requests') })
     const summary = [['Booking-to-arrival rate', arrivalRate], ['Average time from sent to served (minutes)', requests.avg_serve_minutes ?? '']]
     downloadText(`chada-report_${from}_to_${to}.csv`, `${Papa.unparse(rows)}\r\n\r\n${Papa.unparse(summary)}`)
   }
@@ -187,7 +187,7 @@ export default function Reports() {
             </div>
             <div className="rep-summary-tier secondary">
               <article className="rep-figure"><strong className="rep-number">{arrivalRate}</strong><span>Arrival rate</span><small>{reservations.arrived} of {resolved} arrived</small></article>
-              <article className="rep-figure"><strong className="rep-number">{requests.total}</strong><span>Refill requests</span></article>
+              <article className="rep-figure"><strong className="rep-number">{requests.total}</strong><span>Table requests</span></article>
               <article className="rep-figure"><strong className="rep-number">{serveTime}</strong><span>Average time to serve</span></article>
             </div>
           </div>

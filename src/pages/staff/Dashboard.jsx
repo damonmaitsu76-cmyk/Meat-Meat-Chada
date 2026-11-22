@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { Notice, PageToolbar } from '../../components/ui.jsx'
@@ -215,6 +216,7 @@ export default function Dashboard() {
   const [live, setLive] = useState(false)
   const [now, setNow] = useState(() => Date.now())
   const reloadTimer = useRef(null)
+  const navigate = useNavigate()
 
   const load = useCallback(async () => {
     const noticeSince = new Date(Date.now() - NOTICE_HOURS * 3600 * 1000).toISOString()
@@ -302,6 +304,12 @@ export default function Dashboard() {
   const requestCountByTable = {}
   for (const r of requests) requestCountByTable[r.table_id] = (requestCountByTable[r.table_id] || 0) + 1
 
+  // A table with open requests goes straight to the queue; any other table opens its panel.
+  function selectTable(tableId) {
+    if (requestCountByTable[tableId] > 0) navigate('/staff/requests')
+    else setSelectedId(tableId)
+  }
+
   // Approved bookings for today that have not arrived yet, earliest first, grouped by table.
   const bookingsByTable = {}
   for (const r of reservations) {
@@ -361,7 +369,7 @@ export default function Dashboard() {
             bookingsByTable={bookingsByTable}
             requestCountByTable={requestCountByTable}
             now={now}
-            onSelect={setSelectedId}
+            onSelect={selectTable}
           />
         </>
       )}

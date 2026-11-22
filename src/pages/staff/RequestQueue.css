@@ -1,4 +1,4 @@
-/* Refill requests are tickets at every screen width. */
+/* Requests are tickets at every screen width. */
 .queue-group { margin-top: var(--s4); }
 .queue-group-heading { margin: 0 0 var(--s2); color: var(--text-2); font-size: var(--fs-sm); font-weight: 600; }
 .queue-group-heading span { margin-left: var(--s1); color: var(--text-3); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
@@ -25,8 +25,7 @@
 .served-items-preview { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--text-3); font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
 .served-items[open] .served-items-preview { display: none; }
 .served-items .ticket-items { margin: var(--s1) 0 var(--s2); }
-.served-group { margin-top: var(--s6); border-top: 1px solid var(--line); }
-.served-group > summary { display: flex; align-items: center; min-height: 44px; padding: 0 var(--s2); color: var(--text-2); font-weight: 600; cursor: pointer; }
+.served-group { margin-top: var(--s6); padding-top: var(--s4); border-top: 1px solid var(--line); }
 .served-list { display: grid; }
 .request-ticket .record-actions { margin-top: auto; padding-top: var(--s4); }
 .request-ticket .record-actions .btn { min-height: 48px; }

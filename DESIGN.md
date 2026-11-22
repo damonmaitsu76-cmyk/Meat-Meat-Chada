@@ -1,4 +1,4 @@
-Product: QR refill requests and reservations for a Korean BBQ restaurant, used by guests on phones mid-meal and by staff on phones or tablets mid-service.
+Product: QR table requests and reservations for a Korean BBQ restaurant, used by guests on phones mid-meal and by staff on phones or tablets mid-service.
 Character: fast, sturdy, warm.
 World: charcoal grill, kitchen order tickets, enamel, a paper menu. Near-black charcoal is structure, chili red is the only accent, warm paper is the ground.
 Moments: the guest's request ticket, which shows where their order is; the staff floor map, where table state reads in one glance.
@@ -33,7 +33,7 @@ The staff floor is drawn like a floor plan, and service fills it in.
 - An open table is a dashed outline with its chairs drawn as empty outlines and its seat count in the corner. It stays quiet so tables in use stand out.
 - A table in use fills in. Dining is solid charcoal with a filled chair for each seated guest, in facing pairs. Reserved or held is warning-soft with a solid edge. Every tile is the same size in every state, so the room does not shift when guests sit.
 - State is never color alone: dashed versus solid edge, filled versus empty chairs, and a visible word (Dining, Booked, Held, Reserved) with a mono stamp for the time seated or the booking time.
-- Chili red appears twice: the refill flag on a tile, and the count in Needs attention. Nothing else on the floor is red.
+- Chili red appears twice: the request flag on a tile, and the count in Needs attention. Nothing else on the floor is red.
 - Needs attention is one grouped list of links. Each row says what, where and how long (tables, oldest wait, next reservation). With nothing to do, the section is absent.
 - The state block slides in once when a table changes state. It never loops, and reduced motion turns it off.
 - Phones show two tables per row. Wider screens fill the row with tiles of at least `--size-tile-min`.

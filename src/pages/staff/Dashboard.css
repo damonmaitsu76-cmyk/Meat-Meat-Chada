@@ -78,7 +78,7 @@
 .tile-number { font-family: var(--font-display); font-size: var(--fs-figure-lg); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .tile.dining .tile-label { color: var(--neutral-line); }
 
-/* Chili red is the only accent, so it marks the one thing that needs a person: open refills. */
+/* Chili red is the only accent, so it marks the one thing that needs a person: open requests. */
 .tile-flag { padding: var(--s1) var(--s2); border-radius: var(--r-chip); background: var(--brand); color: var(--white); font-size: var(--fs-meta); font-weight: 600; line-height: 1.2; white-space: nowrap; animation: tile-in var(--t-enter); }
 
 /* The order-ticket motif: a dashed tear line above the state, a mono stamp on the right.

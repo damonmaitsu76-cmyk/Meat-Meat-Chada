@@ -3,6 +3,7 @@ import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
 import { Field, Segmented, StatusChip, Stepper } from '../../components/ui.jsx'
 import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
+import { normalizePhone } from '../../lib/phone.js'
 import './Reserve.css'
 
 const STORAGE_KEY = 'chada_reservation_code'
@@ -87,8 +88,10 @@ function ReservationForm({ onCreated }) {
   async function onSubmit(event) {
     event.preventDefault()
     const nextErrors = {}
+    const phone = normalizePhone(contact)
     if (!name.trim()) nextErrors.name = 'Enter your name.'
     if (!contact.trim()) nextErrors.contact = 'Enter a contact number.'
+    else if (!phone) nextErrors.contact = 'Enter a valid Philippine mobile number, like 0917 123 4567.'
     if (!Number.isInteger(guests) || guests < 1 || guests > 50) nextErrors.guests = 'Choose between 1 and 50 guests.'
     if (!date || date < today || date > shiftDate(today, MAX_DAYS_AHEAD)) nextErrors.date = 'Choose a date within the next 60 days.'
     if (!chosenTime) nextErrors.time = 'Choose an open time.'
@@ -99,7 +102,7 @@ function ReservationForm({ onCreated }) {
     setSubmitting(true)
     const { data, error: submitError } = await supabase.rpc('submit_reservation', {
       p_name: name.trim(),
-      p_contact: contact.trim(),
+      p_contact: phone,
       p_guests: guests,
       p_date: date,
       p_time: chosenTime,
@@ -133,11 +136,13 @@ function ReservationForm({ onCreated }) {
         label="Contact number"
         type="tel"
         required
-        maxLength={40}
+        maxLength={20}
         autoComplete="tel"
         inputMode="tel"
+        placeholder="0917 123 4567"
+        hint={fieldErrors.contact ? undefined : 'Philippine mobile number only.'}
         value={contact}
-        onChange={(event) => updateField('contact', setContact, event.target.value)}
+        onChange={(event) => updateField('contact', setContact, event.target.value.replace(/[^\d+\s().-]/g, ''))}
         error={fieldErrors.contact}
       />
 

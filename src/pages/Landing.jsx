@@ -6,7 +6,7 @@ import './Landing.css'
 const FACTS = [
   { label: 'The deal', text: 'Unlimited Korean grill' },
   { label: 'Find us', text: 'Tagum City' },
-  { label: 'At your table', text: 'Scan the QR for the menu and refills' },
+  { label: 'At your table', text: 'Scan the QR for the menu and to send requests' },
 ]
 
 export default function Landing() {

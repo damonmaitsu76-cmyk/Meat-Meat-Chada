@@ -29,7 +29,7 @@ export default function FloorTile({ table, session, booking, requestCount, now, 
     name,
     party > 0 ? plural(party, 'guest', 'guests') : '',
     seated !== null ? `seated ${agoText(seated)}` : time,
-    requestCount > 0 ? `${plural(requestCount, 'open refill request', 'open refill requests')}` : '',
+    requestCount > 0 ? `${plural(requestCount, 'open request', 'open requests')}` : '',
   ]
     .filter(Boolean)
     .join(', ')
@@ -44,7 +44,7 @@ export default function FloorTile({ table, session, booking, requestCount, now, 
           <span className="tile-label">Table</span>
           <strong className="tile-number">{table.table_number}</strong>
         </span>
-        {requestCount > 0 && <span className="tile-flag">{plural(requestCount, 'refill', 'refills')}</span>}
+        {requestCount > 0 && <span className="tile-flag">{plural(requestCount, 'request', 'requests')}</span>}
       </span>
 
       {state ? (
