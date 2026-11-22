@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Papa from 'papaparse'
 import { supabase } from '../../supabaseClient.js'
-import { Notice, PageToolbar } from '../../components/ui.jsx'
+import { FileDrop, Notice, PageToolbar } from '../../components/ui.jsx'
 import { downloadText } from '../../lib/download.js'
 import { IMPORT_TYPES, MAX_ROWS, existingKey, planImport } from '../../lib/importRules.js'
 import './ImportData.css'
@@ -53,6 +53,7 @@ export default function ImportData() {
     setError('')
     setOutcome(null)
     try {
+      if (!file.name.toLowerCase().endsWith('.csv')) throw new Error('Choose a .csv file.')
       if (file.size > MAX_BYTES) throw new Error('The file is larger than 1 MB. Check that it is the right file.')
 
       const parsed = await parseCsv(file)
@@ -163,19 +164,15 @@ export default function ImportData() {
           </button>
         </div>
 
-        <label className="field">
+        <div className="field">
           <span>CSV file</span>
-          <input
-            key={fileKey}
-            type="file"
-            accept=".csv,text/csv"
-            onChange={(e) => {
-              setFile(e.target.files?.[0] || null)
-              setOutcome(null)
-              setError('')
-            }}
+          <FileDrop
+            file={file}
+            inputKey={fileKey}
+            onFile={(next) => { setFile(next); setOutcome(null) }}
+            onError={setError}
           />
-        </label>
+        </div>
 
         <button className="btn" type="button" disabled={!file || busy} onClick={runImport}>
           {busy ? 'Importing…' : `Import ${type.label.toLowerCase()}`}

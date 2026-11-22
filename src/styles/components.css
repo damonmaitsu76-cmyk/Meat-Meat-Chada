@@ -44,6 +44,13 @@ a.btn { text-decoration: none; }
 .field-hint { color: var(--text-3); font-size: var(--fs-meta); font-weight: 400; }
 .field-error { color: var(--danger); font-size: var(--fs-meta); font-weight: 500; }
 .field input[aria-invalid='true'], .field select[aria-invalid='true'], .field textarea[aria-invalid='true'] { border-color: var(--danger); }
+.file-drop { width: 100%; min-width: 0; padding: var(--s5); border: 1px dashed var(--control); border-radius: var(--r-card); background: var(--card); color: var(--text); }
+.file-drop.dragging { border-color: var(--charcoal); background: var(--ink-soft); }
+.file-drop-idle, .file-drop-selected { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.file-drop-hint { color: var(--text-2); font-weight: 500; }
+.file-drop-meta { display: grid; min-width: 0; gap: var(--s1); }
+.file-drop-meta strong { overflow-wrap: anywhere; color: var(--text); }
+.file-drop-meta small { color: var(--text-3); font-size: var(--fs-meta); font-weight: 400; }
 
 .status-chip, .tag {
   display: inline-flex;
@@ -117,6 +124,8 @@ a.btn { text-decoration: none; }
 
 @media (pointer: coarse) {
   .btn.small { min-height: 44px; }
+  .file-drop-idle { justify-content: center; }
+  .file-drop-hint { display: none; }
 }
 
 @media (max-width: 899px) {

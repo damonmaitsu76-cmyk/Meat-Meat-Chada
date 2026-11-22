@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useRef, useState } from 'react'
 import { useReportLive } from './liveStatus.js'
 
 const STATUS = {
@@ -194,6 +194,55 @@ export function Switch({ checked, label, onChange, disabled = false }) {
       disabled={disabled}
       onClick={onChange}
     />
+  )
+}
+
+export function FileDrop({ file, onFile, onError, inputKey }) {
+  const inputId = `file-drop-${useId().replace(/:/g, '')}`
+  const inputRef = useRef(null)
+  const [dragging, setDragging] = useState(false)
+
+  function accept(candidate) {
+    if (!candidate) return
+    if (!candidate.name.toLowerCase().endsWith('.csv')) {
+      onFile(null)
+      onError('Choose a .csv file.')
+      if (inputRef.current) inputRef.current.value = ''
+      return
+    }
+    onError('')
+    onFile(candidate)
+  }
+
+  return (
+    <div
+      className={`file-drop ${dragging ? 'dragging' : ''}`}
+      onDragOver={(event) => { event.preventDefault(); setDragging(true) }}
+      onDragLeave={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setDragging(false) }}
+      onDrop={(event) => { event.preventDefault(); setDragging(false); accept(event.dataTransfer.files?.[0]) }}
+    >
+      <input
+        key={inputKey}
+        ref={inputRef}
+        id={inputId}
+        className="sr-only"
+        type="file"
+        accept=".csv,text/csv"
+        onChange={(event) => accept(event.target.files?.[0])}
+      />
+      <label className="sr-only" htmlFor={inputId}>CSV file</label>
+      {file ? (
+        <div className="file-drop-selected">
+          <span className="file-drop-meta"><strong>{file.name}</strong><small>{(file.size / 1024).toFixed(1)} KB</small></span>
+          <Button variant="ghost" size="small" type="button" onClick={() => { onFile(null); onError(''); if (inputRef.current) inputRef.current.value = '' }}>Remove</Button>
+        </div>
+      ) : (
+        <div className="file-drop-idle">
+          <span className="file-drop-hint">Drop a CSV file here</span>
+          <Button variant="secondary" type="button" onClick={() => inputRef.current?.click()}>Choose file</Button>
+        </div>
+      )}
+    </div>
   )
 }
 
