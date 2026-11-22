@@ -9,6 +9,7 @@
 .reservation-late { background: var(--warn-soft); border-color: var(--warn-line); }
 .decline-line { margin: 0; color: var(--text-2); overflow-wrap: anywhere; }
 .reservation-records .q-table { min-width: 960px; }
+.reservation-records.no-actions .q-table { min-width: 760px; }
 .reservation-records .q-table td { vertical-align: middle; }
 .reservation-records .reservation-actions { flex-wrap: nowrap; }
 @media (max-width: 899px) {

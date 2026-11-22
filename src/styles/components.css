@@ -44,7 +44,7 @@ a.btn { text-decoration: none; }
 .field-hint { color: var(--text-3); font-size: var(--fs-meta); font-weight: 400; }
 .field-error { color: var(--danger); font-size: var(--fs-meta); font-weight: 500; }
 .field input[aria-invalid='true'], .field select[aria-invalid='true'], .field textarea[aria-invalid='true'] { border-color: var(--danger); }
-.file-drop { width: 100%; min-width: 0; padding: var(--s5); border: 1px dashed var(--control); border-radius: var(--r-card); background: var(--card); color: var(--text); }
+.file-drop { position: relative; width: 100%; min-width: 0; padding: var(--s5); border: 1px dashed var(--control); border-radius: var(--r-card); background: var(--card); color: var(--text); }
 .file-drop.dragging { border-color: var(--charcoal); background: var(--ink-soft); }
 .file-drop-idle, .file-drop-selected { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
 .file-drop-hint { color: var(--text-2); font-weight: 500; }
@@ -126,7 +126,8 @@ a.btn { text-decoration: none; }
 
 .page-toolbar { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: var(--s4); margin-bottom: var(--s4); }
 .page-toolbar-action { display: flex; align-items: center; gap: var(--s2); }
-.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* The input selector outranks `.field input`, which would otherwise stretch a hidden input to full width. */
+.sr-only, .field input.sr-only { position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
 
 @media (pointer: coarse) {
   .btn.small { min-height: 44px; }

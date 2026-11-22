@@ -15,7 +15,8 @@
 .account-records .q-table td:last-child { text-align: right; }
 
 @media (max-width: 899px) {
-  .record-actions .acc-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
-  .record-actions .acc-actions .btn { min-height: 44px; }
-  .record-actions .acc-actions .btn { padding-inline: var(--s2); }
+  /* Two buttons share a row; a lone button fills it; the status change sits on its own row. */
+  .record-actions .acc-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: var(--s2); width: 100%; }
+  .record-actions .acc-actions .btn { width: 100%; min-height: 44px; padding-inline: var(--s2); }
+  .record-actions .acc-actions .acc-status { grid-column: 1 / -1; }
 }

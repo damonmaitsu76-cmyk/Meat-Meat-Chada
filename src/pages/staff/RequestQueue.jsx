@@ -13,6 +13,7 @@ const NEXT = {
 const LATE_MINUTES = 5
 const SAFETY_POLL_MS = 30000
 const SERVED_HOURS = 12
+const TICKET_ITEM_LIMIT = 8 // lines shown on a ticket before "Show more"
 let channelSeq = 0
 
 function formatTime(iso) {
@@ -26,17 +27,41 @@ function servedText(request) {
   return `Served in ${formatDuration(minutes)}`
 }
 
+// An order can hold a large part of the menu, so lists stay dense and long ones fold.
+function ItemList({ items, limit = Infinity }) {
+  const [expanded, setExpanded] = useState(false)
+  const folded = !expanded && items.length > limit
+  const shown = folded ? items.slice(0, limit) : items
+  const hidden = items.length - shown.length
+  return (
+    <>
+      <ul className="ticket-items">
+        {shown.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
+      </ul>
+      {items.length > limit && (
+        <button className="btn ghost small ticket-items-toggle" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
+          {expanded ? 'Show fewer items' : `Show ${hidden} more ${hidden === 1 ? 'item' : 'items'}`}
+        </button>
+      )}
+    </>
+  )
+}
+
 function ServedRow({ request, items }) {
   const table = request.restaurant_tables?.table_number ?? '—'
+  const preview = items.map((item) => `${item.quantity} × ${item.item_name}`).join(', ')
   return (
     <div className="served-request-row">
-      <span>Table {table} · <span className="ticket">{request.request_number}</span> · {formatTime(request.created_at)} · {servedText(request)}</span>
-      <details className="served-items">
-        <summary>Items</summary>
-        <ul className="ticket-items">
-          {items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
-        </ul>
-      </details>
+      <p className="served-request-head"><strong>Table {table}</strong> · <span className="ticket">{request.request_number}</span> · {formatTime(request.created_at)} · {servedText(request)}</p>
+      {items.length > 0 && (
+        <details className="served-items">
+          <summary>
+            <span className="served-items-count">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
+            <span className="served-items-preview">{preview}</span>
+          </summary>
+          <ItemList items={items} />
+        </details>
+      )}
     </div>
   )
 }
@@ -134,9 +159,7 @@ export default function RequestQueue() {
                   ) : undefined}
                 >
                   {late && <p className="request-waiting">Waiting {formatDuration(waited)}</p>}
-                  <ul className="ticket-items">
-                    {items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
-                  </ul>
+                  <ItemList items={items} limit={TICKET_ITEM_LIMIT} />
                   {request.note && <p className="ticket-note">{request.note}</p>}
                 </RecordCard>
               )

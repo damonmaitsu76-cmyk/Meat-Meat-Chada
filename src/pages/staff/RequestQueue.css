@@ -7,14 +7,24 @@
 .request-ticket .record-title { font-family: var(--font-display); font-size: var(--fs-title); font-weight: 600; }
 .request-ticket .record-subtitle { display: flex; flex-wrap: wrap; gap: var(--s1); color: var(--text-3); font-size: var(--fs-meta); }
 .request-ticket.late { background: var(--warn-soft); border-color: var(--warn-line); }
-.request-waiting { margin: var(--s3) 0 0; color: var(--warn); font-weight: 600; }
-.ticket-items { display: grid; gap: var(--s2); margin: 0; padding: 0; list-style: none; }
-.ticket-items li { display: flex; gap: var(--s1); align-items: baseline; overflow-wrap: anywhere; }
-.ticket-items li > span { min-width: 24px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.request-waiting { margin: var(--s3) 0 var(--s2); color: var(--warn); font-weight: 600; }
+/* Items flow into as many columns as fit, so a long order stays short. */
+.ticket-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: var(--s1) var(--s3); margin: 0; padding: 0; list-style: none; }
+.ticket-items li { display: flex; gap: var(--s1); align-items: baseline; min-width: 0; overflow-wrap: anywhere; }
+.ticket-items li > span { min-width: 20px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.ticket-items-toggle { margin-top: var(--s2); margin-left: calc(var(--s3) * -1); }
 .ticket-note { margin: var(--s3) 0 0; color: var(--text-2); overflow-wrap: anywhere; }
-.served-request-row { display: flex; grid-column: 1 / -1; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2) var(--s3); min-width: 0; padding: var(--s2) 0; border-bottom: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); }
-.served-items summary { display: flex; align-items: center; min-height: 44px; padding: 0 var(--s2); color: var(--text); font-weight: 600; cursor: pointer; }
-.served-items .ticket-items { margin: var(--s2) 0; }
+.served-request-row { display: grid; gap: var(--s1); min-width: 0; padding: var(--s3) var(--s2) var(--s2); border-bottom: 1px solid var(--line); color: var(--text-2); font-size: var(--fs-sm); }
+.served-request-head { margin: 0; overflow-wrap: anywhere; }
+.served-request-head strong { color: var(--text); }
+.served-items { min-width: 0; }
+.served-items summary { display: flex; align-items: center; gap: var(--s2); min-height: 44px; color: var(--text); font-weight: 600; cursor: pointer; }
+.served-items summary::before { content: ''; flex: 0 0 auto; width: 6px; height: 6px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); }
+.served-items[open] > summary::before { transform: rotate(45deg); }
+.served-items-count { flex: 0 0 auto; }
+.served-items-preview { flex: 1 1 auto; min-width: 0; overflow: hidden; color: var(--text-3); font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.served-items[open] .served-items-preview { display: none; }
+.served-items .ticket-items { margin: var(--s1) 0 var(--s2); }
 .served-group { margin-top: var(--s6); border-top: 1px solid var(--line); }
 .served-group > summary { display: flex; align-items: center; min-height: 44px; padding: 0 var(--s2); color: var(--text-2); font-weight: 600; cursor: pointer; }
 .served-list { display: grid; }

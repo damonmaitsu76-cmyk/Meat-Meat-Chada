@@ -264,6 +264,7 @@ export function FileDrop({ file, onFile, onError, inputKey }) {
         id={inputId}
         className="sr-only"
         type="file"
+        tabIndex={-1}
         accept=".csv,text/csv"
         onChange={(event) => accept(event.target.files?.[0])}
       />

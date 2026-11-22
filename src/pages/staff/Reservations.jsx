@@ -146,6 +146,10 @@ export default function Reservations() {
     return null
   }
 
+  // Only pending and approved bookings have actions. History has none, so its column is left out.
+  const hasActions = visible.some((reservation) => OPEN_STATUSES.includes(reservation.status))
+  const headers = ['ID', 'Guest', 'Party', 'When', 'Table', 'Status', ...(hasActions ? ['Actions'] : [])]
+
   const records = visible.map((reservation) => {
     const passed = startMs(reservation.reservation_date, reservation.reservation_time) < now
     const late = reservation.status === 'pending' && passed
@@ -178,7 +182,7 @@ export default function Reservations() {
         whenCell,
         tableNo ? `Table ${tableNo}` : '—',
         status,
-        actionsFor(reservation),
+        ...(hasActions ? [actionsFor(reservation) ?? <><span aria-hidden="true">—</span><span className="sr-only">No actions</span></>] : []),
       ],
     }
   })
@@ -201,7 +205,7 @@ export default function Reservations() {
       {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
       {rows === null && !error && <p className="hint">Loading reservations…</p>}
       {rows && query && records.length === 0 && <EmptyState>No reservation matches your search. Check the ID, name, or phone and try again.</EmptyState>}
-      {records.length > 0 && <ResponsiveRecords className="reservation-records" headers={['ID', 'Guest', 'Party', 'When', 'Table', 'Status', 'Actions']} records={records} />}
+      {records.length > 0 && <ResponsiveRecords className={`reservation-records ${hasActions ? '' : 'no-actions'}`.trim()} headers={headers} records={records} />}
       {tablePicker && (
         <Modal title={`Table for ${displayName(tablePicker.customer_name)}`} onClose={() => setTablePicker(null)}>
           <RadioCards label="Choose a table" items={pickerOptions} value={tableChoice} onChange={setTableChoice} />

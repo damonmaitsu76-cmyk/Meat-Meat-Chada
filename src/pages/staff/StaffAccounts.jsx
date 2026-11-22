@@ -244,12 +244,25 @@ export default function StaffAccounts() {
 
   const list = users || []
 
-  function userActions(user, me) {
+  // Phone cards use bordered buttons so they read as buttons; the wide table keeps quiet ghost buttons.
+  function userActions(user, me, layout) {
     const busy = busyId === user.user_id
+    const card = layout === 'card'
+    const deactivating = user.status === 'active'
+    const quiet = card ? 'secondary' : 'ghost'
     return <div className="acc-actions">
-      {!me && <button className="btn ghost small" type="button" disabled={busy} onClick={() => openRole(user)}>Change role</button>}
-      <button className="btn ghost small" type="button" disabled={busy} onClick={() => setResetFor(user)}>Reset password</button>
-      {!me && <button className={`btn ghost small ${user.status === 'active' ? 'acc-deactivate' : ''}`} type="button" disabled={busy} onClick={() => changeStatus(user)}>{user.status === 'active' ? 'Deactivate' : 'Reactivate'}</button>}
+      {!me && <button className={`btn ${quiet} small`} type="button" disabled={busy} onClick={() => openRole(user)}>Change role</button>}
+      <button className={`btn ${quiet} small`} type="button" disabled={busy} onClick={() => setResetFor(user)}>Reset password</button>
+      {!me && (
+        <button
+          className={`btn ${card ? (deactivating ? 'danger' : 'secondary') : 'ghost'} small acc-status ${!card && deactivating ? 'acc-deactivate' : ''}`.trim()}
+          type="button"
+          disabled={busy}
+          onClick={() => changeStatus(user)}
+        >
+          {deactivating ? 'Deactivate' : 'Reactivate'}
+        </button>
+      )}
     </div>
   }
 
@@ -258,9 +271,15 @@ export default function StaffAccounts() {
     const inactive = user.status !== 'active'
     const username = <span className="acc-username"><strong>{user.username}</strong>{me && <span className="acc-you">· You</span>}{inactive && <StatusChip status="muted">Deactivated</StatusChip>}</span>
     const role = <span className="acc-role">{ROLE_LABEL[user.role]}</span>
-    const actions = userActions(user, me)
-    const card = <RecordCard title={username} actions={actions}><span className="acc-role">{ROLE_LABEL[user.role]}</span></RecordCard>
-    return { key: user.user_id, card, cells: [username, role, actions] }
+    const card = (
+      <RecordCard
+        title={user.username}
+        subtitle={<>{ROLE_LABEL[user.role]}{me && <span className="acc-you"> · You</span>}</>}
+        status={inactive ? <StatusChip status="muted">Deactivated</StatusChip> : undefined}
+        actions={userActions(user, me, 'card')}
+      />
+    )
+    return { key: user.user_id, card, cells: [username, role, userActions(user, me, 'table')] }
   })
 
   return (
