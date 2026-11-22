@@ -1,106 +1,28 @@
-/* Shared by customer and staff pages. */
-
-/* ---------- reservation status tags (extends .tag in global.css) ---------- */
-.tag.pending        { background: var(--warn-soft); color: var(--warn); }
-.tag.approved       { background: #dcecff; color: #1d5fb4; }
-.tag.declined       { background: #f9dedc; color: var(--brand); }
-.tag.cancelled      { background: #ebe8e4; color: #4d4642; }
-.tag.arrived        { background: var(--ok-soft); color: var(--ok); }
-.tag.auto_cancelled { background: #f3e5d0; color: #8a5a00; }
-
-/* ---------- buttons ---------- */
-a.btn { text-decoration: none; }
-.btn.secondary { background: var(--card); color: var(--text); border: 1px solid #c9c4be; }
-.btn.secondary:hover:not(:disabled) { background: #efedea; }
-
-.dim { display: block; color: var(--muted); font-size: 0.85rem; }
-
-/* ---------- summary numbers ---------- */
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+/* Small shared page patterns not specific to controls or one screen. */
+.dim, .sub { display: block; color: var(--text-3); font-size: var(--fs-meta); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--s3); margin-bottom: var(--s5); }
 .stat {
   display: grid;
-  gap: 2px;
-  padding: 14px 16px;
+  gap: var(--s1);
+  padding: var(--s4);
   background: var(--card);
   border: 1px solid var(--line);
   border-radius: var(--r-card);
   color: inherit;
   text-decoration: none;
 }
-a.stat:hover { border-color: var(--text); }
-.stat-num { font-family: var(--font-display); font-size: 1.75rem; font-weight: 700; color: var(--text); line-height: 1.1; }
-.stat-label { color: var(--muted); font-size: 0.88rem; }
-
-/* ---------- table status (floor tiles and the tables list) ---------- */
+.stat-num { color: var(--text); font-family: var(--font-display); font-size: var(--fs-title-lg); font-weight: 700; line-height: 1.1; }
+.stat-label { color: var(--text-2); font-size: var(--fs-sm); }
+.stat-sub { color: var(--text-3); font-size: var(--fs-meta); }
 .tile-status {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   width: fit-content;
-  padding: 2px 10px;
-  border-radius: var(--r-pill);
-  font-size: 0.78rem;
-  font-weight: 700;
+  padding: var(--s1) var(--s2);
+  border-radius: var(--r-chip);
+  font-size: var(--fs-meta);
+  font-weight: 600;
 }
-.tile-status::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.tile-status.available { background: var(--ok-soft); color: var(--ok); }
-.tile-status.reserved  { background: var(--warn-soft); color: var(--warn); }
-.tile-status.dining    { background: var(--brand-soft); color: var(--brand); }
-
-/* ---------- dialog: centred on desktop, a bottom sheet on phones ---------- */
-.backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(29, 27, 26, 0.55); }
-.modal {
-  position: fixed;
-  z-index: 21;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(100% - 32px);
-  max-width: 420px;
-  max-height: 90vh;
-  overflow: auto;
-  padding: 20px;
-  background: var(--card);
-  border-radius: var(--r-sheet);
-  box-shadow: var(--shadow-float);
-  animation: modal-in 0.18s ease-out;
-}
-.modal-small { max-width: 380px; }
-.modal:focus { outline: none; }
-.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.modal-head h2, .modal-title { margin: 0; font-size: 1.35rem; }
-.modal-text { margin: 8px 0 0; color: var(--muted); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-.modal-close {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border: 0;
-  border-radius: 50%;
-  background: none;
-  font-size: 1.6rem;
-  line-height: 1;
-  color: var(--muted);
-}
-.modal-close:hover { background: #efedea; color: var(--text); }
-.modal .field { margin-top: 16px; }
-.modal .field input { width: 100%; }
-@keyframes modal-in { from { opacity: 0; transform: translate(-50%, calc(-50% + 12px)); } }
-@keyframes sheet-in { from { transform: translateY(24px); } }
-
-@media (max-width: 560px) {
-  .modal {
-    top: auto;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    max-width: none;
-    max-height: 88vh;
-    transform: none;
-    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
-    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-    animation-name: sheet-in;
-  }
-  .modal-actions .btn { flex: 1; }
-}
+.tile-status.available { color: var(--ok); background: var(--ok-soft); }
+.tile-status.reserved { color: var(--warn); background: var(--warn-soft); }
+.tile-status.dining { color: var(--white); background: var(--charcoal); }

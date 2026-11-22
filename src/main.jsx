@@ -9,6 +9,7 @@ import AuthProvider from './auth/AuthProvider.jsx'
 import './styles/tokens.css'
 import './styles/global.css'
 import './styles/shared.css'
+import './styles/components.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
