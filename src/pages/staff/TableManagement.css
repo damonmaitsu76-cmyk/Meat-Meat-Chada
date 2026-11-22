@@ -1,12 +1,11 @@
 /* Table list, address control, QR preview, and print sheet. */
 .tm-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s2); }
-.tm-add-disclosure { position: relative; margin: 0; }
+.tm-add-disclosure { position: relative; }
 .tm-add-disclosure[open] .disclosure-body { position: absolute; z-index: 10; top: calc(100% + var(--s2)); right: 0; width: min(400px, calc(100vw - var(--s8))); padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
 .tm-add { display: grid; gap: var(--s3); margin: 0; }
 .tm-add .field { margin: 0; }
 .tm-add .btn { justify-self: start; }
-.tm-check { display: flex; align-items: center; gap: var(--s2); min-height: 44px; color: var(--text-2); font-size: var(--fs-sm); white-space: nowrap; }
-.tm-check input { width: 20px; height: 20px; accent-color: var(--charcoal); }
+.tm-removed-toggle { margin-top: var(--s3); }
 .tm-address { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin: 0 0 var(--s3); color: var(--text-3); font-size: var(--fs-meta); }
 .tm-address span { min-width: 0; overflow-wrap: anywhere; }
 .tm-address code { color: var(--text-2); font: inherit; }
@@ -44,7 +43,10 @@
 @media (max-width: 719px) {
   .page-toolbar { align-items: flex-start; flex-wrap: wrap; }
   .page-toolbar-action { flex: 1 1 100%; justify-content: space-between; flex-wrap: wrap; }
-  .tm-toolbar { justify-content: flex-start; }
+  .tm-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .tm-toolbar > .btn, .tm-add-disclosure, .tm-add-disclosure > summary { width: 100%; }
+  .tm-toolbar > .btn, .tm-add-disclosure > summary { min-width: 0; padding-inline: var(--s2); }
+  .tm-add-disclosure > summary { justify-content: center; }
   .tm-list { padding-inline: var(--s3); }
   .tm-row { flex-wrap: wrap; }
   .tm-actions { width: 100%; }

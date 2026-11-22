@@ -161,6 +161,7 @@ export default function TableManagement() {
 
   const all = tables || []
   const activeTables = all.filter((t) => t.is_active)
+  const removedTables = all.filter((t) => !t.is_active)
   const visible = showRemoved ? all : activeTables
   const suggested = all.reduce((max, t) => Math.max(max, t.table_number), 0) + 1
   const baseUrl = normalizeBase(baseInput) || window.location.origin
@@ -282,17 +283,13 @@ export default function TableManagement() {
           action={(
             <div className="tm-toolbar">
               <button className="btn" type="button" disabled={activeTables.length === 0} onClick={() => printTables(activeTables)}>Print all QR codes</button>
-              <Disclosure label="Add table" className="tm-add-disclosure">
+              <Disclosure label="Add table" className="tm-add-disclosure disclosure-button">
                 <form className="tm-add" onSubmit={addTable}>
                   <Field label="Table number" type="number" min={1} inputMode="numeric" placeholder={String(suggested)} value={newNumber} onChange={(event) => setNewNumber(event.target.value)} />
                   <Field label="Seats" type="number" min={1} inputMode="numeric" value={newSeats} onChange={(event) => setNewSeats(event.target.value)} />
                   <button className="btn secondary" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add table'}</button>
                 </form>
               </Disclosure>
-              <label className="tm-check">
-                <input type="checkbox" checked={showRemoved} onChange={(event) => setShowRemoved(event.target.checked)} />
-                Show removed tables
-              </label>
             </div>
           )}
         />
@@ -350,6 +347,7 @@ export default function TableManagement() {
                 )
               })}
             </ul>}
+            {removedTables.length > 0 && <button className="btn ghost small tm-removed-toggle" type="button" aria-expanded={showRemoved} onClick={() => setShowRemoved((value) => !value)}>{showRemoved ? 'Hide' : 'Show'} removed tables ({removedTables.length})</button>}
           </>
         )}
 

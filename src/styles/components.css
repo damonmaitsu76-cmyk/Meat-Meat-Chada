@@ -98,6 +98,9 @@ a.btn { text-decoration: none; }
 .disclosure > summary { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s4); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; list-style-position: inside; }
 .disclosure-body { margin-top: var(--s3); }
 .disclosure[open] > summary { margin-bottom: var(--s2); }
+.disclosure-button { margin: 0; }
+.disclosure-button > summary { min-height: 44px; padding: 0 var(--s4); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font: inherit; font-weight: 600; }
+.disclosure-button[open] > summary { margin-bottom: 0; }
 
 .stepper { display: inline-flex; align-items: center; gap: var(--s2); }
 .stepper button { width: 44px; min-height: 44px; border: 1px solid var(--control); border-radius: var(--r-pill); background: var(--card); color: var(--text); font-size: var(--fs-stepper); font-weight: 600; }
