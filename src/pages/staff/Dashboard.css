@@ -7,7 +7,6 @@
 .attention-row { display: flex; align-items: center; gap: var(--s3); min-height: 48px; border-bottom: 1px solid var(--line); color: var(--text); text-decoration: none; }
 .attention-row strong { min-width: 32px; color: var(--brand); font-family: var(--font-display); font-size: var(--fs-title); font-variant-numeric: tabular-nums; }
 .attention-row:hover span { text-decoration: underline; }
-.quiet-line { margin: var(--s2) 0 0; color: var(--text-2); }
 .floor-section { margin-top: var(--s4); }
 .floor-heading { margin-bottom: var(--s3); }
 .floor-heading p { margin: var(--s1) 0 0; color: var(--text-3); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }

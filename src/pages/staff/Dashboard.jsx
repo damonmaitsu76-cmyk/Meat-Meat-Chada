@@ -313,7 +313,6 @@ export default function Dashboard() {
       now - new Date(r.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000
   )
   const pendingCount = reservations.filter((r) => r.status === 'pending').length
-  const occupied = tables.filter((t) => t.status === 'dining').length
   const guestsDining = sessions.reduce((sum, s) => sum + s.party_size, 0)
 
   const selected = tables.find((t) => t.table_id === selectedId) || null
@@ -328,17 +327,15 @@ export default function Dashboard() {
 
       {data && (
         <>
-          <section className="attention" aria-labelledby="attention-title">
-            <h2 id="attention-title">Needs attention</h2>
-            {requests.length === 0 && pendingCount === 0 ? (
-              <p className="quiet-line">Nothing waiting.</p>
-            ) : (
+          {(requests.length > 0 || pendingCount > 0) && (
+            <section className="attention" aria-labelledby="attention-title">
+              <h2 id="attention-title">Needs attention</h2>
               <div className="attention-list">
                 {requests.length > 0 && <Link className="attention-row" to="/staff/requests"><strong>{requests.length}</strong><span>Active refill requests</span></Link>}
                 {pendingCount > 0 && <Link className="attention-row" to="/staff/reservations"><strong>{pendingCount}</strong><span>Reservations waiting for approval</span></Link>}
               </div>
-            )}
-          </section>
+            </section>
+          )}
 
           {noShows.length > 0 && (
             <Notice tone="warn">
@@ -358,7 +355,7 @@ export default function Dashboard() {
           <section className="floor-section" aria-labelledby="floor-title">
             <div className="floor-heading">
               <h2 id="floor-title">Floor</h2>
-              <p>{occupied} of {tables.length} tables occupied · {guestsDining} guests dining</p>
+              {guestsDining > 0 && <p>{guestsDining} guests dining</p>}
             </div>
 
             {tables.length === 0 && <p className="empty-state">No active tables. Add tables in Tables &amp; QR.</p>}
