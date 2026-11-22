@@ -66,10 +66,6 @@ export default function StaffLayout() {
           ))}
         </nav>
 
-        <main className="staff-main">
-          {soundBlocked && <Notice tone="warn">Tap or click anywhere to turn on the sound for new requests.</Notice>}
-          <Outlet />
-        </main>
 
         <nav className={`staff-bottom-nav ${adminLinks.length ? 'has-more' : ''}`} aria-label="Daily staff screens">
           {dailyLinks.map((item) => (
