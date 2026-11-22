@@ -219,10 +219,6 @@ export default function Settings() {
                 />
               </label>
             </div>
-            <p className="set-help">
-              Customers can only book times inside these hours. The last bookable time is one slot
-              before closing.
-            </p>
           </section>
 
           <div className="set-actions">
