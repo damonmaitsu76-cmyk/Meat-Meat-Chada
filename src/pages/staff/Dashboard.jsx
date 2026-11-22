@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { Notice, PageToolbar } from '../../components/ui.jsx'
 import { fmtTime, manilaDate } from '../../lib/dates.js'
+import { minutesSince } from '../../lib/floor.js'
 import { displayName, formatDuration } from '../../lib/format.js'
 import './Dashboard.css'
-import FloorTile from './FloorTile.jsx'
+import AttentionList from './AttentionList.jsx'
+import FloorMap from './FloorMap.jsx'
 
 const NOTICE_HOURS = 2 // how long a released no-show stays in the notice box
 const SAFETY_POLL_MS = 30000 // in case the live connection silently drops
@@ -15,8 +16,7 @@ const WATCHED_TABLES = ['restaurant_tables', 'dining_sessions', 'reservations', 
 let channelSeq = 0
 
 function sinceText(iso, now) {
-  const mins = Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60000))
-  return formatDuration(mins)
+  return formatDuration(minutesSince(iso, now))
 }
 
 /* ------------------------------------------------------------------ */
@@ -73,6 +73,11 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
 
   return (
     <Modal title={`Table ${table.table_number}`} onClose={onClose}>
+      <p className="panel-meta">
+        Seats {table.capacity}
+        {session || table.status === 'dining' ? ' · Dining' : table.status === 'reserved' ? ' · Reserved' : ''}
+      </p>
+
       {session && (
         <section className="panel-section">
           <h3>Seated now</h3>
@@ -234,7 +239,7 @@ export default function Dashboard() {
         ),
       supabase
         .from('refill_requests')
-        .select('request_id, table_id, status')
+        .select('request_id, table_id, status, created_at')
         .in('status', ['sent', 'accepted', 'ready']),
     ])
     const failed = [t, s, r, q].find((x) => x.error)
@@ -313,8 +318,7 @@ export default function Dashboard() {
       r.status === 'auto_cancelled' &&
       now - new Date(r.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000
   )
-  const pendingCount = reservations.filter((r) => r.status === 'pending').length
-  const guestsDining = sessions.reduce((sum, s) => sum + s.party_size, 0)
+  const pendingReservations = reservations.filter((r) => r.status === 'pending')
 
   const selected = tables.find((t) => t.table_id === selectedId) || null
 
@@ -328,15 +332,13 @@ export default function Dashboard() {
 
       {data && (
         <>
-          {(requests.length > 0 || pendingCount > 0) && (
-            <section className="attention" aria-labelledby="attention-title">
-              <h2 id="attention-title">Needs attention</h2>
-              <div className="attention-list">
-                {requests.length > 0 && <Link className="attention-row" to="/staff/requests"><strong>{requests.length}</strong><span>Active refill requests</span></Link>}
-                {pendingCount > 0 && <Link className="attention-row" to="/staff/reservations"><strong>{pendingCount}</strong><span>Reservations waiting for approval</span></Link>}
-              </div>
-            </section>
-          )}
+          <AttentionList
+            requests={requests}
+            pendingReservations={pendingReservations}
+            tablesById={tablesById}
+            today={today}
+            now={now}
+          />
 
           {noShows.length > 0 && (
             <Notice tone="warn">
@@ -353,28 +355,14 @@ export default function Dashboard() {
             </Notice>
           )}
 
-          <section className="floor-section" aria-labelledby="floor-title">
-            <div className="floor-heading">
-              <h2 id="floor-title">Floor</h2>
-              {guestsDining > 0 && <p>{guestsDining} guests dining</p>}
-            </div>
-
-            {tables.length === 0 && <p className="empty-state">No active tables. Add tables in Tables &amp; QR.</p>}
-
-            <div className="floor">
-              {tables.map((t) => (
-                <FloorTile
-                  key={t.table_id}
-                  table={t}
-                  session={sessionByTable[t.table_id]}
-                  booking={(bookingsByTable[t.table_id] || [])[0]}
-                  requestCount={requestCountByTable[t.table_id] || 0}
-                  now={now}
-                  onSelect={() => setSelectedId(t.table_id)}
-                />
-              ))}
-            </div>
-          </section>
+          <FloorMap
+            tables={tables}
+            sessionByTable={sessionByTable}
+            bookingsByTable={bookingsByTable}
+            requestCountByTable={requestCountByTable}
+            now={now}
+            onSelect={setSelectedId}
+          />
         </>
       )}
 

@@ -1,70 +1,63 @@
-import { fmtTime } from '../../lib/dates.js'
-import { displayName, formatDuration } from '../../lib/format.js'
+import { formatDuration } from '../../lib/format.js'
+import { agoText, minutesSince, plural, seatLayout, tileDetails } from '../../lib/floor.js'
+import './Dashboard.css'
 
-const MAX_SEATS_SHOWN = 12
-
-function minutesSince(iso, now) {
-  return Math.max(0, Math.floor((now - new Date(iso).getTime()) / 60000))
+// Chairs along one long side of the table. Decorative: the tile's label carries the same facts.
+function Seats({ side, seats }) {
+  if (seats.length === 0) return null
+  return (
+    <span className={`seats ${side}`} aria-hidden="true">
+      {seats.map((taken, index) => (
+        <span key={index} className={`seat ${taken ? 'taken' : ''}`} />
+      ))}
+    </span>
+  )
 }
 
-function guestsText(count) {
-  return `${count} ${count === 1 ? 'guest' : 'guests'}`
-}
-
-// One table on the floor view: its number, its chairs, and a state block only when something is happening.
+// One table on the floor. An open table is a dashed outline, like a table drawn on a plan;
+// a table in use fills in, with a ticket-style block that says who is there and for how long.
 export default function FloorTile({ table, session, booking, requestCount, now, onSelect }) {
-  const seatCount = Math.min(table.capacity, MAX_SEATS_SHOWN)
-  const taken = session ? Math.min(session.party_size, seatCount) : 0
-
-  let state = ''
-  let guest = ''
-  if (session) {
-    state = 'Dining'
-    guest = `${displayName(session.guest_name)} · ${guestsText(session.party_size)}`
-  } else if (booking) {
-    state = table.status === 'reserved' ? 'Held' : 'Booked'
-    guest = `${displayName(booking.customer_name)} · ${fmtTime(booking.reservation_time)}`
-  } else if (table.status === 'reserved') {
-    state = 'Reserved'
-  }
+  const { tone, state, name, party, time } = tileDetails(table, session, booking)
+  const seats = seatLayout(table.capacity, session ? session.party_size : 0)
+  const seated = session ? minutesSince(session.seated_at, now) : null
+  const stamp = seated !== null ? formatDuration(seated) : time
 
   const spoken = [
     `Table ${table.table_number}`,
-    `${table.capacity} seats`,
-    table.status,
-    guest.replace(' · ', ', '),
-    requestCount > 0 ? `${requestCount} open ${requestCount === 1 ? 'request' : 'requests'}` : '',
+    plural(table.capacity, 'seat', 'seats'),
+    state ? state.toLowerCase() : 'available',
+    name,
+    party > 0 ? plural(party, 'guest', 'guests') : '',
+    seated !== null ? `seated ${agoText(seated)}` : time,
+    requestCount > 0 ? `${plural(requestCount, 'open refill request', 'open refill requests')}` : '',
   ]
     .filter(Boolean)
     .join(', ')
 
   return (
-    <button className={`tile ${table.status}`} type="button" aria-label={spoken} onClick={onSelect}>
+    <button className={`tile ${tone}`} type="button" aria-label={spoken} onClick={onSelect}>
+      <Seats side="top" seats={seats.top} />
+      <Seats side="bottom" seats={seats.bottom} />
+
       <span className="tile-head">
-        <span className="tile-label">Table</span>
-        <strong className="tile-number">{table.table_number}</strong>
+        <span className="tile-id">
+          <span className="tile-label">Table</span>
+          <strong className="tile-number">{table.table_number}</strong>
+        </span>
+        {requestCount > 0 && <span className="tile-flag">{plural(requestCount, 'refill', 'refills')}</span>}
       </span>
 
-      <span className="tile-seats" aria-hidden="true" style={{ '--seat-rows': seatCount > 4 ? 2 : 1 }}>
-        {Array.from({ length: seatCount }, (_, index) => (
-          <span key={index} className={`seat ${index < taken ? 'taken' : ''}`} />
-        ))}
-      </span>
-
-      {state && (
-        <span className="tile-state">
+      {state ? (
+        <span key={tone} className="tile-foot">
           <span className="tile-state-row">
             <span className="tile-state-word">{state}</span>
-            {session && <span className="ticket tile-timer">{formatDuration(minutesSince(session.seated_at, now))}</span>}
+            {stamp && <span className="ticket tile-stamp">{stamp}</span>}
           </span>
-          {guest && <span className="tile-guest">{guest}</span>}
+          {name && <span className="tile-guest">{name}</span>}
+          {party > 0 && <span className="tile-party">{plural(party, 'guest', 'guests')}</span>}
         </span>
-      )}
-
-      {requestCount > 0 && (
-        <span className="tile-requests">
-          {requestCount} {requestCount === 1 ? 'request' : 'requests'}
-        </span>
+      ) : (
+        <span className="tile-capacity">{plural(table.capacity, 'seat', 'seats')}</span>
       )}
     </button>
   )

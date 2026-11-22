@@ -1,8 +1,45 @@
 import { useState } from 'react'
 import { Button, Disclosure, EmptyState, Field, FilterTabs, LiveIndicator, Notice, PageToolbar, RecordCard, ResponsiveRecords, StatusChip, Stepper, Switch } from '../components/ui.jsx'
+import { manilaDate, shiftDate } from '../lib/dates.js'
+import AttentionList from './staff/AttentionList.jsx'
+import FloorMap from './staff/FloorMap.jsx'
 import './DesignFixture.css'
 
 const LONG_NAME = 'Alexandria Maria Dela Cruz-Santos, Junior'
+
+// Every floor state in one room: open, booked later, held, reserved, dining, a long name,
+// several refills, and a table with more chairs than the drawing shows.
+function floorFixture(now) {
+  const minutesAgo = (minutes) => new Date(now - minutes * 60000).toISOString()
+  const today = manilaDate(new Date(now))
+  const table = (table_number, capacity, status = 'available') => ({ table_id: table_number, table_number, capacity, status })
+  const tables = [
+    table(1, 2), table(2, 2), table(3, 4), table(4, 4, 'dining'), table(5, 4, 'reserved'),
+    table(6, 6, 'dining'), table(7, 6, 'reserved'), table(8, 8), table(9, 12, 'dining'), table(10, 14),
+  ]
+  const session = (table_id, guest_name, party_size, minutes, source = 'walk_in') => ({ session_id: table_id, table_id, guest_name, party_size, source, seated_at: minutesAgo(minutes) })
+  const sessionByTable = {
+    4: session(4, 'Gays', 3, 12),
+    6: session(6, LONG_NAME, 6, 94, 'reservation'),
+    9: session(9, 'RAMOS FAMILY', 9, 0),
+  }
+  const bookingsByTable = {
+    2: [{ reservation_id: 1, reservation_code: 'CH-7QW2LD', customer_name: 'Reyes', guest_count: 2, reservation_time: '19:30:00' }],
+    5: [{ reservation_id: 2, reservation_code: 'CH-3ZKSLD', customer_name: 'MARIA DELA CRUZ', guest_count: 4, reservation_time: '18:45:00' }],
+  }
+  const requests = [
+    { request_id: 1, table_id: 4, status: 'sent', created_at: minutesAgo(3) },
+    { request_id: 2, table_id: 6, status: 'accepted', created_at: minutesAgo(8) },
+    { request_id: 3, table_id: 6, status: 'ready', created_at: minutesAgo(2) },
+  ]
+  const requestCountByTable = { 4: 1, 6: 2 }
+  const pendingReservations = [
+    { reservation_id: 3, reservation_code: 'CH-9HT4PA', customer_name: 'Lee', guest_count: 2, reservation_date: shiftDate(today, 1), reservation_time: '11:00:00', status: 'pending' },
+    { reservation_id: 4, reservation_code: 'CH-5BN8XC', customer_name: 'DELA CRUZ', guest_count: 4, reservation_date: today, reservation_time: '20:00:00', status: 'pending' },
+  ]
+  const tablesById = Object.fromEntries(tables.map((t) => [t.table_id, t]))
+  return { today, tables, tablesById, sessionByTable, bookingsByTable, requests, requestCountByTable, pendingReservations }
+}
 const REQUEST_ITEMS = Array.from({ length: 12 }, (_, index) => ({ name: `Grill refill item ${index + 1}`, quantity: index % 3 + 1 }))
 const MANY_RECORDS = Array.from({ length: 120 }, (_, index) => ({ key: `fixture-${index + 1}`, name: `Guest ${String(index + 1).padStart(3, '0')}`, party: index % 8 + 1 }))
 
@@ -10,6 +47,9 @@ export default function DesignFixture() {
   const [filter, setFilter] = useState('active')
   const [quantity, setQuantity] = useState(2)
   const [available, setAvailable] = useState(true)
+  const [now] = useState(() => Date.now())
+  const floor = floorFixture(now)
+  const quietTables = floor.tables.slice(0, 8).map((t) => ({ ...t, status: 'available' }))
   const manyRecords = MANY_RECORDS.map((record) => ({
     key: record.key,
     card: <RecordCard title={record.name} subtitle={`Party of ${record.party} · Tomorrow 6:00 PM`} status={<StatusChip status="pending" />} meta={<span className="ticket">CH-3ZKSLD</span>} />,
@@ -97,6 +137,30 @@ export default function DesignFixture() {
           <ul className="fixture-items">{REQUEST_ITEMS.map((item) => <li key={item.name}><span>{item.quantity}</span> × {item.name}</li>)}</ul>
           <p className="hint">Served in 14 min</p>
         </RecordCard>
+      </section>
+
+      <section className="fixture-section" id="floor-fixture">
+        <h3>Floor with every table state</h3>
+        <AttentionList
+          requests={floor.requests}
+          pendingReservations={floor.pendingReservations}
+          tablesById={floor.tablesById}
+          today={floor.today}
+          now={now}
+        />
+        <FloorMap
+          tables={floor.tables}
+          sessionByTable={floor.sessionByTable}
+          bookingsByTable={floor.bookingsByTable}
+          requestCountByTable={floor.requestCountByTable}
+          now={now}
+          onSelect={() => {}}
+        />
+      </section>
+
+      <section className="fixture-section" id="floor-quiet-fixture">
+        <h3>Quiet floor</h3>
+        <FloorMap tables={quietTables} sessionByTable={{}} bookingsByTable={{}} requestCountByTable={{}} now={now} onSelect={() => {}} />
       </section>
 
       <section className="fixture-section">

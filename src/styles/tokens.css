@@ -42,6 +42,11 @@
   --space-home-vertical: 96px;
   --space-tray-bottom: 168px;
   --space-staff-nav-clearance: 96px;
+  --size-tile-min: 148px;
+  --size-tile-height: 176px;
+  --size-seat-width: 20px;
+  --size-seat-height: 8px;
+  --size-attention-count: 40px;
   --space-print-card: 8mm;
   --space-print-gap: 2mm;
   --control-textarea-min-height: 96px;
@@ -62,6 +67,7 @@
   --r-ctrl: 10px;
   --r-card: 14px;
   --r-tile: 14px;
+  --r-seat: 3px;
   --r-sheet: 22px;
   --r-pill: 999px;
 
@@ -73,6 +79,7 @@
   --fs-title: 1.375rem;
   --fs-title-lg: 1.75rem;
   --fs-figure: 2rem;
+  --fs-figure-lg: 2.5rem;
   --fs-nav: 0.6875rem;
   --fs-stepper: 1.15rem;
   --fs-close: 1.6rem;
