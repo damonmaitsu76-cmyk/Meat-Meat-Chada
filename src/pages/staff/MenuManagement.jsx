@@ -176,11 +176,6 @@ export default function MenuManagement() {
         )}
       />
 
-      <p className="hint">
-        Switch a dish off when the kitchen runs out.
-        {!canEdit && ' The manager or owner can add, edit, and delete dishes.'}
-      </p>
-
       {info && <div className="success">{info}</div>}
       {(actionError || error) && <Notice tone="warn" action={!items ? <button className="btn secondary small" type="button" onClick={load}>Try again</button> : undefined}>{actionError || error}</Notice>}
       {items === null && !error && <p className="hint">Loading dishes…</p>}
