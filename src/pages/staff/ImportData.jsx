@@ -218,7 +218,7 @@ export default function ImportData() {
                 <tbody>
                   {problems.slice(0, SHOW_ROWS).map((p) => (
                     <tr key={`${p.kind}-${p.row}`}>
-                      <td>{p.row}</td>
+                      <td>{p.row + 1}</td>
                       <td>{preview(outcome.typeKey, p.data)}</td>
                       <td>
                         <strong>{p.kind === 'failed' ? 'Failed' : 'Skipped'}.</strong> {p.reason}
@@ -228,10 +228,7 @@ export default function ImportData() {
                 </tbody>
               </table>
               </div>
-              <p className="hint">
-                Row 1 is the first row under the column names.
-                {problems.length > SHOW_ROWS && ` Showing the first ${SHOW_ROWS} of ${problems.length}.`}
-              </p>
+              {problems.length > SHOW_ROWS && <p className="hint">Showing the first {SHOW_ROWS} of {problems.length}.</p>}
             </>
           )}
 
