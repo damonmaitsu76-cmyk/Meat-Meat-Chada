@@ -21,7 +21,6 @@ export default function DesignFixture() {
       <PageToolbar title="Design fixture" live={false} />
       <header className="fixture-staff-top"><span className="brand">Samgyup Chada</span><span className="staff-user"><span className="staff-identity">manager</span><LiveIndicator live={false} /></span></header>
       <h2 className="fixture-heading">Components and states</h2>
-      <p className="hint">A local fixture for the restaurant interface. It uses sample records and does not load restaurant data.</p>
 
       <section className="fixture-section">
         <h3>Buttons and fields</h3>
@@ -70,7 +69,7 @@ export default function DesignFixture() {
           <Stepper value={quantity} label="Marinated pork" min={0} max={20} onChange={(delta) => setQuantity((current) => Math.max(0, Math.min(20, current + delta)))} />
           <Switch checked={available} label="Marinated pork availability" onChange={() => setAvailable((current) => !current)} />
           {!available && <span className="fixture-state-warn">Unavailable</span>}
-          <Disclosure label="Add dish"><p className="hint">A rarely used form can sit behind this disclosure.</p><Button variant="secondary">Add dish</Button></Disclosure>
+          <Disclosure label="Add dish"><Button variant="secondary">Add dish</Button></Disclosure>
         </div>
       </section>
 
@@ -80,7 +79,7 @@ export default function DesignFixture() {
           <p className="hint">Loading requests…</p>
           <Notice tone="warn" action={<Button variant="secondary" size="small">Try again</Button>}>The floor could not be loaded.</Notice>
           <div className="fixture-no-access"><strong>Not allowed</strong><p>Your account does not have access to this page.</p></div>
-          <EmptyState>No open requests. New ones appear here live.</EmptyState>
+          <EmptyState>No open requests.</EmptyState>
           <p className="fixture-state-empty">No tables yet. Add your first table from the toolbar.</p>
         </div>
       </section>

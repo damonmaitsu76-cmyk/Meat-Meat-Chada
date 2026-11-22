@@ -44,7 +44,7 @@ supabase functions deploy manage-staff
 | Role | Can do |
 | --- | --- |
 | Staff | Dashboard, request queue, reservations, dish availability |
-| Administrator | Everything staff can do, plus tables and QR codes, import, reports, accounts, settings, and editing the menu |
+| Manager | Everything staff can do, plus tables and QR codes, import, reports, accounts, settings, and editing the menu |
 
 ## Pages
 
@@ -52,16 +52,16 @@ supabase functions deploy manage-staff
 | --- | --- | --- |
 | `/menu/<qr-token>` | Customers | QR menu, tray, request status |
 | `/reserve` | Customers | Reserve a table, check or cancel a reservation |
-| `/login` | Staff, administrator | Sign in with a username (the app adds `@chada.app`) |
+| `/login` | Staff, manager | Sign in with a username (the app adds `@chada.app`) |
 | `/staff/dashboard` | All logged-in roles | Floor view, walk-ins, seating |
 | `/staff/requests` | All logged-in roles | Refill request queue |
 | `/staff/reservations` | All logged-in roles | Approve, decline, confirm arrival |
-| `/staff/menu` | All logged-in roles | Dish availability; administrators also add, edit, delete |
-| `/staff/tables` | Administrator | Tables and printable QR codes |
-| `/staff/import` | Administrator | Load the menu or table list from a CSV file |
-| `/staff/reports` | Administrator | Reservations, no-shows, guests served, busy days, activity log |
-| `/staff/accounts` | Administrator | Create accounts, reset passwords, change roles, deactivate |
-| `/staff/settings` | Administrator | Grace period, slot length, opening hours |
+| `/staff/menu` | All logged-in roles | Dish availability; managers also add, edit, delete |
+| `/staff/tables` | Manager | Tables and printable QR codes |
+| `/staff/import` | Manager | Load the menu or table list from a CSV file |
+| `/staff/reports` | Manager | Reservations, no-shows, guests served, busy days, activity log |
+| `/staff/accounts` | Manager | Create accounts, reset passwords, change roles, deactivate |
+| `/staff/settings` | Manager | Grace period, slot length, opening hours |
 
 ## Deploying
 

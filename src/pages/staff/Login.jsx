@@ -31,7 +31,6 @@ export default function Login() {
     <main className="login-wrap">
       <form className="login-card" onSubmit={onSubmit}>
         <h1>Samgyup Chada</h1>
-        <p className="hint">Staff login</p>
 
         <Field label="Username" type="text" autoComplete="username" autoCapitalize="none" required value={username} onChange={(e) => setUsername(e.target.value)} />
         <Field label="Password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />

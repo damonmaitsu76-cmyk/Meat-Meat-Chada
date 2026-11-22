@@ -167,7 +167,6 @@ function StatusView({ qrToken, justSent }) {
       <h1 className="customer-title">Request status</h1>
       {error && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={() => { setRequests(null); setRefresh((value) => value + 1) }}>Try again</button>}>{error}</Notice>}
       {requests === null && !error && <p className="hint">Loading requests…</p>}
-      {requests && requests.length === 0 && <EmptyState>No requests from this table yet. Send a refill request from the menu to see it here.</EmptyState>}
 
       <ul className="list request-list">
         {(requests || []).map((request) => {

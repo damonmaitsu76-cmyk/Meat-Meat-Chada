@@ -210,7 +210,7 @@ export default function Reservations() {
       {info && <div className="success" role="status">{info}</div>}
       {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
       {rows === null && !error && <p className="hint">Loading reservations…</p>}
-      {rows && records.length === 0 && <EmptyState>{query ? 'No reservation matches your search. Check the ID, name, or phone and try again.' : filter === 'pending' ? 'No pending reservations. New requests appear here live.' : filter === 'approved' ? 'No approved reservations.' : 'No reservation history for the last 7 days.'}</EmptyState>}
+      {rows && query && records.length === 0 && <EmptyState>No reservation matches your search. Check the ID, name, or phone and try again.</EmptyState>}
       {records.length > 0 && <ResponsiveRecords className="reservation-records" headers={['ID', 'Guest', 'Party', 'When', 'Table', 'Status', 'Actions']} records={records} />}
       {tablePicker && (
         <Modal title={`Table for ${displayName(tablePicker.customer_name)}`} onClose={() => setTablePicker(null)}>

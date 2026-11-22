@@ -164,7 +164,6 @@ function ReservationForm({ onCreated }) {
         <legend>Time</legend>
         {slotsLoading && <p className="field-hint">Loading times…</p>}
         {loaded?.error && <div className="time-error"><p className="error">{loaded.error}</p><button type="button" className="btn secondary small" onClick={() => setTick((value) => value + 1)}>Try again</button></div>}
-        {!slotsLoading && !loaded?.error && !slots.length && <p className="field-hint">Choose a date and party size to see times.</p>}
         {openSlots.length > 0 && (
           <>
             {periods.length > 1 && <Segmented label="Time of day" items={periods.map(({ key, label }) => ({ key, label }))} value={selectedPeriod} onChange={setPeriod} />}

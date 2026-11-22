@@ -31,7 +31,6 @@ function Home() {
       <header className="topbar"><span className="brand">Samgyup Chada</span></header>
       <main className="home-content">
         <h1>Meat Me at Chada</h1>
-        <p>Scan the QR code at your table to order refills, or reserve a table ahead of your visit.</p>
         <Link className="btn" to="/reserve">Reserve a table</Link>
       </main>
     </div>
@@ -47,7 +46,7 @@ export default function App() {
       <Route path="/menu/:qrToken" element={<QRMenu />} />
       <Route path="/reserve" element={<Reserve />} />
 
-      {/* staff and administrators */}
+      {/* staff and managers */}
       <Route path="/login" element={<Login />} />
       <Route element={<RequireAuth roles={STAFF_ROLES} />}>
         <Route path="/staff" element={<StaffLayout />}>
@@ -56,7 +55,7 @@ export default function App() {
           <Route path="requests" element={<RequestQueue />} />
           <Route path="reservations" element={<Reservations />} />
           <Route path="menu" element={<MenuManagement />} />
-          {/* administrators only */}
+          {/* managers only */}
           <Route element={<RequireAuth roles={ADMIN_ROLES} />}>
             <Route path="tables" element={<TableManagement />} />
             <Route path="import" element={<ImportData />} />

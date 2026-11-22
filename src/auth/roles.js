@@ -2,7 +2,7 @@
 export const ROLES = ['staff', 'admin']
 
 // Names shown on screen.
-export const ROLE_LABEL = { staff: 'Staff', admin: 'Administrator' }
+export const ROLE_LABEL = { staff: 'Staff', admin: 'Manager' }
 
 // Roles that may open the staff workspace.
 export const STAFF_ROLES = ['staff', 'admin']
