@@ -6,35 +6,7 @@ import { confirmDialog } from '../../components/dialogs.js'
 import { Disclosure, Field, Notice, PageToolbar } from '../../components/ui.jsx'
 import './TableManagement.css'
 
-const BASE_KEY = 'chada_qr_base'
 const QR_OPTIONS = { width: 600, margin: 2, errorCorrectionLevel: 'M' }
-
-// The website address that goes inside the QR codes is kept in this browser.
-function readBase() {
-  try {
-    return localStorage.getItem(BASE_KEY) || ''
-  } catch {
-    return ''
-  }
-}
-
-function saveBase(value) {
-  try {
-    localStorage.setItem(BASE_KEY, value)
-  } catch {
-    // private browsing: the field still works, it just is not remembered
-  }
-}
-
-// "chada.pages.dev/" -> "https://chada.pages.dev"; "192.168.1.5:5173" -> "http://192.168.1.5:5173"
-function normalizeBase(raw) {
-  let v = raw.trim().replace(/\/+$/, '')
-  if (!v) return ''
-  if (!/^https?:\/\//i.test(v)) {
-    v = (/^(localhost|\d{1,3}(\.\d{1,3}){3})(:\d+)?$/i.test(v) ? 'http://' : 'https://') + v
-  }
-  return v
-}
 
 function friendly(error) {
   if (error.code === '23505') {
@@ -92,7 +64,6 @@ function QrModal({ table, baseUrl, onClose, onPrint }) {
           {img === null && <p className="hint">Drawing the QR code…</p>}
           {img === '' && <p className="error">Could not draw the QR code.</p>}
           {img && <img src={img} alt={`QR code for Table ${table.table_number}`} />}
-          <span className="tm-url">{url}</span>
           {img && (
             <div className="tm-qr-actions">
               <a className="btn" href={img} download={`table-${table.table_number}-qr.png`}>
@@ -116,8 +87,6 @@ export default function TableManagement() {
   const [error, setError] = useState('') // problems loading the list
   const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
   const [info, setInfo] = useState('')
-  const [baseInput, setBaseInput] = useState(() => readBase() || window.location.origin)
-  const [editingBase, setEditingBase] = useState(false)
   const [showRemoved, setShowRemoved] = useState(false)
   const [newNumber, setNewNumber] = useState('')
   const [newSeats, setNewSeats] = useState('4')
@@ -164,8 +133,8 @@ export default function TableManagement() {
   const removedTables = all.filter((t) => !t.is_active)
   const visible = showRemoved ? all : activeTables
   const suggested = all.reduce((max, t) => Math.max(max, t.table_number), 0) + 1
-  const baseUrl = normalizeBase(baseInput) || window.location.origin
-  const isLocal = /^https?:\/\/(localhost|127\.|0\.0\.0\.0|192\.168\.|10\.)/i.test(baseUrl)
+  const configuredSiteUrl = import.meta.env.VITE_PUBLIC_SITE_URL?.trim()
+  const baseUrl = (configuredSiteUrl || window.location.origin).replace(/\/+$/, '')
 
   async function addTable(e) {
     e.preventDefault()
@@ -293,19 +262,6 @@ export default function TableManagement() {
             </div>
           )}
         />
-
-        <div className="tm-address">
-          <span>QR codes open <code>{baseUrl}</code></span>
-          {!editingBase && <button className="btn ghost small" type="button" onClick={() => setEditingBase(true)}>Change</button>}
-        </div>
-        {editingBase && (
-          <div className="tm-address-edit">
-            <Field label="Website address inside the QR codes" type="text" inputMode="url" autoCapitalize="none" value={baseInput} onChange={(event) => setBaseInput(event.target.value)} />
-            <button className="btn secondary small" type="button" onClick={() => { saveBase(baseInput.trim()); setEditingBase(false) }}>Save address</button>
-            <button className="btn ghost small" type="button" onClick={() => { setBaseInput(readBase() || window.location.origin); setEditingBase(false) }}>Cancel</button>
-          </div>
-        )}
-        {isLocal && <Notice tone="warn">This address only works on your own computer or Wi-Fi. Enter the restaurant's website address before printing QR codes for tables.</Notice>}
 
         {info && <div className="success">{info}</div>}
         {(actionError || error) && <Notice tone="warn" action={<button className="btn secondary small" type="button" onClick={load}>Try again</button>}>{actionError || error}</Notice>}

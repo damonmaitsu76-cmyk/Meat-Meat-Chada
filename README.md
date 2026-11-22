@@ -69,8 +69,7 @@ The app is a static site (Cloudflare Pages works). Set the two `VITE_` variables
 settings, build with `npm run build`, and publish the `dist` folder. `public/_redirects` makes
 links like `/menu/<token>` work after a page refresh.
 
-Before printing QR codes, open **Tables & QR** and enter the real website address in the
-address box so the codes do not point to `localhost`.
+Print the QR codes from the live site, or set the optional `VITE_PUBLIC_SITE_URL` in Cloudflare Pages if the live site is reached through a different address.
 
 ## Before the restaurant uses it
 

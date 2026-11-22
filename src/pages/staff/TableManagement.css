@@ -6,11 +6,6 @@
 .tm-add .field { margin: 0; }
 .tm-add .btn { justify-self: start; }
 .tm-removed-toggle { margin-top: var(--s3); }
-.tm-address { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin: 0 0 var(--s3); color: var(--text-3); font-size: var(--fs-meta); }
-.tm-address span { min-width: 0; overflow-wrap: anywhere; }
-.tm-address code { color: var(--text-2); font: inherit; }
-.tm-address-edit { display: flex; align-items: end; flex-wrap: wrap; gap: var(--s2); max-width: 720px; margin-bottom: var(--s3); }
-.tm-address-edit .field { flex: 1 1 240px; margin: 0; }
 .tm-list { max-width: 900px; margin: 0; padding: 0 var(--s4); list-style: none; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
 .tm-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 56px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
 .tm-row:last-child { border-bottom: 0; }
@@ -23,7 +18,6 @@
 .tm-edit .field { margin: 0; }
 .tm-qr { display: grid; justify-items: center; gap: var(--s3); margin-top: var(--s3); }
 .tm-qr img { width: 260px; height: 260px; max-width: 100%; }
-.tm-url { color: var(--text-3); font-size: var(--fs-meta); overflow-wrap: anywhere; text-align: center; }
 .tm-qr-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2); }
 
 /* Keep the existing print layout and browser print flow. */
