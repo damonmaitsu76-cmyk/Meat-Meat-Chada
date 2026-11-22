@@ -14,13 +14,14 @@ import Settings from './pages/staff/Settings.jsx'
 import StaffAccounts from './pages/staff/StaffAccounts.jsx'
 import StaffLayout from './pages/staff/StaffLayout.jsx'
 import TableManagement from './pages/staff/TableManagement.jsx'
+import DesignFixture from './pages/DesignFixture.jsx'
 
 function Message({ title, text }) {
   return (
-    <div className="center-screen">
+    <main className="center-screen">
       <h1>{title}</h1>
       <p>{text}</p>
-    </div>
+    </main>
   )
 }
 
@@ -40,6 +41,7 @@ function Home() {
 export default function App() {
   return (
     <Routes>
+      {import.meta.env.DEV && <Route path="/__design" element={<DesignFixture />} />}
       {/* customers (no login) */}
       <Route path="/" element={<Home />} />
       <Route path="/menu/:qrToken" element={<QRMenu />} />

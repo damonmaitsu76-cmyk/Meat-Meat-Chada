@@ -75,7 +75,7 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
         {session && (
           <section className="panel-section">
             <h3>Seated now</h3>
-            <p style={{ margin: '0 0 10px' }}>
+            <p className="panel-session-summary">
               <strong>{displayName(session.guest_name)}</strong>, party of {session.party_size}
               <span className="dim">
                 {session.source === 'walk_in' ? 'Walk-in' : 'Reservation'}, seated{' '}
@@ -190,7 +190,7 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
         )}
 
         {error && (
-          <p className="error" style={{ marginTop: 14 }}>
+          <p className="error panel-error">
             {error}
           </p>
         )}

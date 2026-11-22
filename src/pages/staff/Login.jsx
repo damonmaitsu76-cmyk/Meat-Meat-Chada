@@ -28,7 +28,7 @@ export default function Login() {
   }
 
   return (
-    <div className="login-wrap">
+    <main className="login-wrap">
       <form className="login-card" onSubmit={onSubmit}>
         <h1>Samgyup Chada</h1>
         <p className="hint">Staff login</p>
@@ -42,6 +42,6 @@ export default function Login() {
           {busy ? 'Logging in…' : 'Log in'}
         </button>
       </form>
-    </div>
+    </main>
   )
 }

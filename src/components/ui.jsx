@@ -1,3 +1,5 @@
+import { useId } from 'react'
+
 const STATUS = {
   sent: ['neutral', 'New'],
   accepted: ['neutral', 'Accepted'],
@@ -97,13 +99,26 @@ export function ResponsiveRecords({ headers, records, className = '' }) {
 
 export function FilterTabs({ items, value, onChange, label = 'Filters' }) {
   return (
-    <div className="filter-tabs" role="tablist" aria-label={label}>
+    <div
+      className="filter-tabs"
+      role="group"
+      aria-label={label}
+      onKeyDown={(event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+        event.preventDefault()
+        const buttons = Array.from(event.currentTarget.querySelectorAll('[data-filter-tab]'))
+        const current = buttons.indexOf(event.target)
+        const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length
+        buttons[next]?.focus()
+        if (items[next]) onChange(items[next].key)
+      }}
+    >
       {items.map((item) => (
         <button
           key={item.key}
           type="button"
-          role="tab"
-          aria-selected={value === item.key}
+          data-filter-tab
+          aria-pressed={value === item.key}
           aria-label={item.ariaLabel}
           className={`filter-tab ${value === item.key ? 'active' : ''}`}
           onClick={() => onChange(item.key)}
@@ -164,5 +179,4 @@ export function PageToolbar({ title, live, action, className = '' }) {
     </div>
   )
 }
-import { useId } from 'react'
 

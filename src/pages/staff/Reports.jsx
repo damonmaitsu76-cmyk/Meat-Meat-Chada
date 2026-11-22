@@ -68,14 +68,18 @@ function groupActivity(logs, today) {
   return [...groups].map(([label, entries]) => ({ label, entries }))
 }
 
+function ticket(code) {
+  return <span className="ticket">{code}</span>
+}
+
 function describe(log) {
   const details = log.details || {}
   switch (`${log.action}:${log.record_type}`) {
-    case 'approve:reservation': return `Approved ${details.reservation_code}${details.table_number ? ` for Table ${details.table_number}` : ''}`
-    case 'decline:reservation': return `Declined ${details.reservation_code}${details.reason ? `: ${details.reason}` : ''}`
-    case 'staff_cancel:reservation': return `Cancelled ${details.reservation_code} by staff${details.reason ? `: ${details.reason}` : ''}`
-    case 'arrive:reservation': return `Seated ${details.reservation_code} at Table ${details.table_number}`
-    case 'auto_cancel:reservation': return `Released ${details.reservation_code} after the grace period (no-show)`
+    case 'approve:reservation': return <>Approved {ticket(details.reservation_code)}{details.table_number ? ` for Table ${details.table_number}` : ''}</>
+    case 'decline:reservation': return <>Declined {ticket(details.reservation_code)}{details.reason ? `: ${details.reason}` : ''}</>
+    case 'staff_cancel:reservation': return <>Cancelled {ticket(details.reservation_code)} by staff{details.reason ? `: ${details.reason}` : ''}</>
+    case 'arrive:reservation': return <>Seated {ticket(details.reservation_code)} at Table {details.table_number}</>
+    case 'auto_cancel:reservation': return <>Released {ticket(details.reservation_code)} after the grace period (no-show)</>
     case 'import:menu_items':
     case 'import:restaurant_tables': return `Imported ${log.record_type === 'menu_items' ? 'menu items' : 'tables'}: ${details.imported} saved, ${details.skipped} skipped, ${details.failed} failed`
     case 'update:menu_items': return `Edited dish ${details.item_name}`

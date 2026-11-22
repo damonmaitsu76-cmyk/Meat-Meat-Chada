@@ -36,6 +36,16 @@
   --print-cut: #888888;
   --scrim: rgba(29, 27, 26, 0.55);
 
+  /* fixed layout and print spacing */
+  --space-content-bottom: 104px;
+  --space-center-vertical: 80px;
+  --space-home-vertical: 96px;
+  --space-tray-bottom: 168px;
+  --space-staff-nav-clearance: 96px;
+  --space-print-card: 8mm;
+  --space-print-gap: 2mm;
+  --control-textarea-min-height: 96px;
+
   /* spacing: 4px grid */
   --s1: 4px;
   --s2: 8px;
@@ -63,6 +73,11 @@
   --fs-title: 1.375rem;
   --fs-title-lg: 1.75rem;
   --fs-figure: 2rem;
+  --fs-nav: 0.6875rem;
+  --fs-stepper: 1.15rem;
+  --fs-close: 1.6rem;
+  --fs-print-table: 28pt;
+  --fs-print-hint: 11pt;
   --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
   --font-body: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 

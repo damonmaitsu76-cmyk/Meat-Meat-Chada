@@ -19,20 +19,32 @@ function formatTime(iso) {
   return new Date(iso).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
 }
 
-function MenuView({ items, tray, onAdd, onChangeQty }) {
+function MenuView({ items, tray, onAdd, onChangeQty, tableNumber }) {
   const [category, setCategory] = useState('meats')
   const visible = items.filter((item) => item.category === category)
 
   return (
     <>
+      <h1 className="sr-only">Menu for Table {tableNumber}</h1>
       <p className="menu-intro">Add refills, then send them to staff.</p>
-      <div className="tabs menu-tabs" role="tablist" aria-label="Menu categories">
+      <div className="tabs menu-tabs" role="tablist" aria-label="Menu categories" onKeyDown={(event) => {
+        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+        event.preventDefault()
+        const currentIndex = CATEGORIES.findIndex((item) => item.key === category)
+        const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? CATEGORIES.length - 1 : (currentIndex + (event.key === 'ArrowRight' ? 1 : -1) + CATEGORIES.length) % CATEGORIES.length
+        const next = CATEGORIES[nextIndex]
+        setCategory(next.key)
+        event.currentTarget.querySelectorAll('[role="tab"]')[nextIndex]?.focus()
+      }}>
         {CATEGORIES.map((item) => (
           <button
             key={item.key}
             type="button"
             role="tab"
             aria-selected={category === item.key}
+            aria-controls="menu-category-panel"
+            id={`menu-category-${item.key}`}
+            tabIndex={category === item.key ? 0 : -1}
             className={`tab ${category === item.key ? 'active' : ''}`}
             onClick={() => setCategory(item.key)}
           >
@@ -41,7 +53,7 @@ function MenuView({ items, tray, onAdd, onChangeQty }) {
         ))}
       </div>
 
-      <ul className="menu-list" role="tabpanel" aria-label={CATEGORIES.find((item) => item.key === category)?.label}>
+      <ul className="menu-list" id="menu-category-panel" role="tabpanel" aria-labelledby={`menu-category-${category}`}>
         {visible.length === 0 && <li className="menu-empty">No dishes in this category.</li>}
         {visible.map((item) => {
           const quantity = tray[item.item_id] || 0
@@ -272,15 +284,15 @@ export default function QRMenu() {
 
   if (!menu) {
     return (
-      <div className="center-screen">
+      <main className="center-screen">
         {loadError ? (
           <>
             <h1>Menu unavailable</h1>
             <p>{loadError}</p>
             {validToken && <button type="button" className="btn secondary" onClick={loadMenu}>Try again</button>}
           </>
-        ) : <p>Loading menu…</p>}
-      </div>
+        ) : <><h1 className="sr-only">Menu</h1><p>Loading menu…</p></>}
+      </main>
     )
   }
 
@@ -291,9 +303,8 @@ export default function QRMenu() {
         <span className="table-badge">Table {menu.table_number}</span>
       </header>
       <main className={`content ${view === 'tray' ? 'tray-content' : ''}`}>
-        <h1 className="sr-only">Samgyup Chada menu for Table {menu.table_number}</h1>
         {fetchError && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={loadMenu}>Refresh menu</button>}>{fetchError}</Notice>}
-        {view === 'menu' && <MenuView items={menu.items} tray={tray} onAdd={addItem} onChangeQty={changeQty} />}
+        {view === 'menu' && <MenuView items={menu.items} tray={tray} onAdd={addItem} onChangeQty={changeQty} tableNumber={menu.table_number} />}
         {view === 'tray' && <TrayView itemsById={itemsById} tray={tray} note={note} setNote={setNote} onChangeQty={changeQty} onSend={sendRequest} sending={sending} error={sendError} onBrowse={() => go('menu')} />}
         {view === 'status' && <StatusView qrToken={qrToken} justSent={justSent} />}
       </main>

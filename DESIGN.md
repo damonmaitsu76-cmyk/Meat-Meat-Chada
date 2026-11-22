@@ -12,7 +12,15 @@ Use quiet charcoal and paper surfaces to make the restaurant's working informati
 
 ## Tokens and layout
 
-Keep color, spacing, type, radius, and motion values in `src/styles/tokens.css`. Spacing follows a 4px grid. Hairlines are decorative only; controls use the stronger control token. Text and non-text contrast are checked from the final token pairs. Avoid shadows except on dialogs and sheets.
+Keep color, spacing, type, radius, and motion values in `src/styles/tokens.css`.
+
+- Color roles: `--charcoal` is structure, `--bg` and `--card` are paper surfaces, `--text`/`--text-2`/`--text-3` set text hierarchy, `--line` is decorative only, `--control` draws control borders, and `--brand` is the single accent. `--ok`, `--warn`, and neutral tokens carry status.
+- Spacing: use the 4px scale `--s1`, `--s2`, `--s3`, `--s4`, `--s5`, `--s6`, `--s8`, `--s10`, and `--s12`. Semantic layout and print tokens preserve fixed clearances and the existing print sheet measurements.
+- Type: use `--font-display` (Bricolage Grotesque Variable) for display figures and titles, `--font-body` (Figtree Variable) elsewhere, and the `--fs-meta` through `--fs-figure` scale.
+- Radius: use `--r-chip`, `--r-ctrl`, `--r-card`, `--r-sheet`, and `--r-pill` by component role. Pills are reserved for dots and switches.
+- Motion: use `--t-fast` for control changes and `--t-enter` for short dialog or sheet entrances. Keep reduced-motion support.
+
+Spacing follows a 4px grid. Hairlines are decorative only; controls use the stronger control token. Text and non-text contrast are checked from the final token pairs. Avoid shadows except on dialogs and sheets.
 
 ## Component rules
 
@@ -28,19 +36,19 @@ Do not change Supabase schema, RLS, RPC names, route paths, authentication logic
 
 ## Recon audit
 
-1. `src/styles/staff.css` and staff list pages: `.q-table` turns cells into label/value stacks below 720px; use purposeful record cards on phones and real tables only where comparison helps.
-2. `src/styles/tokens.css`, `src/styles/shared.css`, `src/styles/global.css`, `src/pages/staff/Dashboard.css`: red is used for actions, declined status, dining state, and active navigation; reserve it for the action/attention uses and move statuses to neutral, warning, ink, or success.
-3. `src/pages/staff/Dashboard.jsx`, `src/pages/staff/TableManagement.jsx`, `src/pages/customer/QRMenu.jsx`: Available is visibly repeated in tiles, rows, and menu dishes; show normal state by absence and keep its accessible text.
-4. `src/pages/staff/StaffLayout.jsx`, `src/styles/staff.css`: the header can wrap to two rows on phones, the nav is a top strip, and visible page titles repeat nav labels; use a compact shell and one page title.
-5. `src/pages/staff/Dashboard.jsx`, `src/pages/staff/Dashboard.css`: four equal summary cards remain; the reported 6px left stripe is already absent in the current CSS.
-6. `src/pages/customer/Reserve.css`, `src/pages/staff/Reservations.css`, `src/pages/staff/MenuManagement.css`, `src/pages/staff/TableManagement.css`, `src/pages/staff/Reports.css`, `src/pages/staff/StaffAccounts.css`: fields and selects are restyled in multiple places; consolidate on shared Field styles. Amber notices are separately defined in Dashboard, Reservations, and Table Management; replace them with Notice.
-7. All CSS files except `src/styles/tokens.css`: raw color literals appear outside tokens; migrate them to semantic tokens.
-8. `src/styles/global.css`, `src/pages/staff/StaffAccounts.css`, `src/pages/staff/TableManagement.css`: disabled and removed text is faded with opacity, and input/off-switch borders use weak decorative lines; use explicit accessible colors and the control border token.
-9. `src/pages/staff/RequestQueue.jsx`, `src/pages/staff/Reports.jsx`: request queries omit the schema's existing `served_at`, so served rows show their total age; report duration keeps a decimal minute value. Use served duration and whole-minute formatting.
-10. `src/pages/customer/QRMenu.jsx`, `src/styles/global.css`: menu rows have repeated Add buttons without inline quantity, no sticky review action, and the tray count is hidden from the Menu tab; add steppers and a review bar using current tray state.
-11. `src/pages/staff/Reports.jsx`, `src/pages/staff/Reports.css`: six equal summary cards, formula copy, repeated date range, and a label/value activity table remain; group summary hierarchy and compact activity rows.
-12. `src/pages/staff/MenuManagement.jsx`, `src/pages/staff/MenuManagement.css`: each dish is a table row with a redundant Available label and equal Edit/Delete actions; use a compact dish list, inline edit, and confirmed delete.
-13. `src/pages/staff/TableManagement.jsx`: Show QR code is a primary button on each row while Print all QR codes is secondary, and the status column repeats Available; reverse action priority and remove normal status.
-14. `src/pages/staff/StaffAccounts.jsx`, `src/pages/staff/StaffAccounts.css`: account creation is always open with half-width fields, the policy paragraph mixes validation and account rules, and roles are inline selects; collapse the form/help and clarify row actions.
-15. `src/pages/customer/Reserve.jsx`, `src/pages/customer/Reserve.css`, `src/styles/global.css`: disabled buttons fade, the outlined Reservation header resembles a logout control, and open slots are rendered as a select despite the RPC returning slot records; use clear action hierarchy and selectable time buttons.
-16. `src/pages/staff/Reservations.jsx`, `src/pages/staff/Dashboard.jsx`: guest name casing is displayed exactly as stored, and no CSS applies all-caps to names; use a display-only title-case helper only for entirely uppercase input.
+1. File: `src/styles/staff.css`, `src/pages/staff/RequestQueue.jsx`, `src/pages/staff/Reservations.jsx`, `src/pages/staff/MenuManagement.jsx`, `src/pages/staff/TableManagement.jsx`, `src/pages/staff/StaffAccounts.jsx`, `src/pages/staff/Reports.jsx`; Problem: `.q-table` turns cells into label/value stacks below 720px; Fix: use purposeful record cards on phones and real tables only where comparison helps.
+2. File: `src/styles/tokens.css`, `src/styles/shared.css`, `src/styles/global.css`, `src/pages/staff/Dashboard.css`; Problem: red is used for actions, declined status, dining state, and active navigation; Fix: reserve it for action/attention uses and move statuses to neutral, warning, ink, or success.
+3. File: `src/pages/staff/Dashboard.jsx`, `src/pages/staff/TableManagement.jsx`, `src/pages/customer/QRMenu.jsx`; Problem: Available repeats in tiles, rows, and menu dishes; Fix: show normal state by absence and keep its accessible text.
+4. File: `src/pages/staff/StaffLayout.jsx`, `src/styles/staff.css`; Problem: the header wraps on phones, the nav is a top strip, and visible page titles repeat nav labels; Fix: use a compact shell and one page title.
+5. File: `src/pages/staff/Dashboard.jsx`, `src/pages/staff/Dashboard.css`; Problem: four equal summary cards remain; the reported 6px left stripe was already absent at recon; Fix: replace the cards with the Needs attention strip and floor summary, with unstriped table tiles.
+6. File: `src/pages/customer/Reserve.css`, `src/pages/staff/Reservations.css`, `src/pages/staff/MenuManagement.css`, `src/pages/staff/TableManagement.css`, `src/pages/staff/Reports.css`, `src/pages/staff/StaffAccounts.css`, `src/pages/staff/Dashboard.css`; Problem: fields and selects are restyled in multiple places, and amber notices are separately defined; Fix: use shared Field styles and the shared Notice component.
+7. File: all CSS files except `src/styles/tokens.css`; Problem: raw color literals appear outside tokens; Fix: move color literals to semantic tokens.
+8. File: `src/styles/global.css`, `src/pages/staff/StaffAccounts.css`, `src/pages/staff/TableManagement.css`; Problem: disabled and removed text uses opacity, and input/off-switch borders use weak decorative lines; Fix: use explicit accessible colors and the control border token.
+9. File: `src/pages/staff/RequestQueue.jsx`, `src/pages/staff/Reports.jsx`; Problem: request queries omit the existing `served_at`, so served rows show total age, and report duration includes decimal minutes; Fix: show served duration and format whole minutes.
+10. File: `src/pages/customer/QRMenu.jsx`, `src/styles/global.css`; Problem: menu rows repeat Add buttons without inline quantity, lack a sticky review action, and hide the tray count from the Menu tab; Fix: add steppers and a review bar using current tray state.
+11. File: `src/pages/staff/Reports.jsx`, `src/pages/staff/Reports.css`; Problem: six equal summary cards, formula copy, repeated date range, and label/value activity rows; Fix: group summary hierarchy and use compact activity rows.
+12. File: `src/pages/staff/MenuManagement.jsx`, `src/pages/staff/MenuManagement.css`; Problem: dish rows repeat labels and give Edit/Delete equal weight; Fix: use a compact dish list, inline editing, and confirmed delete.
+13. File: `src/pages/staff/TableManagement.jsx`; Problem: Show QR code outranks Print all QR codes and the status column repeats Available; Fix: make print primary and remove normal status.
+14. File: `src/pages/staff/StaffAccounts.jsx`, `src/pages/staff/StaffAccounts.css`; Problem: account creation is always open, fields are half width, policy text mixes rules, and roles are inline selects; Fix: collapse the form/help and clarify row actions.
+15. File: `src/pages/customer/Reserve.jsx`, `src/pages/customer/Reserve.css`, `src/styles/global.css`; Problem: disabled buttons fade, the Reservation pill resembles logout, and returned open slots use a select; Fix: clarify action hierarchy and render selectable time buttons.
+16. File: `src/pages/staff/Reservations.jsx`, `src/pages/staff/Dashboard.jsx`; Problem: guest names retain all-uppercase presentation; Fix: title-case display only when stored text is entirely uppercase.

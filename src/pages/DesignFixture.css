@@ -1,0 +1,24 @@
+.design-fixture { max-width: 1000px; margin: 0 auto; padding: var(--s5); }
+.fixture-heading { margin: 0 0 var(--s2); font-size: var(--fs-title-lg); }
+.fixture-section { margin: 0 0 var(--s6); padding-bottom: var(--s4); border-bottom: 1px solid var(--line); }
+.fixture-section h3 { margin: 0 0 var(--s3); font-size: var(--fs-title); }
+.fixture-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.fixture-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); margin-top: var(--s4); }
+.fixture-field-grid .field { margin: 0; }
+.fixture-state-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+.fixture-no-access, .fixture-state-empty { padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.fixture-no-access p { margin: var(--s1) 0 0; color: var(--text-2); }
+.fixture-state-empty { margin: 0; color: var(--text-2); }
+.fixture-state-warn { color: var(--warn); font-size: var(--fs-meta); font-weight: 600; }
+.fixture-ticket { max-width: 720px; }
+.fixture-items { display: grid; gap: var(--s1); margin: 0; padding: 0; list-style: none; }
+.fixture-items li { display: flex; gap: var(--s1); }
+.fixture-items li span { min-width: 24px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.fixture-record-scroll { max-height: 560px; overflow: auto; }
+.fixture-large-list .records-table-wrap { max-height: 520px; overflow: auto; }
+
+@media (max-width: 560px) {
+  .design-fixture { padding: var(--s4); }
+  .fixture-field-grid, .fixture-state-grid { grid-template-columns: minmax(0, 1fr); }
+  .fixture-actions { align-items: flex-start; }
+}

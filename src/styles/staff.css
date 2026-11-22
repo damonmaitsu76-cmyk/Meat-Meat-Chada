@@ -2,7 +2,6 @@
 .login-wrap { min-height: 100vh; display: grid; place-items: center; padding: var(--s6); background: var(--charcoal); }
 .login-card { width: 100%; max-width: 360px; padding: var(--s6); background: var(--card); border-radius: var(--r-sheet); }
 .login-card h1 { margin: 0 0 var(--s1); font-size: var(--fs-title-lg); }
-.login-card .field input { width: 100%; }
 
 .staff-shell { min-height: 100vh; display: grid; grid-template-rows: auto auto 1fr; }
 .staff-top {
@@ -31,7 +30,7 @@
   scrollbar-width: none;
 }
 .staff-nav::-webkit-scrollbar { display: none; }
-.staff-nav a { padding: var(--s3) var(--s3); color: var(--text-2); text-decoration: none; font-weight: 600; white-space: nowrap; border-bottom: 3px solid transparent; }
+.staff-nav a { padding: var(--s3) var(--s3); color: var(--text-2); text-decoration: none; font-weight: 600; white-space: nowrap; border-bottom: 1px solid transparent; }
 .staff-nav a:hover { color: var(--text); }
 .staff-nav a.active { color: var(--text); border-bottom-color: var(--brand); }
 .staff-nav .nav-count { color: var(--text-2); font-variant-numeric: tabular-nums; }
@@ -68,7 +67,7 @@
 @media (max-width: 719px) {
   .staff-shell { grid-template-rows: auto 1fr; }
   .staff-nav { display: none; }
-  .staff-main { padding-bottom: 96px; }
+  .staff-main { padding-bottom: var(--space-staff-nav-clearance); }
   .staff-bottom-nav {
     position: fixed;
     z-index: 8;
@@ -93,15 +92,16 @@
     gap: var(--s1);
     padding: var(--s1);
     border: 0;
+    border-top: 1px solid transparent;
     border-radius: 0;
     background: transparent;
     color: var(--text-2);
     font: inherit;
-    font-size: 0.6875rem;
+    font-size: var(--fs-nav);
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
   }
-  .staff-bottom-nav a.active, .staff-bottom-nav button.active { color: var(--brand); box-shadow: inset 0 3px 0 var(--brand); }
+  .staff-bottom-nav a.active, .staff-bottom-nav button.active { color: var(--brand); border-top-color: var(--brand); }
   .staff-bottom-nav .nav-count { color: var(--text-2); font-variant-numeric: tabular-nums; }
 }

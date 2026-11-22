@@ -89,19 +89,19 @@ export default function Reservations() {
     act(reservation, () => supabase.rpc('approve_reservation', {
       p_reservation_id: reservation.reservation_id,
       p_table_id: picked ? Number(picked) : null,
-    }), (data) => `Approved ${data.reservation_code}: Table ${data.table_number}.`)
+    }), (data) => `Approved ${displayName(reservation.customer_name)} for Table ${data.table_number}.`)
   }
 
   async function decline(reservation) {
-    const reason = await promptDialog({ title: `Decline ${reservation.reservation_code}`, label: 'Reason shown to the customer (optional)', confirmLabel: 'Decline' })
+    const reason = await promptDialog({ title: 'Decline reservation', label: 'Reason shown to the customer (optional)', confirmLabel: 'Decline' })
     if (reason === null) return
-    act(reservation, () => supabase.rpc('decline_reservation', { p_reservation_id: reservation.reservation_id, p_reason: reason }), () => `Declined ${reservation.reservation_code}.`)
+    act(reservation, () => supabase.rpc('decline_reservation', { p_reservation_id: reservation.reservation_id, p_reason: reason }), () => `Declined ${displayName(reservation.customer_name)}'s reservation.`)
   }
 
   async function cancel(reservation) {
-    const reason = await promptDialog({ title: `Cancel ${reservation.reservation_code}`, label: 'Reason (optional)', confirmLabel: 'Cancel reservation', cancelLabel: 'Keep it' })
+    const reason = await promptDialog({ title: 'Cancel reservation', label: 'Reason (optional)', confirmLabel: 'Cancel reservation', cancelLabel: 'Keep it' })
     if (reason === null) return
-    act(reservation, () => supabase.rpc('staff_cancel_reservation', { p_reservation_id: reservation.reservation_id, p_reason: reason }), () => `Cancelled ${reservation.reservation_code}.`)
+    act(reservation, () => supabase.rpc('staff_cancel_reservation', { p_reservation_id: reservation.reservation_id, p_reason: reason }), () => `Cancelled ${displayName(reservation.customer_name)}'s reservation.`)
   }
 
   function arrive(reservation) {
