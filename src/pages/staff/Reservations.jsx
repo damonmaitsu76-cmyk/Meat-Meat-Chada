@@ -203,8 +203,10 @@ export default function Reservations() {
     <>
       <PageToolbar title="Reservations" live={live} />
       {noShows.length > 0 && <Notice tone="warn"><strong>Released after the grace period</strong><ul>{noShows.map((reservation) => <li key={reservation.reservation_id}>{displayName(reservation.customer_name)} (<span className="ticket">{reservation.reservation_code}</span>), booked for {fmtTime(reservation.reservation_time)}{reservation.restaurant_tables ? `, Table ${reservation.restaurant_tables.table_number} released` : ''}</li>)}</ul></Notice>}
-      <input className="search" type="search" aria-label="Search reservations by ID, name, or phone" placeholder="Search by ID, name, or phone" value={search} onChange={(event) => setSearch(event.target.value)} />
-      <FilterTabs label="Reservation filters" items={FILTERS.map((item) => ({ ...item, count: count(item.key) }))} value={query ? '' : filter} onChange={(key) => { setSearch(''); setFilter(key) }} />
+      <div className="reservation-controls">
+        <FilterTabs label="Reservation filters" items={FILTERS.map((item) => ({ ...item, count: count(item.key) }))} value={query ? '' : filter} onChange={(key) => { setSearch(''); setFilter(key) }} />
+        <input className="search" type="search" aria-label="Search reservations by ID, name, or phone" placeholder="Search by ID, name, or phone" value={search} onChange={(event) => setSearch(event.target.value)} />
+      </div>
       {info && <div className="success" role="status">{info}</div>}
       {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
       {rows === null && !error && <p className="hint">Loading reservations…</p>}

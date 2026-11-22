@@ -1,5 +1,7 @@
 /* Reservation records use cards on phones and a comparison table on wide screens. */
-.search { display: block; width: 100%; margin: 0 0 var(--s3); }
+.reservation-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); margin-bottom: var(--s4); }
+.reservation-controls .filter-tabs { flex: 1 1 auto; width: auto; max-width: 100%; min-width: 0; margin: 0; }
+.reservation-controls .search { flex: 0 0 280px; width: 280px; max-width: 100%; margin: 0; }
 .reservation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .reservation-actions .sub { align-self: center; }
 .contact-link { color: var(--text-2); text-decoration: underline; text-underline-offset: 2px; }
@@ -17,4 +19,9 @@
   .record-actions .reservation-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
   .record-actions .reservation-actions .btn { min-height: 44px; }
   .record-actions .reservation-actions > :nth-child(3) { grid-column: 1 / -1; }
+}
+
+@media (max-width: 719px) {
+  .reservation-controls .filter-tabs { flex: 0 0 100%; width: 100%; }
+  .reservation-controls .search { flex: 0 0 100%; width: 100%; }
 }
