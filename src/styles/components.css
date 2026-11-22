@@ -101,6 +101,12 @@ a.btn { text-decoration: none; }
 .segmented-option[aria-checked='true'] { border-bottom-color: var(--charcoal); background: transparent; color: var(--text); }
 .segmented-option:disabled { background: var(--ink-soft); color: var(--disabled-text); cursor: not-allowed; }
 
+.radio-cards { display: grid; gap: var(--s2); margin-bottom: var(--s4); }
+.radio-card { display: grid; align-content: center; gap: var(--s1); width: 100%; min-height: 48px; padding: var(--s2) var(--s3); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font: inherit; text-align: left; }
+.radio-card.selected { padding: calc(var(--s2) - 1px) calc(var(--s3) - 1px); border: 2px solid var(--charcoal); background: var(--ink-soft); }
+.radio-card-label { font-weight: 600; }
+.radio-card-description { color: var(--text-2); font-size: var(--fs-sm); font-weight: 400; }
+
 .disclosure { margin: 0 0 var(--s4); }
 .disclosure > summary { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s4); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; list-style-position: inside; }
 .disclosure-body { margin-top: var(--s3); }

@@ -3,7 +3,7 @@ import QRCode from 'qrcode'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Disclosure, Field, Notice, PageToolbar } from '../../components/ui.jsx'
+import { Field, Notice, PageToolbar } from '../../components/ui.jsx'
 import './TableManagement.css'
 
 const QR_OPTIONS = { width: 600, margin: 2, errorCorrectionLevel: 'M' }
@@ -32,6 +32,29 @@ async function removalBlocker(t) {
     return `Table ${t.table_number} still has approved bookings (${codes}). Remove it once they are done.`
   }
   return ''
+}
+
+function AddTableModal({ suggested, adding, onClose, onAdd }) {
+  const [newNumber, setNewNumber] = useState('')
+  const [newSeats, setNewSeats] = useState('4')
+  const [error, setError] = useState('')
+
+  async function submit(event) {
+    const message = await onAdd(event, newNumber, newSeats)
+    if (message) setError(message)
+    else onClose()
+  }
+
+  return (
+    <Modal title="Add table" onClose={onClose}>
+      <form onSubmit={submit}>
+        <Field label="Table number" type="number" min={1} inputMode="numeric" placeholder={String(suggested)} autoFocus value={newNumber} onChange={(event) => setNewNumber(event.target.value)} />
+        <Field label="Seats" type="number" min={1} inputMode="numeric" value={newSeats} onChange={(event) => setNewSeats(event.target.value)} />
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="btn full" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add table'}</button>
+      </form>
+    </Modal>
+  )
 }
 
 /* ------------------------------------------------------------------ */
@@ -88,8 +111,7 @@ export default function TableManagement() {
   const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
   const [info, setInfo] = useState('')
   const [showRemoved, setShowRemoved] = useState(false)
-  const [newNumber, setNewNumber] = useState('')
-  const [newSeats, setNewSeats] = useState('4')
+  const [addOpen, setAddOpen] = useState(false)
   const [adding, setAdding] = useState(false)
   const [edit, setEdit] = useState(null) // { id, number, seats }
   const [busyId, setBusyId] = useState(null)
@@ -136,14 +158,13 @@ export default function TableManagement() {
   const configuredSiteUrl = import.meta.env.VITE_PUBLIC_SITE_URL?.trim()
   const baseUrl = (configuredSiteUrl || window.location.origin).replace(/\/+$/, '')
 
-  async function addTable(e) {
+  async function addTable(e, newNumber, newSeats) {
     e.preventDefault()
     const number = Number(newNumber || suggested)
     const seats = Number(newSeats)
     if (![number, seats].every((n) => Number.isInteger(n) && n >= 1)) {
       setInfo('')
-      setActionError('Table number and seats must be whole numbers above zero.')
-      return
+      return 'Table number and seats must be whole numbers above zero.'
     }
     setAdding(true)
     const { error } = await supabase
@@ -152,13 +173,12 @@ export default function TableManagement() {
     setAdding(false)
     if (error) {
       setInfo('')
-      setActionError(friendly(error))
-      return
+      return friendly(error)
     }
     setActionError('')
     setInfo(`Table ${number} added.`)
-    setNewNumber('')
     load()
+    return ''
   }
 
   async function saveEdit() {
@@ -252,13 +272,7 @@ export default function TableManagement() {
           action={(
             <div className="tm-toolbar">
               <button className="btn" type="button" disabled={activeTables.length === 0} onClick={() => printTables(activeTables)}>Print all QR codes</button>
-              <Disclosure label="Add table" className="tm-add-disclosure disclosure-button">
-                <form className="tm-add" onSubmit={addTable}>
-                  <Field label="Table number" type="number" min={1} inputMode="numeric" placeholder={String(suggested)} value={newNumber} onChange={(event) => setNewNumber(event.target.value)} />
-                  <Field label="Seats" type="number" min={1} inputMode="numeric" value={newSeats} onChange={(event) => setNewSeats(event.target.value)} />
-                  <button className="btn secondary" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add table'}</button>
-                </form>
-              </Disclosure>
+              <button className="btn secondary" type="button" onClick={() => { setInfo(''); setActionError(''); setAddOpen(true) }}>Add table</button>
             </div>
           )}
         />
@@ -306,6 +320,8 @@ export default function TableManagement() {
             {removedTables.length > 0 && <button className="btn ghost small tm-removed-toggle" type="button" aria-expanded={showRemoved} onClick={() => setShowRemoved((value) => !value)}>{showRemoved ? 'Hide' : 'Show'} removed tables ({removedTables.length})</button>}
           </>
         )}
+
+        {addOpen && <AddTableModal suggested={suggested} adding={adding} onClose={() => setAddOpen(false)} onAdd={addTable} />}
 
         {qrTable && (
           <QrModal

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Disclosure, Field, Notice, PageToolbar, Segmented, Switch } from '../../components/ui.jsx'
+import Modal from '../../components/Modal.jsx'
+import { Field, Notice, PageToolbar, Segmented, Switch } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES } from '../../auth/roles.js'
 import './MenuManagement.css'
@@ -21,6 +22,30 @@ function friendly(error) {
   return error.message
 }
 
+function AddDishModal({ adding, onClose, onAdd }) {
+  const [name, setName] = useState('')
+  const [category, setCategory] = useState('meats')
+  const [error, setError] = useState('')
+
+  async function submit(event) {
+    event.preventDefault()
+    const message = await onAdd({ name, category })
+    if (message) setError(message)
+    else onClose()
+  }
+
+  return (
+    <Modal title="Add dish" onClose={onClose}>
+      <form onSubmit={submit}>
+        <Field label="Dish name" type="text" maxLength={80} required autoFocus value={name} onChange={(event) => setName(event.target.value)} />
+        <div className="field"><span>Category</span><Segmented label="Category" items={CATEGORIES} value={category} onChange={setCategory} /></div>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="btn full" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add dish'}</button>
+      </form>
+    </Modal>
+  )
+}
+
 export default function MenuManagement() {
   const { profile } = useAuth()
   const canEdit = ADMIN_ROLES.includes(profile.role) // staff only get the availability switches
@@ -31,8 +56,7 @@ export default function MenuManagement() {
   const [info, setInfo] = useState('')
   const [live, setLive] = useState(false)
   const [busyId, setBusyId] = useState(null)
-  const [newName, setNewName] = useState('')
-  const [newCategory, setNewCategory] = useState('meats')
+  const [addOpen, setAddOpen] = useState(false)
   const [adding, setAdding] = useState(false)
   const [edit, setEdit] = useState(null) // { id, name, category }
 
@@ -82,28 +106,25 @@ export default function MenuManagement() {
     load()
   }
 
-  async function addDish(e) {
-    e.preventDefault()
-    const name = newName.trim()
+  async function addDish({ name: dishName, category }) {
+    const name = dishName.trim()
     if (!name) {
       setInfo('')
-      setActionError('Enter a dish name.')
-      return
+      return 'Enter a dish name.'
     }
     setAdding(true)
     const { error } = await supabase
       .from('menu_items')
-      .insert({ item_name: name, category: newCategory })
+      .insert({ item_name: name, category })
     setAdding(false)
     if (error) {
       setInfo('')
-      setActionError(friendly(error))
-      return
+      return friendly(error)
     }
     setActionError('')
     setInfo(`${name} added.`)
-    setNewName('')
     load()
+    return ''
   }
 
   async function saveEdit() {
@@ -165,17 +186,10 @@ export default function MenuManagement() {
       <PageToolbar
         title="Menu"
         live={live}
-        action={canEdit && (
-          <Disclosure label="Add dish" className="toolbar-disclosure">
-            <form className="mm-add" onSubmit={addDish}>
-              <Field label="Dish name" type="text" maxLength={80} required value={newName} onChange={(event) => setNewName(event.target.value)} />
-              <div className="field"><span>Category</span><Segmented label="Category" items={CATEGORIES} value={newCategory} onChange={setNewCategory} /></div>
-              <button className="btn secondary" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add dish'}</button>
-            </form>
-          </Disclosure>
-        )}
+        action={canEdit && <button className="btn" type="button" onClick={() => { setInfo(''); setActionError(''); setAddOpen(true) }}>Add dish</button>}
       />
 
+      {addOpen && <AddDishModal adding={adding} onClose={() => setAddOpen(false)} onAdd={addDish} />}
       {info && <div className="success">{info}</div>}
       {(actionError || error) && <Notice tone="warn" action={!items ? <button className="btn secondary small" type="button" onClick={load}>Try again</button> : undefined}>{actionError || error}</Notice>}
       {items === null && !error && <p className="hint">Loading dishes…</p>}

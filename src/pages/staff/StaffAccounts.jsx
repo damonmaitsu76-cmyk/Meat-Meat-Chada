@@ -2,12 +2,16 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Disclosure, Field, Notice, PageToolbar, RecordCard, ResponsiveRecords, Segmented, StatusChip } from '../../components/ui.jsx'
+import { Disclosure, Field, Notice, PageToolbar, RadioCards, RecordCard, ResponsiveRecords, StatusChip } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
-import { ROLES, ROLE_LABEL } from '../../auth/roles.js'
+import { ROLE_LABEL } from '../../auth/roles.js'
 import './StaffAccounts.css'
 
 const USERNAME_RE = /^[a-z0-9._-]{3,30}$/ // same rule as the manage-staff function
+const ROLE_OPTIONS = [
+  { key: 'staff', label: 'Staff', description: 'Dashboard, requests, reservations, and dish availability.' },
+  { key: 'admin', label: 'Manager', description: 'Everything staff can do, plus tables, import, reports, accounts, and settings.' },
+]
 
 function passwordProblem(password) {
   return password.length < 8 || password.length > 72
@@ -26,6 +30,54 @@ async function callManageStaff(body) {
     // no readable reply (network problem, or the function is not deployed)
   }
   return 'Could not reach the account service. Check that the manage-staff function is deployed.'
+}
+
+function CreateAccountModal({ creating, onClose, onCreate }) {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole] = useState('staff')
+  const [error, setError] = useState('')
+
+  async function submit(event) {
+    event.preventDefault()
+    const message = await onCreate({ username, password, role })
+    if (message) setError(message)
+    else onClose()
+  }
+
+  return (
+    <Modal title="Create account" onClose={onClose}>
+      <form onSubmit={submit}>
+        <Field label="Username" hint="3–30 letters, numbers, dots, dashes or underscores" type="text" autoCapitalize="none" autoComplete="off" maxLength={30} autoFocus value={username} onChange={(event) => setUsername(event.target.value)} />
+        <Field label="Password" hint="8–72 characters" type="password" autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} />
+        <div className="field"><span>Role</span><RadioCards label="Role" items={ROLE_OPTIONS} value={role} onChange={setRole} /></div>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="btn full" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create account'}</button>
+      </form>
+    </Modal>
+  )
+}
+
+function RoleModal({ user, busy, onClose, onChange }) {
+  const [role, setRole] = useState(user.role)
+  const [error, setError] = useState('')
+
+  async function submit(event) {
+    event.preventDefault()
+    const message = await onChange(user, role)
+    if (message) setError(message)
+    else onClose()
+  }
+
+  return (
+    <Modal title={`Role for ${user.username}`} onClose={onClose}>
+      <form onSubmit={submit}>
+        <RadioCards label={`Role for ${user.username}`} items={ROLE_OPTIONS} value={role} onChange={setRole} />
+        {error && <p className="error" role="alert">{error}</p>}
+        <button className="btn full" type="submit" disabled={role === user.role || busy}>Change role</button>
+      </form>
+    </Modal>
+  )
 }
 
 /* ------------------------------------------------------------------ */
@@ -82,13 +134,11 @@ export default function StaffAccounts() {
   const [error, setError] = useState('') // problems loading the list
   const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
   const [info, setInfo] = useState('')
-  const [newUsername, setNewUsername] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [newRole, setNewRole] = useState('staff')
+  const [createOpen, setCreateOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState(null)
   const [resetFor, setResetFor] = useState(null)
-  const [roleEditId, setRoleEditId] = useState(null)
+  const [roleFor, setRoleFor] = useState(null)
 
   const load = useCallback(
     () =>
@@ -112,39 +162,35 @@ export default function StaffAccounts() {
 
   const closeReset = useCallback(() => setResetFor(null), [])
 
-  async function createAccount(e) {
-    e.preventDefault()
-    const username = newUsername.trim().toLowerCase()
+  async function createAccount({ username: inputUsername, password, role }) {
+    const username = inputUsername.trim().toLowerCase()
     const problem = USERNAME_RE.test(username)
-      ? passwordProblem(newPassword)
+      ? passwordProblem(password)
       : 'The username must be 3 to 30 letters, numbers, dots, dashes, or underscores.'
     if (problem) {
       setInfo('')
-      setActionError(problem)
-      return
+      return problem
     }
     setCreating(true)
     const message = await callManageStaff({
       action: 'create',
       username,
-      password: newPassword,
-      role: newRole,
+      password,
+      role,
     })
     setCreating(false)
     if (message) {
       setInfo('')
-      setActionError(message)
-      return
+      return message
     }
     setActionError('')
     setInfo(`Account ${username} created. Give them the username and the password.`)
-    setNewUsername('')
-    setNewPassword('')
     load()
+    return ''
   }
 
   // Role and status are plain edits of the users row; the database rules decide if they are allowed.
-  async function updateUser(u, changes, okMessage) {
+  async function updateUser(u, changes, okMessage, reportError = true) {
     setBusyId(u.user_id)
     setInfo('')
     const { data, error } = await supabase
@@ -154,24 +200,20 @@ export default function StaffAccounts() {
       .select('user_id')
     setBusyId(null)
     if (error || data.length === 0) {
-      setActionError(error ? error.message : 'The change was not saved. Check your account role.')
+      const message = error ? error.message : 'The change was not saved. Check your account role.'
+      if (reportError) setActionError(message)
       load()
-      return
+      return message
     }
     setActionError('')
     setInfo(okMessage)
     load()
+    return ''
   }
 
   async function changeRole(u, role) {
-    if (role === u.role) return
-    const ok = await confirmDialog({
-      title: `Change ${u.username} to ${ROLE_LABEL[role]}?`,
-      confirmLabel: 'Change role',
-    })
-    if (!ok) return
-    await updateUser(u, { role }, `${u.username} is now ${ROLE_LABEL[role]}.`)
-    setRoleEditId(null)
+    if (role === u.role) return ''
+    return updateUser(u, { role }, `${u.username} is now ${ROLE_LABEL[role]}.`, false)
   }
 
   async function changeStatus(u) {
@@ -196,18 +238,10 @@ export default function StaffAccounts() {
 
   const list = users || []
 
-  function roleControl(user) {
-    if (roleEditId !== user.user_id) return <span>{ROLE_LABEL[user.role]}</span>
-    return <div className="account-role">
-      <Segmented label={`Role of ${user.username}`} items={ROLES.map((role) => ({ key: role, label: ROLE_LABEL[role] }))} value={user.role} disabled={busyId === user.user_id} onChange={(role) => changeRole(user, role)} />
-      <button className="btn ghost small" type="button" onClick={() => setRoleEditId(null)}>Cancel</button>
-    </div>
-  }
-
   function userActions(user, me) {
     const busy = busyId === user.user_id
     return <div className="acc-actions">
-      {!me && roleEditId !== user.user_id && <button className="btn ghost small" type="button" disabled={busy} onClick={() => setRoleEditId(user.user_id)}>Change role</button>}
+      {!me && <button className="btn ghost small" type="button" disabled={busy} onClick={() => setRoleFor(user)}>Change role</button>}
       <button className="btn ghost small" type="button" disabled={busy} onClick={() => setResetFor(user)}>Reset password</button>
       {!me && <button className={`btn ghost small ${user.status === 'active' ? 'acc-deactivate' : ''}`} type="button" disabled={busy} onClick={() => changeStatus(user)}>{user.status === 'active' ? 'Deactivate' : 'Reactivate'}</button>}
     </div>
@@ -216,22 +250,16 @@ export default function StaffAccounts() {
   const records = list.map((user) => {
     const me = user.user_id === profile.user_id
     const inactive = user.status !== 'active'
-    const username = <span className="acc-username"><strong>{user.username}{me && <span className="acc-you"> · You</span>}</strong>{inactive && <StatusChip status="muted">Deactivated</StatusChip>}</span>
-    const role = roleControl(user)
-    const card = <RecordCard title={<span className="acc-username"><span>{user.username}{me && <span className="acc-you"> · You</span>}</span>{inactive && <StatusChip status="muted">Deactivated</StatusChip>}</span>} actions={userActions(user, me)}><div className="account-role">{role}</div></RecordCard>
-    return { key: user.user_id, card, cells: [username, role, userActions(user, me)] }
+    const username = <span className="acc-username"><strong>{user.username}</strong>{me && <span className="acc-you">· You</span>}{inactive && <StatusChip status="muted">Deactivated</StatusChip>}</span>
+    const role = <span className="acc-role">{ROLE_LABEL[user.role]}</span>
+    const actions = userActions(user, me)
+    const card = <RecordCard title={username} actions={actions}><span className="acc-role">{ROLE_LABEL[user.role]}</span></RecordCard>
+    return { key: user.user_id, card, cells: [username, role, actions] }
   })
 
   return (
     <>
-      <PageToolbar title="Staff accounts" action={<Disclosure label="Create account" className="acc-create-disclosure disclosure-button">
-        <form className="acc-add" onSubmit={createAccount}>
-          <Field label="Username" hint="3–30 letters, numbers, dots, dashes or underscores" type="text" autoCapitalize="none" autoComplete="off" maxLength={30} value={newUsername} onChange={(event) => setNewUsername(event.target.value)} />
-          <Field label="Password" hint="8–72 characters" type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
-          <div className="field"><span>Role</span><Segmented label="Role" items={ROLES.map((role) => ({ key: role, label: ROLE_LABEL[role] }))} value={newRole} onChange={setNewRole} /></div>
-          <button className="btn" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create account'}</button>
-        </form>
-      </Disclosure>} />
+      <PageToolbar title="Staff accounts" action={<button className="btn" type="button" onClick={() => { setInfo(''); setActionError(''); setCreateOpen(true) }}>Create account</button>} />
       {info && <div className="success">{info}</div>}
       {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
       {users === null && !error && <p className="hint">Loading accounts…</p>}
@@ -254,6 +282,8 @@ export default function StaffAccounts() {
           }}
         />
       )}
+      {createOpen && <CreateAccountModal creating={creating} onClose={() => setCreateOpen(false)} onCreate={createAccount} />}
+      {roleFor && <RoleModal key={`${roleFor.user_id}-${roleFor.role}`} user={roleFor} busy={busyId === roleFor.user_id} onClose={() => setRoleFor(null)} onChange={changeRole} />}
     </>
   )
 }
