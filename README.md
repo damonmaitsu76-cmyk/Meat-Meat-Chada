@@ -19,7 +19,7 @@ Other scripts: `npm run lint`, `npm run build`, `npm run preview`.
 
 ## Set up the database
 
-In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 08:
+In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 10:
 
 1. `01_schema.sql` – tables, security rules, and functions
 2. `02_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
@@ -29,6 +29,8 @@ In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 0
 6. `06_merge_roles.sql` – one `admin` role instead of manager and owner
 7. `07_staff_cancel_and_slot_fixes.sql` – staff cancellation and table availability fixes
 8. `08_seed.sql` – settings, sample tables and dishes, and the first login account (follow the steps inside the file; it needs the admin role from 06)
+9. `09_add_on_category.sql` – adds the `add-on` menu category (meats, sides, drinks, add-on)
+10. `10_samgyup_menu.sql` – a starter samgyupsal menu: more meats, sides, drinks, and add-ons (needs 09)
 
 ## Deploy the account function
 
@@ -81,5 +83,5 @@ A printed code contains the full web address. If the address changes later, prin
 
 ## Before the restaurant uses it
 
-The tables and dishes from `supabase/sql/08_seed.sql` are placeholders. Replace them with the real ones through
+The tables and dishes from `supabase/sql/08_seed.sql` and `supabase/sql/10_samgyup_menu.sql` are placeholders. Replace them with the real ones through
 **Import** or the **Tables & QR** and **Menu** pages.

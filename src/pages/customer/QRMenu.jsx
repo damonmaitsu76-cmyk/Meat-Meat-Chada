@@ -7,6 +7,7 @@ const CATEGORIES = [
   { key: 'meats', label: 'Meats' },
   { key: 'sides', label: 'Sides' },
   { key: 'drinks', label: 'Drinks' },
+  { key: 'add-on', label: 'Add-ons' },
 ]
 const STATUS_ORDER = ['sent', 'accepted', 'ready', 'served']
 const STATUS_LABELS = { sent: 'Sent', accepted: 'Accepted', ready: 'Ready', served: 'Served' }

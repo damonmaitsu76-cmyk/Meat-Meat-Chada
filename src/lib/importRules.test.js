@@ -23,8 +23,21 @@ describe('planImport', () => {
     expect(result.failed).toHaveLength(1)
     expect(result.failed[0]).toMatchObject({
       row: 1,
-      reason: 'The category must be meats, sides, or drinks.',
+      reason: 'The category must be meats, sides, drinks, or add-on.',
     })
+  })
+
+  it('accepts the add-on category', () => {
+    const result = planImport(
+      'menu',
+      [{ item_name: ' Cheese  Ramyun ', category: 'Add-On' }],
+      new Set()
+    )
+
+    expect(result.failed).toEqual([])
+    expect(result.records).toEqual([
+      { item_name: 'Cheese Ramyun', category: 'add-on', is_available: true },
+    ])
   })
 
   it('skips a duplicate row inside the file', () => {

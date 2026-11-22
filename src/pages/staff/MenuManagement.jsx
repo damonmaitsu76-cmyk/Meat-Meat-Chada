@@ -11,6 +11,7 @@ const CATEGORIES = [
   { key: 'meats', label: 'Meats' },
   { key: 'sides', label: 'Sides' },
   { key: 'drinks', label: 'Drinks' },
+  { key: 'add-on', label: 'Add-ons' },
 ]
 const SAFETY_POLL_MS = 30000 // in case the live connection silently drops
 

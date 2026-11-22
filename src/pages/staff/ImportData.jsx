@@ -167,7 +167,7 @@ export default function ImportData() {
         </div>
 
         <p className="imp-help">{typeKey === 'menu'
-          ? 'Use a spreadsheet saved as CSV, one dish per row. Columns: Dish name, Category (meats, sides, or drinks), and Available (yes or no; leave blank for yes).'
+          ? 'Use a spreadsheet saved as CSV, one dish per row. Columns: Dish name, Category (meats, sides, drinks, or add-on), and Available (yes or no; leave blank for yes).'
           : 'Use a spreadsheet saved as CSV, one table per row. Columns: Table number, Seats, and Active (yes or no; leave blank for yes).'}</p>
 
         <div className="field">

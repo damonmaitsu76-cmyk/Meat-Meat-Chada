@@ -3,7 +3,7 @@
 // menu_items.csv         columns: item_name, category, is_available (yes/no, optional)
 // restaurant_tables.csv  columns: table_number, capacity, is_active (yes/no, optional)
 
-export const CATEGORIES = ['meats', 'sides', 'drinks']
+export const CATEGORIES = ['meats', 'sides', 'drinks', 'add-on']
 export const MAX_ROWS = 500
 
 export const IMPORT_TYPES = {
@@ -41,7 +41,7 @@ function checkMenuRow(row) {
   const category = text(row.category).toLowerCase()
   if (!name) return { reason: 'The dish name is blank.' }
   if (name.length > 80) return { reason: 'The dish name is longer than 80 characters.' }
-  if (!CATEGORIES.includes(category)) return { reason: 'The category must be meats, sides, or drinks.' }
+  if (!CATEGORIES.includes(category)) return { reason: 'The category must be meats, sides, drinks, or add-on.' }
   const available = readYesNo(row.is_available, true)
   if (available.error) return { reason: 'Availability must be yes or no.' }
   return {
