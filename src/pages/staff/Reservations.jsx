@@ -4,6 +4,7 @@ import { promptDialog } from '../../components/dialogs.js'
 import { EmptyState, FilterTabs, Notice, PageToolbar, RecordCard, ResponsiveRecords, StatusChip } from '../../components/ui.jsx'
 import { dayLabel, fmtTime, manilaDate, shiftDate, startMs } from '../../lib/dates.js'
 import { displayName } from '../../lib/format.js'
+import './Reservations.css'
 
 const FILTERS = [
   { key: 'pending', label: 'Pending' },
