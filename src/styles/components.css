@@ -90,6 +90,10 @@ a.btn { text-decoration: none; }
 .filter-count { margin-left: var(--s2); font-variant-numeric: tabular-nums; }
 .filter-tab.active .filter-count { color: var(--white); }
 
+.segmented { display: flex; flex-wrap: wrap; gap: var(--s1); }
+.segmented-option { min-height: 44px; padding: 0 var(--s3); border: 1px solid transparent; border-radius: var(--r-chip); background: transparent; color: var(--text-2); font: inherit; font-weight: 600; }
+.segmented-option[aria-checked='true'] { background: var(--charcoal); color: var(--white); }
+
 .disclosure { margin: 0 0 var(--s4); }
 .disclosure > summary { display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--s4); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font-weight: 600; cursor: pointer; list-style-position: inside; }
 .disclosure-body { margin-top: var(--s3); }

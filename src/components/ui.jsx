@@ -130,6 +130,37 @@ export function FilterTabs({ items, value, onChange, label = 'Filters' }) {
   )
 }
 
+export function Segmented({ items, value, onChange, label }) {
+  function move(event) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const buttons = Array.from(event.currentTarget.querySelectorAll('[data-segmented-radio]'))
+    const current = buttons.indexOf(event.target)
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (current + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length
+    if (items[next]) onChange(items[next].key)
+    buttons[next]?.focus()
+  }
+
+  return (
+    <div className="segmented" role="radiogroup" aria-label={label} onKeyDown={move}>
+      {items.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          role="radio"
+          data-segmented-radio
+          aria-checked={value === item.key}
+          tabIndex={value === item.key ? 0 : -1}
+          className="segmented-option"
+          onClick={() => onChange(item.key)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export function Disclosure({ label, children, className = '', open = false }) {
   return (
     <details className={`disclosure ${className}`.trim()} open={open || undefined}>

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Field, StatusChip, Stepper } from '../../components/ui.jsx'
+import { Field, Segmented, StatusChip, Stepper } from '../../components/ui.jsx'
 import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
 import './Reserve.css'
 
@@ -43,6 +43,7 @@ function ReservationForm({ onCreated }) {
   const [guests, setGuests] = useState(2)
   const [date, setDate] = useState(today)
   const [time, setTime] = useState('')
+  const [period, setPeriod] = useState('')
   const [tick, setTick] = useState(0)
   const [slotResult, setSlotResult] = useState(null)
   const [fieldErrors, setFieldErrors] = useState({})
@@ -67,6 +68,15 @@ function ReservationForm({ onCreated }) {
   const openSlots = slots.filter((slot) => slot.is_open)
   const chosenTime = openSlots.some((slot) => slot.slot_time === time) ? time : ''
   const noOpenSlots = loaded && !loaded.error && openSlots.length === 0
+  const periodForTime = (slotTime) => slotTime < '14:00:00' ? 'lunch' : slotTime < '17:00:00' ? 'afternoon' : 'dinner'
+  const periods = [
+    { key: 'lunch', label: 'Lunch', slots: openSlots.filter((slot) => periodForTime(slot.slot_time) === 'lunch') },
+    { key: 'afternoon', label: 'Afternoon', slots: openSlots.filter((slot) => periodForTime(slot.slot_time) === 'afternoon') },
+    { key: 'dinner', label: 'Dinner', slots: openSlots.filter((slot) => periodForTime(slot.slot_time) === 'dinner') },
+  ].filter((item) => item.slots.length > 0)
+  const selectedPeriod = periods.some((item) => item.key === period)
+    ? period
+    : chosenTime ? periodForTime(chosenTime) : periods[0]?.key || ''
 
   function updateField(field, setter, value) {
     setter(value)
@@ -156,25 +166,25 @@ function ReservationForm({ onCreated }) {
         {slotsLoading && <p className="field-hint">Loading times…</p>}
         {loaded?.error && <div className="time-error"><p className="error">{loaded.error}</p><button type="button" className="btn secondary small" onClick={() => setTick((value) => value + 1)}>Try again</button></div>}
         {!slotsLoading && !loaded?.error && !slots.length && <p className="field-hint">Choose a date and party size to see times.</p>}
-        {slots.length > 0 && (
-          <div className="time-grid">
-            {slots.map((slot) => {
-              const open = slot.is_open
-              return (
+        {openSlots.length > 0 && (
+          <>
+            {periods.length > 1 && <Segmented label="Time of day" items={periods.map(({ key, label }) => ({ key, label }))} value={selectedPeriod} onChange={setPeriod} />}
+            <div className="time-grid">
+              {periods.find((item) => item.key === selectedPeriod)?.slots.map((slot) => (
                 <button
                   key={slot.slot_time}
                   type="button"
                   className={`time-option ${chosenTime === slot.slot_time ? 'selected' : ''}`}
-                  disabled={!open || slotsLoading}
-                  aria-label={`${fmtTime(slot.slot_time)}${open ? '' : ', unavailable'}`}
+                  disabled={slotsLoading}
+                  aria-label={fmtTime(slot.slot_time)}
                   aria-pressed={chosenTime === slot.slot_time}
-                  onClick={() => { updateField('time', setTime, slot.slot_time) }}
+                  onClick={() => { setPeriod(periodForTime(slot.slot_time)); updateField('time', setTime, slot.slot_time) }}
                 >
-                  {fmtTime(slot.slot_time)}{!open && <small>Unavailable</small>}
+                  {fmtTime(slot.slot_time)}
                 </button>
-              )
-            })}
-          </div>
+              ))}
+            </div>
+          </>
         )}
         {fieldErrors.time && <small className="field-error" id="reservation-time-error" role="alert">{fieldErrors.time}</small>}
       </fieldset>
