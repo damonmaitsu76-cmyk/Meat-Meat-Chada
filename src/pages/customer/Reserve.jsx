@@ -10,12 +10,12 @@ const POLL_MS = 5000
 const MAX_DAYS_AHEAD = 60
 
 const STATUS = {
-  pending: { label: 'Pending', text: 'We received your request. Staff will review it soon. Keep this page, or return to it on this phone, to see the answer.' },
-  approved: { label: 'Approved', text: 'Your table is confirmed. Show this reservation ID to the staff when you arrive. Please arrive on time; late bookings are released to other guests.' },
-  declined: { label: 'Declined', text: 'We could not confirm this request. Try another date or time.' },
-  cancelled: { label: 'Cancelled', text: 'This reservation was cancelled.' },
-  arrived: { label: 'Arrived', text: 'Welcome to Samgyup Chada. Scan the QR code on your table to see the menu and ask for refills.' },
-  auto_cancelled: { label: 'Released', text: 'This reservation was released because you did not arrive in time. You can make a new one.' },
+  pending: { label: 'Pending', text: '' },
+  approved: { label: 'Approved', text: 'Show this ID to the staff when you arrive.' },
+  declined: { label: 'Declined', text: '' },
+  cancelled: { label: 'Cancelled', text: '' },
+  arrived: { label: 'Arrived', text: '' },
+  auto_cancelled: { label: 'Released', text: 'You did not arrive in time, so the table was released.' },
 }
 
 function readStoredCode() {
@@ -221,7 +221,6 @@ function LookupForm({ onFound }) {
   return (
     <form onSubmit={onSubmit} noValidate>
       <h2>Have a reservation ID?</h2>
-      <p className="hint">Enter it to check your status or cancel.</p>
       <div className="lookup">
         <label className="field lookup-field" htmlFor="lookup-code">
           <span>Reservation ID</span>
@@ -304,7 +303,7 @@ function StatusCard({ code, onReset }) {
         <div><dt>Date</dt><dd>{fmtDate(reservation.reservation_date)}</dd></div>
         <div><dt>Time</dt><dd>{fmtTime(reservation.reservation_time)}</dd></div>
       </dl>
-      <p className="hint">{info.text}</p>
+      {info.text && <p className="hint">{info.text}</p>}
       {reservation.status === 'declined' && reservation.decline_reason && <p className="decline-reason"><strong>Message from the restaurant:</strong> {reservation.decline_reason}</p>}
       {error && <p className="error" role="alert">{error}</p>}
       {canCancel ? (
