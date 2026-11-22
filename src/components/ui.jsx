@@ -124,7 +124,7 @@ export function FilterTabs({ items, value, onChange, label = 'Filters' }) {
           className={`filter-tab ${value === item.key ? 'active' : ''}`}
           onClick={() => onChange(item.key)}
         >
-          {item.label}{item.count !== undefined && <span className="filter-count">{item.count}</span>}
+      {item.label}{item.count > 0 && <span className="filter-count">{item.count}</span>}
         </button>
       ))}
     </div>

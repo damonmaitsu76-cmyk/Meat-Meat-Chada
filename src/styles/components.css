@@ -84,15 +84,14 @@ a.btn { text-decoration: none; }
 .records-table-wrap { width: 100%; overflow-x: auto; }
 .records-table-wrap .q-table { min-width: 800px; }
 
-.filter-tabs { display: flex; gap: var(--s1); width: 100%; margin: 0 0 var(--s4); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; }
-.filter-tab { flex: 0 0 auto; min-height: 44px; padding: 0 var(--s4); border: 1px solid transparent; border-radius: var(--r-chip); background: transparent; color: var(--text-2); font-weight: 600; scroll-snap-align: start; white-space: nowrap; }
-.filter-tab.active { background: var(--charcoal); color: var(--white); }
-.filter-count { margin-left: var(--s2); font-variant-numeric: tabular-nums; }
-.filter-tab.active .filter-count { color: var(--white); }
+.filter-tabs { display: flex; gap: var(--s3); width: 100%; margin: 0 0 var(--s4); border-bottom: 1px solid var(--line); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+.filter-tab { flex: 0 0 auto; min-height: 44px; padding: 0 var(--s2); border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--text-2); font-weight: 600; scroll-snap-align: start; white-space: nowrap; }
+.filter-tab.active { border-bottom-color: var(--charcoal); background: transparent; color: var(--text); }
+.filter-count { margin-left: var(--s2); color: var(--text-3); font-size: var(--fs-meta); font-variant-numeric: tabular-nums; }
 
-.segmented { display: flex; flex-wrap: wrap; gap: var(--s1); }
-.segmented-option { min-height: 44px; padding: 0 var(--s3); border: 1px solid transparent; border-radius: var(--r-chip); background: transparent; color: var(--text-2); font: inherit; font-weight: 600; }
-.segmented-option[aria-checked='true'] { background: var(--charcoal); color: var(--white); }
+.segmented { display: flex; flex-wrap: wrap; gap: var(--s3); border-bottom: 1px solid var(--line); }
+.segmented-option { min-height: 44px; padding: 0 var(--s2); border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; color: var(--text-2); font: inherit; font-weight: 600; }
+.segmented-option[aria-checked='true'] { border-bottom-color: var(--charcoal); background: transparent; color: var(--text); }
 .segmented-option:disabled { background: var(--ink-soft); color: var(--disabled-text); cursor: not-allowed; }
 
 .disclosure { margin: 0 0 var(--s4); }

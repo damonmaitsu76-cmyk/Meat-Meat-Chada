@@ -1,17 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
-import { EmptyState, FilterTabs, Notice, PageToolbar, RecordCard, StatusChip } from '../../components/ui.jsx'
+import { Notice, PageToolbar, RecordCard, StatusChip } from '../../components/ui.jsx'
 import { formatDuration } from '../../lib/format.js'
 import './RequestQueue.css'
 
-const ACTIVE = ['sent', 'accepted', 'ready']
-const FILTERS = [
-  { key: 'active', label: 'Active' },
-  { key: 'sent', label: 'New' },
-  { key: 'accepted', label: 'Accepted' },
-  { key: 'ready', label: 'Ready' },
-  { key: 'served', label: 'Served' },
-]
 const STATUS_LABEL = { sent: 'New', accepted: 'Accepted', ready: 'Ready', served: 'Served' }
 const NEXT = {
   sent: { status: 'accepted', label: 'Accept' },
@@ -53,7 +45,6 @@ export default function RequestQueue() {
   const [requests, setRequests] = useState(null)
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
-  const [filter, setFilter] = useState('active')
   const [busyId, setBusyId] = useState(null)
   const [live, setLive] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -106,59 +97,59 @@ export default function RequestQueue() {
   }
 
   const all = requests || []
-  const matches = (request, key) => key === 'active' ? ACTIVE.includes(request.status) : request.status === key
-  const count = (key) => all.filter((request) => matches(request, key)).length
-  const visible = all.filter((request) => matches(request, filter))
-  if (filter === 'served') visible.reverse()
+  const activeGroups = [
+    { status: 'sent', label: 'New' },
+    { status: 'accepted', label: 'Accepted' },
+    { status: 'ready', label: 'Ready' },
+  ].map((group) => ({ ...group, requests: all.filter((request) => request.status === group.status) })).filter((group) => group.requests.length > 0)
+  const served = all.filter((request) => request.status === 'served').reverse()
 
   return (
     <>
       <PageToolbar title="Request queue" live={live} />
-      <FilterTabs
-        label="Request filters"
-        value={filter}
-        onChange={setFilter}
-        items={FILTERS.map((item) => ({ ...item, count: count(item.key) }))}
-      />
 
       {(actionError || error) && <Notice tone="warn" action={<button className="btn secondary small" type="button" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
       {requests === null && !error && <p className="hint">Loading requests…</p>}
-      {requests && visible.length === 0 && (
-        <EmptyState>
-          {filter === 'active' ? 'No open requests. New ones appear here live.' : filter === 'served' ? 'No served requests in the last 12 hours.' : `No ${FILTERS.find((item) => item.key === filter)?.label.toLowerCase()} requests.`}
-        </EmptyState>
-      )}
 
-      {visible.length > 0 && (
-        <div className="request-grid">
-          {visible.map((request) => {
-            const next = NEXT[request.status]
-            const waited = Math.max(0, Math.floor((now - new Date(request.created_at).getTime()) / 60000))
-            const late = request.status === 'sent' && waited >= LATE_MINUTES
-            const items = request.request_items || []
-            if (request.status === 'served') return <ServedRow key={request.request_id} request={request} items={items} />
-            return (
-              <RecordCard
-                key={request.request_id}
-                className={`request-ticket ${late ? 'late' : ''}`}
-                title={`Table ${request.restaurant_tables?.table_number ?? '—'}`}
-                status={<StatusChip status={request.status}>{STATUS_LABEL[request.status]}</StatusChip>}
-                subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span></>}
-                actions={next ? (
-                  <button className="btn full" type="button" disabled={busyId === request.request_id} onClick={() => advance(request)}>
-                    {busyId === request.request_id ? 'Saving…' : next.label}
-                  </button>
-                ) : undefined}
-              >
-                {late && <p className="request-waiting">Waiting {formatDuration(waited)}</p>}
-                <ul className="ticket-items">
-                  {items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
-                </ul>
-                {request.note && <p className="ticket-note">{request.note}</p>}
-              </RecordCard>
-            )
-          })}
-        </div>
+      {activeGroups.map((group) => (
+        <section className="queue-group" key={group.status} aria-labelledby={`queue-${group.status}`}>
+          <h2 className="queue-group-heading" id={`queue-${group.status}`}>{group.label} <span>{group.requests.length}</span></h2>
+          <div className="request-grid">
+            {group.requests.map((request) => {
+              const next = NEXT[request.status]
+              const waited = Math.max(0, Math.floor((now - new Date(request.created_at).getTime()) / 60000))
+              const late = request.status === 'sent' && waited >= LATE_MINUTES
+              const items = request.request_items || []
+              return (
+                <RecordCard
+                  key={request.request_id}
+                  className={`request-ticket ${late ? 'late' : ''}`}
+                  title={`Table ${request.restaurant_tables?.table_number ?? '—'}`}
+                  status={<StatusChip status={request.status}>{STATUS_LABEL[request.status]}</StatusChip>}
+                  subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span></>}
+                  actions={next ? (
+                    <button className="btn full" type="button" disabled={busyId === request.request_id} onClick={() => advance(request)}>
+                      {busyId === request.request_id ? 'Saving…' : next.label}
+                    </button>
+                  ) : undefined}
+                >
+                  {late && <p className="request-waiting">Waiting {formatDuration(waited)}</p>}
+                  <ul className="ticket-items">
+                    {items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
+                  </ul>
+                  {request.note && <p className="ticket-note">{request.note}</p>}
+                </RecordCard>
+              )
+            })}
+          </div>
+        </section>
+      ))}
+
+      {served.length > 0 && (
+        <details className="served-group">
+          <summary>Served in the last 12 hours ({served.length})</summary>
+          <div className="served-list">{served.map((request) => <ServedRow key={request.request_id} request={request} items={request.request_items || []} />)}</div>
+        </details>
       )}
     </>
   )
