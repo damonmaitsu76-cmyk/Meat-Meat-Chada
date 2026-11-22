@@ -207,7 +207,6 @@ export default function Reports() {
                 </ResponsiveContainer>
               </div>
               {busiest.length > 0 && <p className="rep-note"><strong>Busiest {busiest.length === 1 ? 'day' : 'days'}:</strong> {busiest.map((day) => `${weekdayDate(day.day)} (${day.guests} guests)`).join(', ')}</p>}
-              <p className="rep-note">{sessions.walk_in_guests} walk-in guests and {sessions.reservation_guests} guests who reserved.</p>
             </>}
           </section>
 
