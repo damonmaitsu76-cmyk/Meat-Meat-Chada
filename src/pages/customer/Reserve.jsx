@@ -222,7 +222,6 @@ function LookupForm({ onFound }) {
       <h2>Have a reservation ID?</h2>
       <div className="lookup">
         <label className="field lookup-field" htmlFor="lookup-code">
-          <span>Reservation ID</span>
           <input
             id="lookup-code"
             className="ticket"
