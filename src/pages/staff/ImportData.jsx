@@ -131,11 +131,6 @@ export default function ImportData() {
     <>
       <PageToolbar title="Import data" />
 
-      <p className="hint">
-        Load the restaurant&apos;s existing menu or table list from a CSV file instead of typing
-        each one. Rows that are already saved are skipped, so uploading the same file twice is safe.
-      </p>
-
       <section className="imp-card">
         <div className="filters">
           {Object.entries(IMPORT_TYPES).map(([key, t]) => (
