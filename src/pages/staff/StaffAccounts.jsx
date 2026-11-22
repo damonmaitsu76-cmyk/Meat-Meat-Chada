@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Disclosure, Field, Notice, PageToolbar, RecordCard, ResponsiveRecords, Segmented } from '../../components/ui.jsx'
+import { Disclosure, Field, Notice, PageToolbar, RecordCard, ResponsiveRecords, Segmented, StatusChip } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ROLES, ROLE_LABEL } from '../../auth/roles.js'
 import './StaffAccounts.css'
@@ -196,10 +196,8 @@ export default function StaffAccounts() {
 
   const list = users || []
 
-  function roleControl(user, me) {
-    if (roleEditId !== user.user_id) {
-      return <div className="account-role"><span>{ROLE_LABEL[user.role]}</span>{!me && <button className="btn ghost small" type="button" onClick={() => setRoleEditId(user.user_id)}>Change role</button>}</div>
-    }
+  function roleControl(user) {
+    if (roleEditId !== user.user_id) return <span>{ROLE_LABEL[user.role]}</span>
     return <div className="account-role">
       <Segmented label={`Role of ${user.username}`} items={ROLES.map((role) => ({ key: role, label: ROLE_LABEL[role] }))} value={user.role} disabled={busyId === user.user_id} onChange={(role) => changeRole(user, role)} />
       <button className="btn ghost small" type="button" onClick={() => setRoleEditId(null)}>Cancel</button>
@@ -209,24 +207,24 @@ export default function StaffAccounts() {
   function userActions(user, me) {
     const busy = busyId === user.user_id
     return <div className="acc-actions">
-      <button className="btn small secondary" type="button" disabled={busy} onClick={() => setResetFor(user)}>Reset password</button>
-      {!me && <button className="btn small secondary" type="button" disabled={busy} onClick={() => changeStatus(user)}>{user.status === 'active' ? 'Deactivate' : 'Reactivate'}</button>}
+      {!me && roleEditId !== user.user_id && <button className="btn ghost small" type="button" disabled={busy} onClick={() => setRoleEditId(user.user_id)}>Change role</button>}
+      <button className="btn ghost small" type="button" disabled={busy} onClick={() => setResetFor(user)}>Reset password</button>
+      {!me && <button className={`btn ghost small ${user.status === 'active' ? 'acc-deactivate' : ''}`} type="button" disabled={busy} onClick={() => changeStatus(user)}>{user.status === 'active' ? 'Deactivate' : 'Reactivate'}</button>}
     </div>
   }
 
   const records = list.map((user) => {
     const me = user.user_id === profile.user_id
-    const active = user.status === 'active'
-    const username = <strong>{user.username}{me && <span className="acc-you"> · You</span>}</strong>
-    const role = roleControl(user, me)
-    const state = <span className={`acc-state ${active ? 'on' : ''}`}>{active ? 'Active' : 'Deactivated'}</span>
-    const card = <RecordCard title={<>{user.username}{me && <span className="acc-you"> · You</span>}</>} status={state} actions={userActions(user, me)}><div className="account-role">{role}</div></RecordCard>
-    return { key: user.user_id, card, cells: [username, role, state, userActions(user, me)] }
+    const inactive = user.status !== 'active'
+    const username = <span className="acc-username"><strong>{user.username}{me && <span className="acc-you"> · You</span>}</strong>{inactive && <StatusChip status="muted">Deactivated</StatusChip>}</span>
+    const role = roleControl(user)
+    const card = <RecordCard title={<span className="acc-username"><span>{user.username}{me && <span className="acc-you"> · You</span>}</span>{inactive && <StatusChip status="muted">Deactivated</StatusChip>}</span>} actions={userActions(user, me)}><div className="account-role">{role}</div></RecordCard>
+    return { key: user.user_id, card, cells: [username, role, userActions(user, me)] }
   })
 
   return (
     <>
-      <PageToolbar title="Staff accounts" action={<Disclosure label="Create account" className="acc-create-disclosure">
+      <PageToolbar title="Staff accounts" action={<Disclosure label="Create account" className="acc-create-disclosure disclosure-button">
         <form className="acc-add" onSubmit={createAccount}>
           <Field label="Username" hint="3–30 letters, numbers, dots, dashes or underscores" type="text" autoCapitalize="none" autoComplete="off" maxLength={30} value={newUsername} onChange={(event) => setNewUsername(event.target.value)} />
           <Field label="Password" hint="8–72 characters" type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
@@ -234,15 +232,15 @@ export default function StaffAccounts() {
           <button className="btn" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create account'}</button>
         </form>
       </Disclosure>} />
-      <Disclosure label="How accounts work" className="acc-policy">
-        <p>Usernames use 3–30 letters, numbers, dots, dashes or underscores. Passwords are 8–72 characters. Staff cannot change their own password yet, so use Reset password if they forget it. Deactivated accounts lose access and are logged out within about a minute. You cannot change your own role or deactivate yourself.</p>
-      </Disclosure>
-
       {info && <div className="success">{info}</div>}
       {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
       {users === null && !error && <p className="hint">Loading accounts…</p>}
       {users && records.length === 0 && <p className="empty-state">No staff accounts yet.</p>}
-      {users && records.length > 0 && <ResponsiveRecords className="account-records" headers={['Username', 'Role', 'Status', 'Actions']} records={records} />}
+      {users && records.length > 0 && <ResponsiveRecords className="account-records" headers={['Username', 'Role', 'Actions']} records={records} />}
+
+      <Disclosure label="How accounts work" className="acc-policy">
+        <p>Usernames use 3–30 letters, numbers, dots, dashes or underscores. Passwords are 8–72 characters. Staff cannot change their own password yet, so use Reset password if they forget it. Deactivated accounts lose access and are logged out within about a minute. You cannot change your own role or deactivate yourself.</p>
+      </Disclosure>
 
       {resetFor && (
         <ResetModal
