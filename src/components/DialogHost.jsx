@@ -28,7 +28,7 @@ function Confirm({ spec }) {
               </button>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <button type="button" className="btn" onClick={() => closeCurrent(true)}>
+              <button type="button" className={`btn ${spec.danger ? 'danger' : ''}`} onClick={() => closeCurrent(true)}>
                 {spec.confirmLabel || 'Confirm'}
               </button>
             </AlertDialog.Action>

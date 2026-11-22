@@ -21,14 +21,16 @@ export function Button({ variant = 'primary', size, className = '', ...props }) 
 }
 
 export function Field({ label, hint, error, id, className = '', children, ...props }) {
-  const hintId = hint ? `${id || props.name || 'field'}-hint` : undefined
-  const errorId = error ? `${id || props.name || 'field'}-error` : undefined
+  const generatedId = useId().replace(/:/g, '')
+  const controlId = id || props.name || `field-${generatedId}`
+  const hintId = hint ? `${controlId}-hint` : undefined
+  const errorId = error ? `${controlId}-error` : undefined
   return (
-    <label className={`field ${className}`.trim()} htmlFor={id}>
+    <label className={`field ${className}`.trim()} htmlFor={controlId}>
       <span>{label}</span>
       {children || (
         <input
-          id={id}
+          id={controlId}
           {...props}
           aria-invalid={error ? 'true' : undefined}
           aria-describedby={[hintId, errorId].filter(Boolean).join(' ') || undefined}
@@ -154,11 +156,13 @@ export function PageToolbar({ title, live, action, className = '' }) {
   return (
     <div className={`page-toolbar ${className}`.trim()}>
       <h1 className="sr-only">{title}</h1>
-      <span className={`live ${live === true ? 'on' : ''}`}>
+      {live !== undefined && <span className={`live ${live === true ? 'on' : ''}`}>
         <span className="live-dot" aria-hidden="true" />
-        <span className="sr-only">Connection: </span>{live === true ? 'Live' : live === false ? 'Reconnecting' : ''}
-      </span>
+        <span className="sr-only">Connection: </span>{live === true ? 'Live' : 'Reconnecting'}
+      </span>}
       {action && <div className="page-toolbar-action">{action}</div>}
     </div>
   )
 }
+import { useId } from 'react'
+

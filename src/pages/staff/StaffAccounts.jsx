@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
+import { Disclosure, Field, Notice, PageToolbar, RecordCard, ResponsiveRecords } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ROLES, ROLE_LABEL } from '../../auth/roles.js'
 import './StaffAccounts.css'
@@ -63,17 +64,7 @@ function ResetModal({ user, onClose, onDone }) {
       <form onSubmit={submit}>
         <span className="dim">Account: {user.username}</span>
 
-        <label className="field" style={{ marginTop: 14 }}>
-          <span>New password (8 to 72 characters)</span>
-          <input
-            type="password"
-            autoComplete="new-password"
-            autoFocus
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-        {error && <p className="error">{error}</p>}
+        <Field label="New password" hint="8–72 characters" type="password" autoComplete="new-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} error={error} />
         <button className="btn full" type="submit" disabled={busy}>
           {busy ? 'Saving…' : 'Save password'}
         </button>
@@ -97,6 +88,7 @@ export default function StaffAccounts() {
   const [creating, setCreating] = useState(false)
   const [busyId, setBusyId] = useState(null)
   const [resetFor, setResetFor] = useState(null)
+  const [roleEditId, setRoleEditId] = useState(null)
 
   const load = useCallback(
     () =>
@@ -178,7 +170,8 @@ export default function StaffAccounts() {
       confirmLabel: 'Change role',
     })
     if (!ok) return
-    updateUser(u, { role }, `${u.username} is now ${ROLE_LABEL[role]}.`)
+    await updateUser(u, { role }, `${u.username} is now ${ROLE_LABEL[role]}.`)
+    setRoleEditId(null)
   }
 
   async function changeStatus(u) {
@@ -189,6 +182,7 @@ export default function StaffAccounts() {
         title: `Deactivate ${u.username}?`,
         message: 'They are logged out and cannot log in again.',
         confirmLabel: 'Deactivate',
+        danger: true,
       }))
     ) {
       return
@@ -202,125 +196,55 @@ export default function StaffAccounts() {
 
   const list = users || []
 
+  function roleControl(user, me) {
+    if (roleEditId !== user.user_id) {
+      return <div className="account-role"><span>{ROLE_LABEL[user.role]}</span>{!me && <button className="btn ghost small" type="button" onClick={() => setRoleEditId(user.user_id)}>Change role</button>}</div>
+    }
+    return <div className="account-role">
+      <select className="acc-select" aria-label={`Role of ${user.username}`} value={user.role} disabled={busyId === user.user_id} onChange={(event) => changeRole(user, event.target.value)}>
+        {ROLES.map((role) => <option key={role} value={role}>{ROLE_LABEL[role]}</option>)}
+      </select>
+      <button className="btn ghost small" type="button" onClick={() => setRoleEditId(null)}>Cancel</button>
+    </div>
+  }
+
+  function userActions(user, me) {
+    const busy = busyId === user.user_id
+    return <div className="acc-actions">
+      <button className="btn small secondary" type="button" disabled={busy} onClick={() => setResetFor(user)}>Reset password</button>
+      {!me && <button className="btn small secondary" type="button" disabled={busy} onClick={() => changeStatus(user)}>{user.status === 'active' ? 'Deactivate' : 'Reactivate'}</button>}
+    </div>
+  }
+
+  const records = list.map((user) => {
+    const me = user.user_id === profile.user_id
+    const active = user.status === 'active'
+    const username = <strong>{user.username}{me && <span className="acc-you"> · You</span>}</strong>
+    const role = roleControl(user, me)
+    const state = <span className={`acc-state ${active ? 'on' : ''}`}>{active ? 'Active' : 'Deactivated'}</span>
+    const card = <RecordCard title={<>{user.username}{me && <span className="acc-you"> · You</span>}</>} status={state} actions={userActions(user, me)}><div className="account-role">{role}</div></RecordCard>
+    return { key: user.user_id, card, cells: [username, role, state, userActions(user, me)] }
+  })
+
   return (
     <>
-      <div className="page-head">
-        <h1>Staff accounts</h1>
-      </div>
-
-      <form className="acc-add" onSubmit={createAccount}>
-        <label className="field">
-          <span>Username</span>
-          <input
-            type="text"
-            autoCapitalize="none"
-            autoComplete="off"
-            maxLength={30}
-            value={newUsername}
-            onChange={(e) => setNewUsername(e.target.value)}
-          />
-        </label>
-        <label className="field">
-          <span>Password</span>
-          <input
-            type="password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
-        </label>
-        <label className="field">
-          <span>Role</span>
-          <select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
-            {ROLES.map((r) => (
-              <option key={r} value={r}>
-                {ROLE_LABEL[r]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <button className="btn" type="submit" disabled={creating}>
-          {creating ? 'Creating…' : 'Create account'}
-        </button>
-      </form>
-      <p className="acc-help">
-        Usernames are 3 to 30 letters, numbers, dots, dashes, or underscores. Passwords are 8 to 72
-        characters. People cannot change their own password yet, so if someone forgets it, use
-        Reset password. A deactivated account loses access right away and is logged out within
-        about a minute. You cannot change your own role or deactivate yourself.
-      </p>
+      <PageToolbar title="Staff accounts" action={<Disclosure label="Create account" className="acc-create-disclosure">
+        <form className="acc-add" onSubmit={createAccount}>
+          <Field label="Username" hint="3–30 letters, numbers, dots, dashes or underscores" type="text" autoCapitalize="none" autoComplete="off" maxLength={30} value={newUsername} onChange={(event) => setNewUsername(event.target.value)} />
+          <Field label="Password" hint="8–72 characters" type="password" autoComplete="new-password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+          <label className="field"><span>Role</span><select value={newRole} onChange={(event) => setNewRole(event.target.value)}>{ROLES.map((role) => <option key={role} value={role}>{ROLE_LABEL[role]}</option>)}</select></label>
+          <button className="btn" type="submit" disabled={creating}>{creating ? 'Creating…' : 'Create account'}</button>
+        </form>
+      </Disclosure>} />
+      <Disclosure label="How accounts work" className="acc-policy">
+        <p>Usernames use 3–30 letters, numbers, dots, dashes or underscores. Passwords are 8–72 characters. Staff cannot change their own password yet, so use Reset password if they forget it. Deactivated accounts lose access and are logged out within about a minute. You cannot change your own role or deactivate yourself.</p>
+      </Disclosure>
 
       {info && <div className="success">{info}</div>}
-      {(actionError || error) && <p className="error">{actionError || error}</p>}
-      {users === null && !error && <p className="hint">Loading…</p>}
-
-      {users && (
-        <table className="q-table">
-          <thead>
-            <tr>
-              <th>Username</th>
-              <th>Role</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((u) => {
-              const me = u.user_id === profile.user_id
-              const busy = busyId === u.user_id
-              const active = u.status === 'active'
-              return (
-                <tr key={u.user_id} className={active ? '' : 'acc-off'}>
-                  <td data-label="Username">
-                    <strong>{u.username}</strong>
-                    {me && <span className="acc-you">you</span>}
-                  </td>
-                  <td data-label="Role">
-                    <select
-                      className="acc-select"
-                      aria-label={`Role of ${u.username}`}
-                      value={u.role}
-                      disabled={me || busy}
-                      onChange={(e) => changeRole(u, e.target.value)}
-                    >
-                      {ROLES.map((r) => (
-                        <option key={r} value={r}>
-                          {ROLE_LABEL[r]}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td data-label="Status">
-                    <span className={`acc-state ${active ? 'on' : ''}`}>
-                      {active ? 'Active' : 'Deactivated'}
-                    </span>
-                  </td>
-                  <td data-label="Action">
-                    <div className="acc-actions">
-                      <button
-                        className="btn small secondary"
-                        disabled={busy}
-                        onClick={() => setResetFor(u)}
-                      >
-                        Reset password
-                      </button>
-                      {!me && (
-                        <button
-                          className="btn small secondary"
-                          disabled={busy}
-                          onClick={() => changeStatus(u)}
-                        >
-                          {active ? 'Deactivate' : 'Reactivate'}
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      )}
+      {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
+      {users === null && !error && <p className="hint">Loading accounts…</p>}
+      {users && records.length === 0 && <p className="empty-state">No staff accounts yet.</p>}
+      {users && records.length > 0 && <ResponsiveRecords className="account-records" headers={['Username', 'Role', 'Status', 'Actions']} records={records} />}
 
       {resetFor && (
         <ResetModal

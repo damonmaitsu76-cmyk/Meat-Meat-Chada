@@ -1,48 +1,27 @@
-/* Staff Accounts. Table, button, field, and modal styles come from global.css, staff.css,
-   and shared.css. */
-
-.acc-add {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  margin-bottom: 8px;
-  padding: 14px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-}
+/* Staff account forms and responsive account records. */
+.acc-create-disclosure { position: relative; margin: 0; }
+.acc-create-disclosure[open] .disclosure-body { position: absolute; z-index: 10; top: calc(100% + var(--s2)); right: 0; width: min(440px, calc(100vw - var(--s8))); padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.acc-add { display: grid; gap: var(--s3); margin: 0; }
 .acc-add .field { margin: 0; }
-.acc-add input[type='text'],
-.acc-add input[type='password'] { width: 200px; max-width: 100%; }
-.acc-add select,
-.acc-select {
-  font: inherit;
-  color: var(--text);
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card);
-}
-.acc-select { padding: 6px 8px; border-radius: 8px; }
-.acc-help { max-width: 720px; margin: 0 0 16px; color: var(--muted); font-size: 0.85rem; }
-
-.acc-you {
-  margin-left: 8px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #eee;
-  color: #555;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-.acc-state { font-size: 0.85rem; font-weight: 600; color: var(--warn); }
+.acc-add .btn { justify-self: start; }
+.acc-policy { max-width: 760px; margin-bottom: var(--s4); }
+.acc-policy .disclosure-body { max-width: 720px; color: var(--text-2); font-size: var(--fs-sm); }
+.acc-policy p { margin: 0; }
+.acc-you { color: var(--text-3); font-size: var(--fs-meta); font-weight: 500; }
+.acc-state { color: var(--text-2); font-size: var(--fs-meta); font-weight: 600; white-space: nowrap; }
 .acc-state.on { color: var(--ok); }
-.acc-off td { opacity: 0.7; }
-.acc-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.account-role { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1); }
+.account-role > span { color: var(--text); font-weight: 500; }
+.account-role .acc-select { min-width: 160px; }
+.acc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.account-records .q-table { min-width: 760px; }
+.account-records .q-table td { vertical-align: middle; }
+.account-records .account-role { flex-wrap: nowrap; }
+.account-records .account-role .acc-select { min-width: 120px; }
+.account-records .acc-actions { flex-wrap: nowrap; }
 
-.modal .field input { width: 100%; }
-
-@media (max-width: 720px) {
-  .acc-actions { justify-content: flex-end; }
+@media (max-width: 899px) {
+  .record-actions .acc-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .record-actions .acc-actions .btn { min-height: 44px; }
+  .account-role .acc-select { flex: 1 1 100%; }
 }
