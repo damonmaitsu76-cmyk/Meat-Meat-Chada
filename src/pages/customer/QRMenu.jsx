@@ -178,10 +178,10 @@ function StatusView({ qrToken, justSent }) {
                 <strong className="ticket">{request.request_number}</strong>
                 <StatusChip status={request.status}>{STATUS_LABELS[request.status] || request.status}</StatusChip>
               </div>
-              <ol className="request-progress" aria-label={`Request progress: ${STATUS_LABELS[request.status] || request.status}`}>
+              <ol className={`request-progress ${request.status === 'served' ? 'served' : ''}`} aria-label={`Request progress: ${STATUS_LABELS[request.status] || request.status}`}>
                 {STATUS_ORDER.map((status, index) => (
-                  <li key={status} className={index === activeIndex ? 'current' : index < activeIndex ? 'done' : ''} aria-current={index === activeIndex ? 'step' : undefined}>
-                    {STATUS_LABELS[status]}
+                  <li key={status} className={index <= activeIndex ? 'filled' : ''} aria-current={index === activeIndex ? 'step' : undefined}>
+                    <span className="sr-only">{STATUS_LABELS[status]}</span>
                   </li>
                 ))}
               </ol>

@@ -171,9 +171,9 @@ button:disabled { cursor: not-allowed; }
 .request-list { gap: var(--s3); }
 .ticket-card .request-head { padding-bottom: var(--s3); border-bottom: 1px dashed var(--line); }
 .request-progress { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s1); margin: var(--s3) 0; padding: 0; list-style: none; }
-.request-progress li { min-height: 32px; padding: var(--s1); border-bottom: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-meta); text-align: center; }
-.request-progress li.done { border-color: var(--charcoal); color: var(--text-2); }
-.request-progress li.current { border-color: var(--brand); color: var(--text); font-weight: 700; }
+.request-progress li { height: 6px; border-radius: var(--r-chip); background: var(--ink-soft); }
+.request-progress li.filled { background: var(--charcoal); }
+.request-progress.served li { background: var(--ok); }
 .request-items { display: grid; gap: var(--s1); }
 .request-items li { display: flex; gap: var(--s1); align-items: baseline; }
 .request-items li > span { min-width: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
