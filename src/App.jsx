@@ -26,14 +26,13 @@ function Message({ title, text }) {
 
 function Home() {
   return (
-    <div className="center-screen">
-      <h1>Meat Me at Chada</h1>
-      <p>Please scan the QR code on your table to open the menu.</p>
-      <p>
-        <Link className="btn" to="/reserve">
-          Reserve a table
-        </Link>
-      </p>
+    <div className="home-screen">
+      <header className="topbar"><span className="brand">Samgyup Chada</span></header>
+      <main className="home-content">
+        <h1>Meat Me at Chada</h1>
+        <p>Scan the QR code at your table to order refills, or reserve a table ahead of your visit.</p>
+        <Link className="btn" to="/reserve">Reserve a table</Link>
+      </main>
     </div>
   )
 }

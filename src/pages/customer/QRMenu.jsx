@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { EmptyState, Notice, StatusChip, Stepper } from '../../components/ui.jsx'
 import { supabase } from '../../supabaseClient.js'
 
 const CATEGORIES = [
@@ -10,211 +11,59 @@ const CATEGORIES = [
 const STATUS_ORDER = ['sent', 'accepted', 'ready', 'served']
 const STATUS_LABELS = { sent: 'Sent', accepted: 'Accepted', ready: 'Ready', served: 'Served' }
 const MAX_QTY = 20
-const POLL_MS = 4000 // request status refresh
-const MENU_POLL_MS = 10000 // menu availability refresh
+const POLL_MS = 4000
+const MENU_POLL_MS = 10000
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function formatTime(iso) {
   return new Date(iso).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
 }
 
-/* ------------------------------------------------------------------ */
-/* Screen 1: QR Menu                                                   */
-/* ------------------------------------------------------------------ */
-function MenuView({ items, tray, onAdd }) {
+function MenuView({ items, tray, onAdd, onChangeQty }) {
   const [category, setCategory] = useState('meats')
-  const visible = items.filter((i) => i.category === category)
+  const visible = items.filter((item) => item.category === category)
 
   return (
     <>
-      <p className="hint">
-        Need more food? Add dishes to your tray and send a request. Staff will bring them to your
-        table.
-      </p>
-
-      <div className="tabs" role="tablist">
-        {CATEGORIES.map((c) => (
+      <p className="menu-intro">Add refills, then send them to staff.</p>
+      <div className="tabs menu-tabs" role="tablist" aria-label="Menu categories">
+        {CATEGORIES.map((item) => (
           <button
-            key={c.key}
+            key={item.key}
+            type="button"
             role="tab"
-            aria-selected={category === c.key}
-            className={`tab ${category === c.key ? 'active' : ''}`}
-            onClick={() => setCategory(c.key)}
+            aria-selected={category === item.key}
+            className={`tab ${category === item.key ? 'active' : ''}`}
+            onClick={() => setCategory(item.key)}
           >
-            {c.label}
+            {item.label}
           </button>
         ))}
       </div>
 
-      <ul className="list">
-        {visible.length === 0 && <li className="empty">No dishes in this category.</li>}
-        {visible.map((item) => (
-          <li key={item.item_id} className={`row ${item.is_available ? '' : 'unavailable'}`}>
-            <div className="row-main">
-              <span className="row-name">{item.item_name}</span>
-              <span className={`badge ${item.is_available ? 'ok' : 'off'}`}>
-                {item.is_available ? 'Available' : 'Unavailable'}
-              </span>
-            </div>
-            <button
-              className="btn small"
-              disabled={!item.is_available}
-              onClick={() => onAdd(item.item_id)}
-            >
-              Add{tray[item.item_id] ? ` (${tray[item.item_id]})` : ''}
-            </button>
-          </li>
-        ))}
-      </ul>
-    </>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* Screen 2: Tray and Request                                          */
-/* ------------------------------------------------------------------ */
-function TrayView({
-  itemsById,
-  tray,
-  note,
-  setNote,
-  onChangeQty,
-  onSend,
-  sending,
-  error,
-  onBrowse,
-}) {
-  const lines = Object.entries(tray)
-    .map(([id, quantity]) => ({ id: Number(id), quantity, item: itemsById[id] }))
-    .filter((l) => l.item)
-  const hasUnavailable = lines.some((l) => !l.item.is_available)
-
-  if (lines.length === 0) {
-    return (
-      <div className="empty-state">
-        <p>Your tray is empty.</p>
-        <button className="btn" onClick={onBrowse}>
-          Browse the menu
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <>
-      <ul className="list">
-        {lines.map(({ id, quantity, item }) => (
-          <li key={id} className={`row ${item.is_available ? '' : 'unavailable'}`}>
-            <div className="row-main">
-              <span className="row-name">{item.item_name}</span>
-              {!item.is_available && <span className="badge off">No longer available</span>}
-            </div>
-            <div className="qty">
-              <button className="qty-btn" aria-label="Decrease" onClick={() => onChangeQty(id, -1)}>
-                −
-              </button>
-              <span className="qty-num">{quantity}</span>
-              <button
-                className="qty-btn"
-                aria-label="Increase"
-                disabled={quantity >= MAX_QTY}
-                onClick={() => onChangeQty(id, +1)}
-              >
-                +
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-
-      <label className="field">
-        <span>Note for the staff (optional)</span>
-        <textarea
-          rows={3}
-          maxLength={300}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="e.g. no spice, extra lettuce"
-        />
-      </label>
-
-      {hasUnavailable && (
-        <p className="error">Please remove the dishes that are no longer available.</p>
-      )}
-      {error && <p className="error">{error}</p>}
-
-      <button className="btn full" disabled={sending || hasUnavailable} onClick={onSend}>
-        {sending ? 'Sending…' : 'Send Request'}
-      </button>
-    </>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/* Screen 3: Request Status (refreshes itself every few seconds)       */
-/* ------------------------------------------------------------------ */
-function StatusView({ qrToken, justSent }) {
-  const [requests, setRequests] = useState(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function load() {
-      if (document.hidden) return
-      const { data, error } = await supabase.rpc('get_table_requests', { p_qr_token: qrToken })
-      if (cancelled) return
-      if (error) setError(error.message)
-      else {
-        setRequests(data)
-        setError('')
-      }
-    }
-
-    load()
-    const timer = setInterval(load, POLL_MS)
-    return () => {
-      cancelled = true
-      clearInterval(timer)
-    }
-  }, [qrToken])
-
-  return (
-    <>
-      {justSent && (
-        <div className="success">
-          Request sent! Your request number is <strong>{justSent}</strong>.
-        </div>
-      )}
-      {error && <p className="error">{error}</p>}
-      {requests === null && !error && <p className="hint">Loading…</p>}
-      {requests && requests.length === 0 && (
-        <p className="empty-state">No requests from this table yet.</p>
-      )}
-
-      <ul className="list">
-        {(requests || []).map((r) => {
-          const idx = STATUS_ORDER.indexOf(r.status)
+      <ul className="menu-list" role="tabpanel" aria-label={CATEGORIES.find((item) => item.key === category)?.label}>
+        {visible.length === 0 && <li className="menu-empty">No dishes in this category.</li>}
+        {visible.map((item) => {
+          const quantity = tray[item.item_id] || 0
           return (
-            <li key={r.request_number} className="request">
-              <div className="request-head">
-                <strong>{r.request_number}</strong>
-                <span className={`tag ${r.status}`}>{STATUS_LABELS[r.status]}</span>
-              </div>
-              <div className="steps" aria-hidden="true">
-                {STATUS_ORDER.map((s, i) => (
-                  <span key={s} className={`step ${i <= idx ? 'done' : ''}`} />
-                ))}
-              </div>
-              <ul className="request-items">
-                {r.items.map((it) => (
-                  <li key={it.item_name}>
-                    {it.quantity} × {it.item_name}
-                  </li>
-                ))}
-              </ul>
-              {r.note && <p className="request-note">Note: {r.note}</p>}
-              <p className="request-time">Sent at {formatTime(r.created_at)}</p>
+            <li key={item.item_id} className={`menu-row ${item.is_available ? '' : 'unavailable'}`}>
+              <span className="menu-name">{item.item_name}</span>
+              {item.is_available ? (
+                quantity > 0 ? (
+                  <Stepper
+                    value={quantity}
+                    label={item.item_name}
+                    max={MAX_QTY}
+                    onChange={(delta) => onChangeQty(item.item_id, delta)}
+                  />
+                ) : (
+                  <button type="button" className="btn secondary small" onClick={() => onAdd(item.item_id)}>
+                    Add
+                  </button>
+                )
+              ) : (
+                <span className="out-for-now">Out for now</span>
+              )}
             </li>
           )
         })}
@@ -223,17 +72,128 @@ function StatusView({ qrToken, justSent }) {
   )
 }
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
+function TrayView({ itemsById, tray, note, setNote, onChangeQty, onSend, sending, error, onBrowse }) {
+  const lines = Object.entries(tray)
+    .map(([id, quantity]) => ({ id: Number(id), quantity, item: itemsById[id] }))
+    .filter((line) => line.item)
+  const hasUnavailable = lines.some((line) => !line.item.is_available)
+  const itemCount = lines.reduce((total, line) => total + line.quantity, 0)
+
+  if (lines.length === 0) {
+    return <EmptyState action={<button className="btn" type="button" onClick={onBrowse}>Browse the menu</button>}>Your tray is empty. Add dishes from the menu to start a request.</EmptyState>
+  }
+
+  return (
+    <>
+      <h1 className="customer-title">Your tray · {itemCount} {itemCount === 1 ? 'item' : 'items'}</h1>
+      <ul className="list tray-list">
+        {lines.map(({ id, quantity, item }) => (
+          <li key={id} className={`row tray-row ${item.is_available ? '' : 'unavailable'}`}>
+            <div className="row-main">
+              <span className="row-name">{item.item_name}</span>
+              {!item.is_available && <span className="out-for-now">No longer available</span>}
+            </div>
+            <Stepper
+              value={quantity}
+              label={item.item_name}
+              max={MAX_QTY}
+              onChange={(delta) => onChangeQty(id, delta)}
+            />
+          </li>
+        ))}
+      </ul>
+
+      <label className="field">
+        <span>Note for staff (optional)</span>
+        <textarea
+          rows={3}
+          maxLength={300}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          placeholder="e.g. no spice, extra lettuce"
+        />
+      </label>
+
+      {hasUnavailable && <p className="error">Remove dishes that are no longer available before sending.</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+      <div className="tray-submit">
+        <button className="btn full" type="button" disabled={sending || hasUnavailable} onClick={onSend}>
+          {sending ? 'Sending…' : 'Send request'}
+        </button>
+      </div>
+    </>
+  )
+}
+
+function StatusView({ qrToken, justSent }) {
+  const [requests, setRequests] = useState(null)
+  const [error, setError] = useState('')
+  const [refresh, setRefresh] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    const safeLoad = async () => {
+      if (document.hidden) return
+      const { data, error: requestError } = await supabase.rpc('get_table_requests', { p_qr_token: qrToken })
+      if (cancelled) return
+      if (requestError) setError(requestError.message)
+      else {
+        setRequests(data)
+        setError('')
+      }
+    }
+    safeLoad()
+    const timer = setInterval(safeLoad, POLL_MS)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, [qrToken, refresh])
+
+  return (
+    <>
+      {justSent && <div className="success" role="status">Request sent. Your request number is <strong className="ticket">{justSent}</strong>.</div>}
+      <h1 className="customer-title">Request status</h1>
+      {error && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={() => { setRequests(null); setRefresh((value) => value + 1) }}>Try again</button>}>{error}</Notice>}
+      {requests === null && !error && <p className="hint">Loading requests…</p>}
+      {requests && requests.length === 0 && <EmptyState>No requests from this table yet. Send a refill request from the menu to see it here.</EmptyState>}
+
+      <ul className="list request-list">
+        {(requests || []).map((request) => {
+          const activeIndex = STATUS_ORDER.indexOf(request.status)
+          return (
+            <li key={request.request_number} className="request ticket-card">
+              <div className="request-head">
+                <strong className="ticket">{request.request_number}</strong>
+                <StatusChip status={request.status}>{STATUS_LABELS[request.status] || request.status}</StatusChip>
+              </div>
+              <ol className="request-progress" aria-label={`Request progress: ${STATUS_LABELS[request.status] || request.status}`}>
+                {STATUS_ORDER.map((status, index) => (
+                  <li key={status} className={index === activeIndex ? 'current' : index < activeIndex ? 'done' : ''} aria-current={index === activeIndex ? 'step' : undefined}>
+                    {STATUS_LABELS[status]}
+                  </li>
+                ))}
+              </ol>
+              <ul className="request-items">
+                {request.items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
+              </ul>
+              {request.note && <p className="request-note">Note for staff: {request.note}</p>}
+              <p className="request-time">Sent at {formatTime(request.created_at)}</p>
+            </li>
+          )
+        })}
+      </ul>
+    </>
+  )
+}
+
 export default function QRMenu() {
   const { qrToken } = useParams()
   const validToken = UUID_RE.test(qrToken || '')
-
-  const [menu, setMenu] = useState(null) // { table_number, items: [...] }
+  const [menu, setMenu] = useState(null)
   const [fetchError, setFetchError] = useState('')
-  const [view, setView] = useState('menu') // 'menu' | 'tray' | 'status'
-  const [tray, setTray] = useState({}) // { [item_id]: quantity }
+  const [view, setView] = useState('menu')
+  const [tray, setTray] = useState({})
   const [note, setNote] = useState('')
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
@@ -250,20 +210,12 @@ export default function QRMenu() {
     })
   }, [qrToken, validToken])
 
-  // Load when the menu or tray opens, then keep availability fresh: every 10 seconds
-  // while the page is visible, and right away when the customer switches back to this tab.
   useEffect(() => {
-    if (view === 'status') return // the status screen does its own polling
-
+    if (view === 'status') return
     loadMenu()
-    const timer = setInterval(() => {
-      if (!document.hidden) loadMenu()
-    }, MENU_POLL_MS)
-    const onVisible = () => {
-      if (!document.hidden) loadMenu()
-    }
+    const timer = setInterval(() => { if (!document.hidden) loadMenu() }, MENU_POLL_MS)
+    const onVisible = () => { if (!document.hidden) loadMenu() }
     document.addEventListener('visibilitychange', onVisible)
-
     return () => {
       clearInterval(timer)
       document.removeEventListener('visibilitychange', onVisible)
@@ -275,23 +227,19 @@ export default function QRMenu() {
     for (const item of menu?.items || []) map[item.item_id] = item
     return map
   }, [menu])
-
-  const loadError = validToken
-    ? fetchError
-    : 'This QR code is not valid. Please ask a staff member for help.'
-
-  const trayCount = Object.values(tray).reduce((sum, q) => sum + q, 0)
+  const loadError = validToken ? fetchError : 'This QR code is not valid. Ask a staff member for help.'
+  const trayCount = Object.values(tray).reduce((sum, quantity) => sum + quantity, 0)
 
   function addItem(id) {
-    setTray((t) => ({ ...t, [id]: Math.min((t[id] || 0) + 1, MAX_QTY) }))
+    setTray((current) => ({ ...current, [id]: Math.min((current[id] || 0) + 1, MAX_QTY) }))
   }
 
   function changeQty(id, delta) {
-    setTray((t) => {
-      const q = (t[id] || 0) + delta
-      const next = { ...t }
-      if (q <= 0) delete next[id]
-      else next[id] = Math.min(q, MAX_QTY)
+    setTray((current) => {
+      const quantity = (current[id] || 0) + delta
+      const next = { ...current }
+      if (quantity <= 0) delete next[id]
+      else next[id] = Math.min(quantity, MAX_QTY)
       return next
     })
   }
@@ -299,20 +247,16 @@ export default function QRMenu() {
   async function sendRequest() {
     setSending(true)
     setSendError('')
-    const items = Object.entries(tray).map(([id, quantity]) => ({
-      item_id: Number(id),
-      quantity,
-    }))
+    const items = Object.entries(tray).map(([id, quantity]) => ({ item_id: Number(id), quantity }))
     const { data, error } = await supabase.rpc('submit_refill_request', {
       p_qr_token: qrToken,
       p_note: note.trim() || null,
       p_items: items,
     })
     setSending(false)
-
     if (error) {
       setSendError(error.message)
-      loadMenu() // a dish may have just become unavailable
+      loadMenu()
       return
     }
     setTray({})
@@ -331,12 +275,11 @@ export default function QRMenu() {
       <div className="center-screen">
         {loadError ? (
           <>
-            <h1>Oops</h1>
+            <h1>Menu unavailable</h1>
             <p>{loadError}</p>
+            {validToken && <button type="button" className="btn secondary" onClick={loadMenu}>Try again</button>}
           </>
-        ) : (
-          <p>Loading menu…</p>
-        )}
+        ) : <p>Loading menu…</p>}
       </div>
     )
   }
@@ -347,35 +290,24 @@ export default function QRMenu() {
         <span className="brand">Samgyup Chada</span>
         <span className="table-badge">Table {menu.table_number}</span>
       </header>
-
-      <main className="content">
-        {view === 'menu' && <MenuView items={menu.items} tray={tray} onAdd={addItem} />}
-        {view === 'tray' && (
-          <TrayView
-            itemsById={itemsById}
-            tray={tray}
-            note={note}
-            setNote={setNote}
-            onChangeQty={changeQty}
-            onSend={sendRequest}
-            sending={sending}
-            error={sendError}
-            onBrowse={() => go('menu')}
-          />
-        )}
+      <main className={`content ${view === 'tray' ? 'tray-content' : ''}`}>
+        <h1 className="sr-only">Samgyup Chada menu for Table {menu.table_number}</h1>
+        {fetchError && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={loadMenu}>Refresh menu</button>}>{fetchError}</Notice>}
+        {view === 'menu' && <MenuView items={menu.items} tray={tray} onAdd={addItem} onChangeQty={changeQty} />}
+        {view === 'tray' && <TrayView itemsById={itemsById} tray={tray} note={note} setNote={setNote} onChangeQty={changeQty} onSend={sendRequest} sending={sending} error={sendError} onBrowse={() => go('menu')} />}
         {view === 'status' && <StatusView qrToken={qrToken} justSent={justSent} />}
       </main>
-
-      <nav className="bottom-nav">
-        <button className={view === 'menu' ? 'active' : ''} onClick={() => go('menu')}>
-          Menu
-        </button>
-        <button className={view === 'tray' ? 'active' : ''} onClick={() => go('tray')}>
-          Tray{trayCount > 0 ? ` (${trayCount})` : ''}
-        </button>
-        <button className={view === 'status' ? 'active' : ''} onClick={() => go('status')}>
-          Status
-        </button>
+      {view === 'menu' && trayCount > 0 && (
+        <div className="menu-review">
+          <button type="button" className="btn full" onClick={() => go('tray')}>
+            Review tray · {trayCount} {trayCount === 1 ? 'item' : 'items'}
+          </button>
+        </div>
+      )}
+      <nav className="bottom-nav" aria-label="Customer menu">
+        <button type="button" aria-current={view === 'menu' ? 'page' : undefined} className={view === 'menu' ? 'active' : ''} onClick={() => go('menu')}>Menu</button>
+        <button type="button" aria-current={view === 'tray' ? 'page' : undefined} className={view === 'tray' ? 'active' : ''} aria-label={trayCount ? `Tray, ${trayCount} items` : 'Tray'} onClick={() => go('tray')}>Tray{trayCount > 0 ? ` · ${trayCount}` : ''}</button>
+        <button type="button" aria-current={view === 'status' ? 'page' : undefined} className={view === 'status' ? 'active' : ''} onClick={() => go('status')}>Status</button>
       </nav>
     </div>
   )

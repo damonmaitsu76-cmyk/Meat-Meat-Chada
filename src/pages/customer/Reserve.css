@@ -1,51 +1,39 @@
-/* Reservation page styles for customers. */
+/* Reservation form and status ticket. Shared fields and buttons live in components.css. */
+.reserve h1 { margin: 0 0 var(--s2); font-size: var(--fs-title-lg); }
+.reserve h2 { margin: 0 0 var(--s2); font-size: var(--fs-title); }
+.reserve-intro { margin: 0 0 var(--s5); color: var(--text-2); }
+.reserve .field-row { align-items: start; gap: var(--s3); }
+.reserve .divider { margin: var(--s6) 0 var(--s4); border: 0; border-top: 1px solid var(--line); }
+.reserve .lookup { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s2); align-items: end; }
+.lookup-field { min-width: 0; margin-bottom: 0; }
+.lookup-field input { text-transform: uppercase; }
+.lookup .btn { min-width: 120px; }
+.time-field { min-width: 0; margin: 0 0 var(--s4); padding: 0; border: 0; }
+.time-field legend { margin-bottom: var(--s2); color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; }
+.time-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); }
+.time-option { min-height: 48px; display: grid; place-content: center; gap: var(--s1); padding: var(--s2); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font: inherit; font-weight: 600; font-variant-numeric: tabular-nums; }
+.time-option small { color: var(--text-3); font-size: var(--fs-meta); font-weight: 400; }
+.time-option.selected { border: 2px solid var(--charcoal); background: var(--ink-soft); }
+.time-option:disabled { color: var(--text-2); background: var(--ink-soft); border-color: var(--line); cursor: not-allowed; }
+.time-error { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.time-error .error { margin: 0; }
 
-/* ---------- form ---------- */
-.reserve h2 { margin: 0 0 8px; font-size: 1.2rem; }
-.reserve .field input,
-.reserve .field select {
-  width: 100%;
-  font: inherit;
-  color: var(--text);
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card);
-}
-.reserve .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.reserve .divider { margin: 28px 0 16px; border: 0; border-top: 1px solid var(--line); }
-.reserve .lookup { display: flex; gap: 8px; align-items: stretch; }
-.reserve .lookup input {
-  flex: 1;
-  min-width: 0;
-  font: inherit;
-  text-transform: uppercase;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
+.res-card { padding: var(--s5) var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.res-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s3); }
+.res-code { display: grid; justify-items: center; gap: var(--s1); margin: var(--s4) 0; padding: var(--s4); border: 2px dashed var(--text-3); border-radius: var(--r-ctrl); text-align: center; overflow-wrap: anywhere; }
+.res-code small { color: var(--text-3); font-size: var(--fs-meta); }
+.res-code strong { color: var(--text); font-size: var(--fs-title-lg); font-weight: 600; }
+.res-code.confirmed { border-color: var(--brand); }
+.res-code.confirmed strong { color: var(--brand); }
+.res-code.waiting strong { font-size: var(--fs-body); font-weight: 500; }
+.res-details { display: grid; gap: var(--s2); margin: 0 0 var(--s3); }
+.res-details > div { display: flex; justify-content: space-between; gap: var(--s3); }
+.res-details dt { color: var(--text-2); font-size: var(--fs-sm); }
+.res-details dd { margin: 0; text-align: right; font-weight: 600; overflow-wrap: anywhere; }
+.decline-reason { margin: 0 0 var(--s3); padding: var(--s3); border-radius: var(--r-ctrl); background: var(--ink-soft); color: var(--text); font-size: var(--fs-sm); }
 
-/* ---------- reservation status card ---------- */
-.res-card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 18px 16px;
+@media (max-width: 360px) {
+  .reserve .lookup { grid-template-columns: minmax(0, 1fr); }
+  .lookup .btn { width: 100%; }
+  .time-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.res-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-.res-code {
-  text-align: center;
-  margin: 14px 0;
-  padding: 14px;
-  border: 2px dashed var(--brand);
-  border-radius: 12px;
-}
-.res-code small { display: block; margin-bottom: 4px; color: var(--muted); font-size: 0.8rem; }
-.res-code strong { font-size: 1.8rem; letter-spacing: 0.08em; color: var(--brand); }
-.res-code.waiting { border-color: var(--line); }
-.res-code.waiting strong { font-size: 1rem; letter-spacing: 0; color: var(--muted); font-weight: 600; }
-.res-details { margin: 0 0 12px; display: grid; gap: 6px; }
-.res-details > div { display: flex; justify-content: space-between; gap: 12px; }
-.res-details dt { color: var(--muted); font-size: 0.9rem; }
-.res-details dd { margin: 0; font-weight: 600; text-align: right; }
-.decline-reason { margin: 0 0 12px; padding: 10px 12px; background: #f9dedc; color: var(--brand-dark); border-radius: 10px; font-size: 0.9rem; }
