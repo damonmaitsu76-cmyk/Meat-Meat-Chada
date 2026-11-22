@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { supabase } from '../../supabaseClient.js'
-import { isRequestAlarmUnlocked, playRequestAlarm, unlockRequestAlarm } from '../../lib/requestAlarm.js'
+import { playRequestAlarm, unlockRequestAlarm } from '../../lib/requestAlarm.js'
 
 let channelSeq = 0
 
@@ -9,17 +9,14 @@ let channelSeq = 0
 const TAP_EVENTS = ['touchend', 'click', 'keydown']
 
 // Rings on this device whenever a customer sends a new request from a table.
-// Returns true while the browser is blocking sound; a tap or click turns it on.
 export default function useRequestAlarm() {
-  const [blocked, setBlocked] = useState(
-    () => !isRequestAlarmUnlocked() && navigator.userActivation?.hasBeenActive !== true
-  )
-
   useEffect(() => {
     const channel = supabase
       .channel(`request-alarm-${++channelSeq}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'refill_requests' }, () => {
-        playRequestAlarm().then((played) => setBlocked(!played))
+        playRequestAlarm().then((played) => {
+          if (!played) console.warn('The browser blocked the request alarm. Click or tap the page once to allow sound.')
+        })
       })
       .subscribe()
     return () => {
@@ -27,22 +24,15 @@ export default function useRequestAlarm() {
     }
   }, [])
 
+  // Staff tap the screen all the time, so any tap or click lets the browser allow sound.
   useEffect(() => {
-    let active = true
-    function unlock() {
-      unlockRequestAlarm().then((ok) => {
-        if (active && ok) setBlocked(false)
-      })
-    }
+    const unlock = () => unlockRequestAlarm()
     // capture phase, so a screen that stops the tap from bubbling cannot block the unlock
     TAP_EVENTS.forEach((name) => window.addEventListener(name, unlock, true))
-    // The page was already tapped (the log in button, say): try now instead of waiting for another tap.
+    // The page was already tapped (the log in button, say): unlock now instead of waiting for another tap.
     if (navigator.userActivation?.hasBeenActive) unlock()
     return () => {
-      active = false
       TAP_EVENTS.forEach((name) => window.removeEventListener(name, unlock, true))
     }
   }, [])
-
-  return blocked
 }

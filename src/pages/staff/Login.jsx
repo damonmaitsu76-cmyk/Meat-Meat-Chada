@@ -3,6 +3,7 @@ import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.js'
 import { homeFor } from '../../auth/roles.js'
 import { Field } from '../../components/ui.jsx'
+import { unlockRequestAlarm } from '../../lib/requestAlarm.js'
 import '../../styles/staff.css'
 
 export default function Login() {
@@ -20,6 +21,7 @@ export default function Login() {
 
   async function onSubmit(e) {
     e.preventDefault()
+    unlockRequestAlarm() // the log in tap is what lets the request alarm make sound later
     setBusy(true)
     setError('')
     const message = await signIn(username, password)

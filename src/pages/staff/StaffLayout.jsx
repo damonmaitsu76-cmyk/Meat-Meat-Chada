@@ -4,7 +4,7 @@ import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES, ROLE_LABEL, STAFF_ROLES } from '../../auth/roles.js'
 import Modal from '../../components/Modal.jsx'
 import { LiveStatusContext } from '../../components/liveStatus.js'
-import { LiveIndicator, Notice } from '../../components/ui.jsx'
+import { LiveIndicator } from '../../components/ui.jsx'
 import useRequestAlarm from './useRequestAlarm.js'
 import useStaffCounts from './useStaffCounts.js'
 import '../../styles/staff.css'
@@ -32,7 +32,7 @@ export default function StaffLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const counts = useStaffCounts()
-  const soundBlocked = useRequestAlarm()
+  useRequestAlarm()
   const [moreOpen, setMoreOpen] = useState(false)
   const [live, setLive] = useState(false)
   const reportLive = useCallback((value) => setLive(value === true), [])
@@ -66,6 +66,7 @@ export default function StaffLayout() {
           ))}
         </nav>
 
+        <main className="staff-main"><Outlet /></main>
 
         <nav className={`staff-bottom-nav ${adminLinks.length ? 'has-more' : ''}`} aria-label="Daily staff screens">
           {dailyLinks.map((item) => (

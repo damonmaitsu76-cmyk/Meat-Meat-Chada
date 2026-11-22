@@ -3,7 +3,8 @@
 //
 // Browsers only allow sound after the person has tapped or clicked the page, and iPhones
 // and iPads want that tap to start the audio itself. unlockRequestAlarm() does that: it
-// plays the sound silently once, from inside a tap (see useRequestAlarm.js).
+// plays the sound silently once, from inside a tap. It is called from the log in button
+// and from the first tap or click on any staff screen (see useRequestAlarm.js).
 import alarmUrl from '../assets/8am-alarm.mp3'
 
 let audio = null
@@ -16,10 +17,6 @@ function getAudio() {
     audio.preload = 'auto'
   }
   return audio
-}
-
-export function isRequestAlarmUnlocked() {
-  return unlocked
 }
 
 async function silentPlay() {
