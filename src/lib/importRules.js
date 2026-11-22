@@ -13,8 +13,6 @@ export const IMPORT_TYPES = {
     fileName: 'menu_items.csv',
     columns: ['item_name', 'category', 'is_available'],
     required: ['item_name', 'category'],
-    template:
-      'item_name,category,is_available\r\nPork Belly,meats,yes\r\nKimchi,sides,yes\r\nIced Tea,drinks,no\r\n',
   },
   tables: {
     label: 'Tables',
@@ -22,7 +20,6 @@ export const IMPORT_TYPES = {
     fileName: 'restaurant_tables.csv',
     columns: ['table_number', 'capacity', 'is_active'],
     required: ['table_number', 'capacity'],
-    template: 'table_number,capacity,is_active\r\n1,2,yes\r\n2,4,yes\r\n3,6,yes\r\n',
   },
 }
 

@@ -8,14 +8,37 @@ import './ImportData.css'
 
 const MAX_BYTES = 1024 * 1024 // 1 MB is far more than a menu needs
 const SHOW_ROWS = 50 // how many problem rows are listed on screen
+const HEADER_ALIASES = {
+  dish_name: 'item_name',
+  dish: 'item_name',
+  name: 'item_name',
+  available: 'is_available',
+  table: 'table_number',
+  table_no: 'table_number',
+  number: 'table_number',
+  seats: 'capacity',
+  active: 'is_active',
+}
+const COLUMN_LABELS = {
+  item_name: 'Dish name',
+  category: 'Category',
+  is_available: 'Available',
+  table_number: 'Table number',
+  capacity: 'Seats',
+  is_active: 'Active',
+}
+
+function normalizeHeader(header) {
+  const normalized = header.replace(/^\ufeff/, '').trim().toLowerCase().replace(/[\s-]+/g, '_')
+  return HEADER_ALIASES[normalized] || normalized
+}
 
 function parseCsv(file) {
   return new Promise((resolve, reject) => {
     Papa.parse(file, {
       header: true,
       skipEmptyLines: 'greedy',
-      // "Item_Name " and "\ufeffitem_name" both become "item_name"
-      transformHeader: (h) => h.replace(/^\ufeff/, '').trim().toLowerCase(),
+      transformHeader: normalizeHeader,
       complete: resolve,
       error: reject,
     })
@@ -60,9 +83,7 @@ export default function ImportData() {
       const fields = parsed.meta.fields || []
       const missing = type.required.filter((c) => !fields.includes(c))
       if (missing.length > 0) {
-        throw new Error(
-          `The first row of the file must have the columns ${type.columns.join(', ')}. Missing: ${missing.join(', ')}.`
-        )
+        throw new Error(`The first row must name these columns: ${missing.map((column) => COLUMN_LABELS[column] || column).join(', ')}.`)
       }
       if (parsed.data.length === 0) throw new Error('The file has no rows to import.')
       if (parsed.data.length > MAX_ROWS) {
@@ -145,24 +166,9 @@ export default function ImportData() {
           ))}
         </div>
 
-        <p className="imp-help">
-          The first row of the file holds the column names:{' '}
-          <strong>{type.columns.join(', ')}</strong>.{' '}
-          {typeKey === 'menu'
-            ? 'Category must be meats, sides, or drinks. '
-            : 'Table number and capacity must be whole numbers above zero. '}
-          {type.columns[2]} is optional and must be yes or no (blank means yes).
-        </p>
-
-        <div className="imp-actions">
-          <button
-            className="btn secondary"
-            type="button"
-            onClick={() => downloadText(type.fileName, type.template)}
-          >
-            Download an example file
-          </button>
-        </div>
+        <p className="imp-help">{typeKey === 'menu'
+          ? 'Use a spreadsheet saved as CSV, one dish per row. Columns: Dish name, Category (meats, sides, or drinks), and Available (yes or no; leave blank for yes).'
+          : 'Use a spreadsheet saved as CSV, one table per row. Columns: Table number, Seats, and Active (yes or no; leave blank for yes).'}</p>
 
         <div className="field">
           <span>CSV file</span>
