@@ -365,6 +365,12 @@ export default function Dashboard() {
               const session = sessionByTable[t.table_id]
               const booking = (bookingsByTable[t.table_id] || [])[0]
               const reqCount = requestCountByTable[t.table_id] || 0
+              const tableState = session
+                ? `Dining · ${displayName(session.guest_name)} · ${session.party_size} guests`
+                : booking
+                  ? `${t.status === 'reserved' ? 'Held for' : 'Booked'} ${displayName(booking.customer_name)} · ${fmtTime(booking.reservation_time)}`
+                  : t.status === 'reserved' ? 'Reserved' : ''
+              const detail = [tableState, reqCount > 0 ? `${reqCount} request${reqCount === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ')
               return (
                 <button
                   key={t.table_id}
@@ -377,18 +383,7 @@ export default function Dashboard() {
                     <strong>Table {t.table_number}</strong>
                     <span className="tile-seats">{t.capacity} seats</span>
                   </span>
-                  {session && (
-                    <><span className="tile-state">Dining · {sinceText(session.seated_at, now)}</span><span className="tile-line">{displayName(session.guest_name)} · {session.party_size} guests</span></>
-                  )}
-                  {!session && booking && (
-                    <span className="tile-state">{t.status === 'reserved' ? 'Held for' : 'Booked'} {displayName(booking.customer_name)}, {fmtTime(booking.reservation_time)}</span>
-                  )}
-                  {!session && !booking && t.status === 'reserved' && <span className="tile-state">Reserved</span>}
-                  {reqCount > 0 && (
-                    <span className="tile-requests">
-                      {reqCount} request{reqCount > 1 ? 's' : ''}
-                    </span>
-                  )}
+                  {detail && <span className="tile-state">{detail}</span>}
                 </button>
               )
             })}
