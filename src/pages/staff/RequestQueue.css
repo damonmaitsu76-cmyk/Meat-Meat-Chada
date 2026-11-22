@@ -1,0 +1,14 @@
+/* Refill requests are tickets at every screen width. */
+.request-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: var(--s3); }
+.request-ticket { display: flex; flex-direction: column; min-width: 0; padding: var(--s4); }
+.request-ticket .record-title { font-family: var(--font-display); font-size: var(--fs-title); font-weight: 600; }
+.request-ticket .record-subtitle { display: flex; flex-wrap: wrap; gap: var(--s1); color: var(--text-3); font-size: var(--fs-meta); }
+.request-ticket.late { background: var(--warn-soft); border-color: var(--warn-line); }
+.request-waiting { margin: var(--s3) 0 0; color: var(--warn); font-weight: 600; }
+.ticket-items { display: grid; gap: var(--s2); margin: 0; padding: 0; list-style: none; }
+.ticket-items li { display: flex; gap: var(--s1); align-items: baseline; overflow-wrap: anywhere; }
+.ticket-items li > span { min-width: 24px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.ticket-note { margin: var(--s3) 0 0; color: var(--text-2); overflow-wrap: anywhere; }
+.served-time { margin: var(--s3) 0 0; color: var(--ok); font-size: var(--fs-sm); font-weight: 600; }
+.request-ticket .record-actions { margin-top: auto; padding-top: var(--s4); }
+.request-ticket .record-actions .btn { min-height: 48px; }

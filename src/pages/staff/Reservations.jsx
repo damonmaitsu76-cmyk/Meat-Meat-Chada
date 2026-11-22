@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { promptDialog } from '../../components/dialogs.js'
+import { EmptyState, FilterTabs, Notice, PageToolbar, RecordCard, ResponsiveRecords, StatusChip } from '../../components/ui.jsx'
 import { dayLabel, fmtTime, manilaDate, shiftDate, startMs } from '../../lib/dates.js'
-import './Reservations.css'
+import { displayName } from '../../lib/format.js'
 
 const FILTERS = [
   { key: 'pending', label: 'Pending' },
@@ -10,55 +11,45 @@ const FILTERS = [
   { key: 'history', label: 'History' },
 ]
 const STATUS_LABEL = {
-  pending: 'Pending',
-  approved: 'Approved',
-  declined: 'Declined',
-  cancelled: 'Cancelled',
-  arrived: 'Arrived',
-  auto_cancelled: 'No-show',
+  pending: 'Pending', approved: 'Approved', declined: 'Declined', cancelled: 'Cancelled', arrived: 'Arrived', auto_cancelled: 'No-show',
 }
 const OPEN_STATUSES = ['pending', 'approved']
-const HISTORY_DAYS = 7 // how far back the History filter looks
-const NOTICE_HOURS = 2 // how long a released no-show stays in the notice box
-const SAFETY_POLL_MS = 30000 // in case the live connection silently drops
-
+const HISTORY_DAYS = 7
+const NOTICE_HOURS = 2
+const SAFETY_POLL_MS = 30000
 let channelSeq = 0
+
+function phoneHref(contact) {
+  return `tel:${String(contact || '').replace(/[^+0-9*#,;]/g, '')}`
+}
 
 export default function Reservations() {
   const [rows, setRows] = useState(null)
   const [tables, setTables] = useState([])
-  const [error, setError] = useState('') // problems loading the list
-  const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
+  const [error, setError] = useState('')
+  const [actionError, setActionError] = useState('')
   const [info, setInfo] = useState('')
   const [filter, setFilter] = useState('pending')
   const [search, setSearch] = useState('')
-  const [choice, setChoice] = useState({}) // { [reservation_id]: table_id chosen by staff }
+  const [choice, setChoice] = useState({})
   const [busyId, setBusyId] = useState(null)
   const [live, setLive] = useState(false)
   const [now, setNow] = useState(() => Date.now())
 
-  // Pending and approved bookings of any date, plus everything else from the last few days.
   const load = useCallback(() => {
     const since = shiftDate(manilaDate(), -HISTORY_DAYS)
     return supabase
       .from('reservations')
-      .select(
-        'reservation_id, reservation_code, customer_name, contact_number, guest_count, ' +
-          'reservation_date, reservation_time, status, updated_at, restaurant_tables(table_number)'
-      )
+      .select('reservation_id, reservation_code, customer_name, contact_number, guest_count, reservation_date, reservation_time, status, updated_at, restaurant_tables(table_number)')
       .or(`status.in.(pending,approved),reservation_date.gte.${since}`)
       .order('reservation_date', { ascending: true })
       .order('reservation_time', { ascending: true })
-      .then(({ data, error }) => {
-        if (error) setError(error.message)
-        else {
-          setRows(data)
-          setError('')
-        }
+      .then(({ data, error: loadError }) => {
+        if (loadError) setError(loadError.message)
+        else { setRows(data); setError('') }
       })
   }, [])
 
-  // Load, then stay up to date: Supabase Realtime pushes a change, we reload the list.
   useEffect(() => {
     load()
     const channel = supabase
@@ -72,274 +63,139 @@ export default function Reservations() {
     }
   }, [load])
 
-  // The tables staff can pick from when approving.
   useEffect(() => {
     let cancelled = false
-    supabase
-      .from('restaurant_tables')
-      .select('table_id, table_number, capacity')
-      .eq('is_active', true)
-      .order('table_number')
-      .then(({ data }) => {
-        if (!cancelled && data) setTables(data)
-      })
-    return () => {
-      cancelled = true
-    }
+    supabase.from('restaurant_tables').select('table_id, table_number, capacity').eq('is_active', true).order('table_number')
+      .then(({ data }) => { if (!cancelled && data) setTables(data) })
+    return () => { cancelled = true }
   }, [])
 
-  // Re-draw "today", "time passed", and the notice box every 30 seconds.
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30000)
     return () => clearInterval(timer)
   }, [])
 
-  // Runs one staff action (approve, decline, arrival), shows the result, and reloads the list.
-  async function act(r, call, message) {
-    setBusyId(r.reservation_id)
-    const { data, error } = await call()
+  async function act(reservation, call, message) {
+    setBusyId(reservation.reservation_id)
+    const { data, error: actionFailure } = await call()
     setBusyId(null)
-    setActionError(error ? error.message : '')
-    setInfo(error ? '' : message(data))
-    load() // also refreshes the list if someone else already changed it
+    setActionError(actionFailure ? actionFailure.message : '')
+    setInfo(actionFailure ? '' : message(data))
+    load()
   }
 
-  function approve(r) {
-    const picked = choice[r.reservation_id]
-    act(
-      r,
-      () =>
-        supabase.rpc('approve_reservation', {
-          p_reservation_id: r.reservation_id,
-          p_table_id: picked ? Number(picked) : null, // null = the smallest free table that fits
-        }),
-      (d) => `Approved ${d.reservation_code}: Table ${d.table_number}.`
-    )
+  function approve(reservation) {
+    const picked = choice[reservation.reservation_id]
+    act(reservation, () => supabase.rpc('approve_reservation', {
+      p_reservation_id: reservation.reservation_id,
+      p_table_id: picked ? Number(picked) : null,
+    }), (data) => `Approved ${data.reservation_code}: Table ${data.table_number}.`)
   }
 
-  async function decline(r) {
-    const reason = await promptDialog({
-      title: `Decline ${r.reservation_code}`,
-      label: 'Reason shown to the customer (optional)',
-      confirmLabel: 'Decline',
-    })
-    if (reason === null) return // staff pressed Cancel
-    act(
-      r,
-      () =>
-        supabase.rpc('decline_reservation', {
-          p_reservation_id: r.reservation_id,
-          p_reason: reason,
-        }),
-      () => `Declined ${r.reservation_code}.`
-    )
+  async function decline(reservation) {
+    const reason = await promptDialog({ title: `Decline ${reservation.reservation_code}`, label: 'Reason shown to the customer (optional)', confirmLabel: 'Decline' })
+    if (reason === null) return
+    act(reservation, () => supabase.rpc('decline_reservation', { p_reservation_id: reservation.reservation_id, p_reason: reason }), () => `Declined ${reservation.reservation_code}.`)
   }
 
-  async function cancel(r) {
-    const reason = await promptDialog({
-      title: `Cancel ${r.reservation_code}`,
-      label: 'Reason (optional)',
-      confirmLabel: 'Cancel reservation',
-      cancelLabel: 'Keep it',
-    })
-    if (reason === null) return // staff pressed Cancel
-    act(
-      r,
-      () =>
-        supabase.rpc('staff_cancel_reservation', {
-          p_reservation_id: r.reservation_id,
-          p_reason: reason,
-        }),
-      () => `Cancelled ${r.reservation_code}.`
-    )
+  async function cancel(reservation) {
+    const reason = await promptDialog({ title: `Cancel ${reservation.reservation_code}`, label: 'Reason (optional)', confirmLabel: 'Cancel reservation', cancelLabel: 'Keep it' })
+    if (reason === null) return
+    act(reservation, () => supabase.rpc('staff_cancel_reservation', { p_reservation_id: reservation.reservation_id, p_reason: reason }), () => `Cancelled ${reservation.reservation_code}.`)
   }
 
-  function arrive(r) {
-    act(
-      r,
-      () => supabase.rpc('confirm_arrival', { p_code: r.reservation_code, p_table_id: null }),
-      (d) => `${r.customer_name} seated at Table ${d.table_number}.`
-    )
+  function arrive(reservation) {
+    act(reservation, () => supabase.rpc('confirm_arrival', { p_code: reservation.reservation_code, p_table_id: null }), (data) => `${displayName(reservation.customer_name)} seated at Table ${data.table_number}.`)
   }
 
   const all = rows || []
   const today = manilaDate(new Date(now))
-  const q = search.trim().toLowerCase()
+  const query = search.trim().toLowerCase()
+  const matchesFilter = (reservation, key) => key === 'history' ? !OPEN_STATUSES.includes(reservation.status) : reservation.status === key
+  const count = (key) => all.filter((reservation) => matchesFilter(reservation, key)).length
+  let visible = query
+    ? all.filter((reservation) => [reservation.reservation_code, reservation.customer_name, reservation.contact_number].some((value) => String(value || '').toLowerCase().includes(query)))
+    : all.filter((reservation) => matchesFilter(reservation, filter))
+  if (!query && filter === 'history') visible = visible.slice().reverse()
 
-  const matchesFilter = (r, key) =>
-    key === 'history' ? !OPEN_STATUSES.includes(r.status) : r.status === key
-  const count = (key) => all.filter((r) => matchesFilter(r, key)).length
+  const noShows = all.filter((reservation) => reservation.status === 'auto_cancelled' && now - new Date(reservation.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000)
 
-  // A search looks through every status, so staff can find an ID whatever its state.
-  let visible = q
-    ? all.filter((r) =>
-        [r.reservation_code, r.customer_name, r.contact_number].some((v) =>
-          v.toLowerCase().includes(q)
-        )
+  function actionsFor(reservation) {
+    const busy = busyId === reservation.reservation_id
+    const fits = tables.filter((table) => table.capacity >= reservation.guest_count)
+    if (reservation.status === 'pending') {
+      return (
+        <div className="reservation-actions">
+          <select aria-label={`Table for ${displayName(reservation.customer_name)}`} value={choice[reservation.reservation_id] ?? ''} disabled={busy} onChange={(event) => setChoice((current) => ({ ...current, [reservation.reservation_id]: event.target.value }))}>
+            <option value="">Auto table</option>
+            {fits.map((table) => <option key={table.table_id} value={table.table_id}>Table {table.table_number} · {table.capacity} seats</option>)}
+          </select>
+          <button className="btn small" type="button" disabled={busy} onClick={() => approve(reservation)}>Approve</button>
+          <button className="btn small secondary" type="button" disabled={busy} onClick={() => decline(reservation)}>Decline</button>
+        </div>
       )
-    : all.filter((r) => matchesFilter(r, filter))
-  if (!q && filter === 'history') visible = visible.slice().reverse() // newest first
+    }
+    if (reservation.status === 'approved') {
+      return (
+        <div className="reservation-actions">
+          {reservation.reservation_date === today
+            ? <button className="btn small" type="button" disabled={busy} onClick={() => arrive(reservation)}>Confirm arrival</button>
+            : <span className="sub">Not for today</span>}
+          <button className="btn small secondary" type="button" disabled={busy} onClick={() => cancel(reservation)}>Cancel</button>
+        </div>
+      )
+    }
+    return null
+  }
 
-  const noShows = all.filter(
-    (r) =>
-      r.status === 'auto_cancelled' &&
-      now - new Date(r.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000
-  )
+  const records = visible.map((reservation) => {
+    const passed = startMs(reservation.reservation_date, reservation.reservation_time) < now
+    const late = reservation.status === 'pending' && passed
+    const tableNo = reservation.restaurant_tables?.table_number
+    const name = displayName(reservation.customer_name)
+    const when = `${dayLabel(reservation.reservation_date, today)} ${fmtTime(reservation.reservation_time)}`
+    const guest = <span>{name}{reservation.contact_number && <a className="sub contact-link" href={phoneHref(reservation.contact_number)}>{reservation.contact_number}</a>}</span>
+    const status = <StatusChip status={reservation.status}>{STATUS_LABEL[reservation.status]}</StatusChip>
+    const phoneMeta = <><span>{tableNo ? `Table ${tableNo}` : 'Auto table'} · </span><span className="ticket">{reservation.reservation_code}</span>{reservation.contact_number && <a className="contact-link" href={phoneHref(reservation.contact_number)}>{reservation.contact_number}</a>}</>
+    const card = (
+      <RecordCard
+        className={late ? 'reservation-late' : ''}
+        title={name}
+        subtitle={`Party of ${reservation.guest_count} · ${when}${late ? ' · Time passed' : ''}`}
+        meta={phoneMeta}
+        status={status}
+        actions={actionsFor(reservation)}
+      >
+        {reservation.status === 'declined' && reservation.decline_reason && <p className="decline-line">{reservation.decline_reason}</p>}
+      </RecordCard>
+    )
+    const whenCell = <span>{dayLabel(reservation.reservation_date, today)}<span className="sub">{fmtTime(reservation.reservation_time)}{late ? ' · Time passed' : ''}</span></span>
+    return {
+      key: reservation.reservation_id,
+      card,
+      cells: [
+        <span className="ticket">{reservation.reservation_code}</span>,
+        guest,
+        reservation.guest_count,
+        whenCell,
+        tableNo ? `Table ${tableNo}` : '—',
+        status,
+        actionsFor(reservation),
+      ],
+    }
+  })
 
   return (
     <>
-      <div className="page-head">
-        <h1>Reservations</h1>
-        <span className={`live ${live ? 'on' : ''}`}>{live ? '● Live' : '○ Reconnecting…'}</span>
-      </div>
-
-      {noShows.length > 0 && (
-        <div className="notice" role="status">
-          <strong>Released after the grace period (no-show)</strong>
-          <ul>
-            {noShows.map((r) => (
-              <li key={r.reservation_id}>
-                {r.customer_name} ({r.reservation_code}), booked for{' '}
-                {fmtTime(r.reservation_time)}
-                {r.restaurant_tables ? `, Table ${r.restaurant_tables.table_number} released` : ''}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <input
-        className="search"
-        type="search"
-        placeholder="Search by ID, name, or phone"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-      />
-
-      <div className="filters">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            className={`chip ${!q && filter === f.key ? 'active' : ''}`}
-            onClick={() => {
-              setSearch('')
-              setFilter(f.key)
-            }}
-          >
-            {f.label} ({count(f.key)})
-          </button>
-        ))}
-      </div>
-
-      {info && <div className="success">{info}</div>}
-      {(actionError || error) && <p className="error">{actionError || error}</p>}
-      {rows === null && !error && <p className="hint">Loading…</p>}
-      {rows && visible.length === 0 && (
-        <p className="empty-state">
-          {q ? 'No reservation matches your search.' : 'Nothing here.'}
-        </p>
-      )}
-
-      {visible.length > 0 && (
-        <table className="q-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Guest</th>
-              <th>Party</th>
-              <th>When</th>
-              <th>Table</th>
-              <th>Status</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((r) => {
-              const passed = startMs(r.reservation_date, r.reservation_time) < now
-              const late = r.status === 'pending' && passed
-              const busy = busyId === r.reservation_id
-              const fits = tables.filter((t) => t.capacity >= r.guest_count)
-              const tableNo = r.restaurant_tables?.table_number
-              return (
-                <tr key={r.reservation_id} className={late ? 'late' : ''}>
-                  <td data-label="ID">
-                    <strong>{r.reservation_code}</strong>
-                  </td>
-                  <td data-label="Guest">
-                    <div>
-                      {r.customer_name}
-                      <span className="sub">{r.contact_number}</span>
-                    </div>
-                  </td>
-                  <td data-label="Party">{r.guest_count}</td>
-                  <td data-label="When">
-                    <div>
-                      {dayLabel(r.reservation_date, today)}
-                      <span className="sub">
-                        {fmtTime(r.reservation_time)}
-                        {late ? ' · time passed' : ''}
-                      </span>
-                    </div>
-                  </td>
-                  <td data-label="Table">{tableNo ? `Table ${tableNo}` : '—'}</td>
-                  <td data-label="Status">
-                    <span className={`tag ${r.status}`}>{STATUS_LABEL[r.status]}</span>
-                  </td>
-                  <td data-label="Action">
-                    {r.status === 'pending' && (
-                      <div className="row-actions">
-                        <select
-                          aria-label="Table for this reservation"
-                          value={choice[r.reservation_id] ?? ''}
-                          disabled={busy}
-                          onChange={(e) =>
-                            setChoice((c) => ({ ...c, [r.reservation_id]: e.target.value }))
-                          }
-                        >
-                          <option value="">Auto table</option>
-                          {fits.map((t) => (
-                            <option key={t.table_id} value={t.table_id}>
-                              Table {t.table_number} (seats {t.capacity})
-                            </option>
-                          ))}
-                        </select>
-                        <button className="btn small" disabled={busy} onClick={() => approve(r)}>
-                          Approve
-                        </button>
-                        <button
-                          className="btn small secondary"
-                          disabled={busy}
-                          onClick={() => decline(r)}
-                        >
-                          Decline
-                        </button>
-                      </div>
-                    )}
-                    {r.status === 'approved' && (
-                      <div className="row-actions">
-                        {r.reservation_date === today ? (
-                          <button className="btn small" disabled={busy} onClick={() => arrive(r)}>
-                            Confirm arrival
-                          </button>
-                        ) : (
-                          <span className="sub">Not for today</span>
-                        )}
-                        <button
-                          className="btn small secondary"
-                          disabled={busy}
-                          onClick={() => cancel(r)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      )}
+      <PageToolbar title="Reservations" live={live} />
+      {noShows.length > 0 && <Notice tone="warn"><strong>Released after the grace period</strong><ul>{noShows.map((reservation) => <li key={reservation.reservation_id}>{displayName(reservation.customer_name)} (<span className="ticket">{reservation.reservation_code}</span>), booked for {fmtTime(reservation.reservation_time)}{reservation.restaurant_tables ? `, Table ${reservation.restaurant_tables.table_number} released` : ''}</li>)}</ul></Notice>}
+      <input className="search" type="search" aria-label="Search reservations by ID, name, or phone" placeholder="Search by ID, name, or phone" value={search} onChange={(event) => setSearch(event.target.value)} />
+      <FilterTabs label="Reservation filters" items={FILTERS.map((item) => ({ ...item, count: count(item.key) }))} value={query ? '' : filter} onChange={(key) => { setSearch(''); setFilter(key) }} />
+      {info && <div className="success" role="status">{info}</div>}
+      {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
+      {rows === null && !error && <p className="hint">Loading reservations…</p>}
+      {rows && records.length === 0 && <EmptyState>{query ? 'No reservation matches your search. Check the ID, name, or phone and try again.' : filter === 'pending' ? 'No pending reservations. New requests appear here live.' : filter === 'approved' ? 'No approved reservations.' : 'No reservation history for the last 7 days.'}</EmptyState>}
+      {records.length > 0 && <ResponsiveRecords className="reservation-records" headers={['ID', 'Guest', 'Party', 'When', 'Table', 'Status', 'Actions']} records={records} />}
     </>
   )
 }

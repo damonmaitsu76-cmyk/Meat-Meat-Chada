@@ -1,42 +1,19 @@
-/* Staff Reservation List. Table, chip, page-head, and status tag styles come from
-   global.css, staff.css, and shared.css. */
+/* Reservation records use cards on phones and a comparison table on wide screens. */
+.search { display: block; width: 100%; margin: 0 0 var(--s3); }
+.reservation-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.reservation-actions select { width: auto; min-width: 140px; }
+.reservation-actions .sub { align-self: center; }
+.contact-link { color: var(--text-2); text-decoration: underline; text-underline-offset: 2px; }
+.record-meta .contact-link { flex-basis: 100%; }
+.reservation-late { background: var(--warn-soft); border-color: var(--warn-line); }
+.decline-line { margin: 0; color: var(--text-2); overflow-wrap: anywhere; }
+.reservation-records .q-table { min-width: 960px; }
+.reservation-records .q-table td { vertical-align: middle; }
+.reservation-records .reservation-actions { flex-wrap: nowrap; }
+.reservation-records .reservation-actions select { min-width: 128px; }
 
-.search {
-  width: 100%;
-  max-width: 360px;
-  font: inherit;
-  color: var(--text);
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  margin-bottom: 16px;
-}
-
-.notice {
-  background: #fff4e0;
-  border: 1px solid #f0d9a8;
-  color: #7a4b00;
-  border-radius: 12px;
-  padding: 10px 14px;
-  margin-bottom: 16px;
-}
-.notice strong { display: block; margin-bottom: 4px; }
-.notice ul { margin: 0; padding-left: 18px; }
-
-.sub { display: block; color: var(--muted); font-size: 0.85rem; }
-
-.row-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.row-actions select {
-  font: inherit;
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--text);
-}
-
-/* phones: guest and date cells hold two lines, keep them as one right-aligned block */
-@media (max-width: 720px) {
-  .q-table td > div { text-align: right; }
-  .row-actions { justify-content: flex-end; }
+@media (max-width: 899px) {
+  .record-actions .reservation-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .record-actions .reservation-actions select { grid-column: 1 / -1; width: 100%; }
+  .record-actions .reservation-actions .btn { min-height: 44px; }
 }

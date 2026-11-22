@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
+import { EmptyState, FilterTabs, Notice, PageToolbar, RecordCard, StatusChip } from '../../components/ui.jsx'
+import { formatDuration } from '../../lib/format.js'
+import './RequestQueue.css'
 
 const ACTIVE = ['sent', 'accepted', 'ready']
 const FILTERS = [
@@ -10,29 +13,30 @@ const FILTERS = [
   { key: 'served', label: 'Served' },
 ]
 const STATUS_LABEL = { sent: 'New', accepted: 'Accepted', ready: 'Ready', served: 'Served' }
-// The button that moves a request to its next status.
 const NEXT = {
   sent: { status: 'accepted', label: 'Accept' },
-  accepted: { status: 'ready', label: 'Ready' },
-  ready: { status: 'served', label: 'Served' },
+  accepted: { status: 'ready', label: 'Mark ready' },
+  ready: { status: 'served', label: 'Mark served' },
 }
-const LATE_MINUTES = 5 // a NEW request waiting this long is highlighted
-const SAFETY_POLL_MS = 30000 // in case the live connection silently drops
-const SERVED_HOURS = 12 // how far back the "Served" filter looks
-
+const LATE_MINUTES = 5
+const SAFETY_POLL_MS = 30000
+const SERVED_HOURS = 12
 let channelSeq = 0
 
-function waitedText(createdAt, now) {
-  const mins = Math.max(0, Math.floor((now - new Date(createdAt).getTime()) / 60000))
-  if (mins < 1) return 'just now'
-  if (mins < 60) return `${mins} min`
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`
+function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
+}
+
+function servedText(request) {
+  if (!request.served_at) return 'Served'
+  const minutes = (new Date(request.served_at).getTime() - new Date(request.created_at).getTime()) / 60000
+  return `Served in ${formatDuration(minutes)}`
 }
 
 export default function RequestQueue() {
   const [requests, setRequests] = useState(null)
-  const [error, setError] = useState('') // problems loading the list
-  const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
+  const [error, setError] = useState('')
+  const [actionError, setActionError] = useState('')
   const [filter, setFilter] = useState('active')
   const [busyId, setBusyId] = useState(null)
   const [live, setLive] = useState(false)
@@ -43,21 +47,17 @@ export default function RequestQueue() {
     return supabase
       .from('refill_requests')
       .select(
-        'request_id, request_number, status, note, created_at, ' +
+        'request_id, request_number, status, note, created_at, served_at, ' +
           'restaurant_tables(table_number), request_items(item_name, quantity)'
       )
       .or(`status.neq.served,created_at.gte.${since}`)
       .order('created_at', { ascending: true })
-      .then(({ data, error }) => {
-        if (error) setError(error.message)
-        else {
-          setRequests(data)
-          setError('')
-        }
+      .then(({ data, error: loadError }) => {
+        if (loadError) setError(loadError.message)
+        else { setRequests(data); setError('') }
       })
   }, [])
 
-  // Load, then stay up to date: Supabase Realtime pushes a change, we reload the list.
   useEffect(() => {
     load()
     const channel = supabase
@@ -71,7 +71,6 @@ export default function RequestQueue() {
     }
   }, [load])
 
-  // Re-draw the "waiting" times every 30 seconds.
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30000)
     return () => clearInterval(timer)
@@ -81,102 +80,69 @@ export default function RequestQueue() {
     const next = NEXT[request.status]
     if (!next) return
     setBusyId(request.request_id)
-    const { error } = await supabase.rpc('advance_refill_request', {
+    const { error: advanceError } = await supabase.rpc('advance_refill_request', {
       p_request_id: request.request_id,
       p_status: next.status,
     })
     setBusyId(null)
-    setActionError(error ? error.message : '')
-    load() // also refreshes the list if someone else already moved it
+    setActionError(advanceError ? advanceError.message : '')
+    load()
   }
 
   const all = requests || []
-  const matches = (r, key) => (key === 'active' ? ACTIVE.includes(r.status) : r.status === key)
-  const count = (key) => all.filter((r) => matches(r, key)).length
-  const visible = all.filter((r) => matches(r, filter))
-  if (filter === 'served') visible.reverse() // newest served first
+  const matches = (request, key) => key === 'active' ? ACTIVE.includes(request.status) : request.status === key
+  const count = (key) => all.filter((request) => matches(request, key)).length
+  const visible = all.filter((request) => matches(request, filter))
+  if (filter === 'served') visible.reverse()
 
   return (
     <>
-      <div className="page-head">
-        <h1>Request Queue</h1>
-        <span className={`live ${live ? 'on' : ''}`}>{live ? '● Live' : '○ Reconnecting…'}</span>
-      </div>
+      <PageToolbar title="Request queue" live={live} />
+      <FilterTabs
+        label="Request filters"
+        value={filter}
+        onChange={setFilter}
+        items={FILTERS.map((item) => ({ ...item, count: count(item.key) }))}
+      />
 
-      <div className="filters">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            className={`chip ${filter === f.key ? 'active' : ''}`}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label} ({count(f.key)})
-          </button>
-        ))}
-      </div>
-
-      {(actionError || error) && <p className="error">{actionError || error}</p>}
-      {requests === null && !error && <p className="hint">Loading…</p>}
+      {(actionError || error) && <Notice tone="warn" action={<button className="btn secondary small" type="button" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
+      {requests === null && !error && <p className="hint">Loading requests…</p>}
       {requests && visible.length === 0 && (
-        <p className="empty-state">
-          {filter === 'active' ? 'No active requests.' : 'Nothing here.'}
-        </p>
+        <EmptyState>
+          {filter === 'active' ? 'No open requests. New ones appear here live.' : filter === 'served' ? 'No served requests in the last 12 hours.' : `No ${FILTERS.find((item) => item.key === filter)?.label.toLowerCase()} requests.`}
+        </EmptyState>
       )}
 
       {visible.length > 0 && (
-        <table className="q-table">
-          <thead>
-            <tr>
-              <th>Request</th>
-              <th>Table</th>
-              <th>Items</th>
-              <th>Notes</th>
-              <th>Status</th>
-              <th>Waiting</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((r) => {
-              const next = NEXT[r.status]
-              const mins = (now - new Date(r.created_at).getTime()) / 60000
-              const late = r.status === 'sent' && mins >= LATE_MINUTES
-              return (
-                <tr key={r.request_id} className={late ? 'late' : ''}>
-                  <td data-label="Request">
-                    <strong>{r.request_number}</strong>
-                  </td>
-                  <td data-label="Table">Table {r.restaurant_tables?.table_number}</td>
-                  <td data-label="Items">
-                    <ul className="items">
-                      {r.request_items.map((i) => (
-                        <li key={i.item_name}>
-                          {i.quantity} × {i.item_name}
-                        </li>
-                      ))}
-                    </ul>
-                  </td>
-                  <td data-label="Notes">{r.note || '—'}</td>
-                  <td data-label="Status">
-                    <span className={`tag ${r.status}`}>{STATUS_LABEL[r.status]}</span>
-                  </td>
-                  <td data-label="Waiting">{waitedText(r.created_at, now)}</td>
-                  <td data-label="Action">
-                    {next && (
-                      <button
-                        className="btn small"
-                        disabled={busyId === r.request_id}
-                        onClick={() => advance(r)}
-                      >
-                        {next.label}
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+        <div className="request-grid">
+          {visible.map((request) => {
+            const next = NEXT[request.status]
+            const waited = Math.max(0, Math.floor((now - new Date(request.created_at).getTime()) / 60000))
+            const late = request.status === 'sent' && waited >= LATE_MINUTES
+            const items = request.request_items || []
+            return (
+              <RecordCard
+                key={request.request_id}
+                className={`request-ticket ${late ? 'late' : ''}`}
+                title={`Table ${request.restaurant_tables?.table_number ?? '—'}`}
+                status={<StatusChip status={request.status}>{STATUS_LABEL[request.status]}</StatusChip>}
+                subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span></>}
+                actions={next ? (
+                  <button className="btn full" type="button" disabled={busyId === request.request_id} onClick={() => advance(request)}>
+                    {busyId === request.request_id ? 'Saving…' : next.label}
+                  </button>
+                ) : undefined}
+              >
+                {late && <p className="request-waiting">Waiting {formatDuration(waited)}</p>}
+                <ul className="ticket-items">
+                  {items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
+                </ul>
+                {request.note && <p className="ticket-note">{request.note}</p>}
+                {request.status === 'served' && <p className="served-time">{servedText(request)}</p>}
+              </RecordCard>
+            )
+          })}
+        </div>
       )}
     </>
   )
