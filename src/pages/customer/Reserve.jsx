@@ -116,7 +116,6 @@ function ReservationForm({ onCreated }) {
   return (
     <form onSubmit={onSubmit} noValidate>
       <h1>Reserve a table</h1>
-      <p className="reserve-intro">Staff confirm your request and send you a reservation ID.</p>
 
       <Field
         id="reservation-name"

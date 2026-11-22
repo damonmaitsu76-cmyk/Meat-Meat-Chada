@@ -1,7 +1,6 @@
 /* Reservation form and status ticket. Shared fields and buttons live in components.css. */
 .reserve h1 { margin: 0 0 var(--s2); font-size: var(--fs-title-lg); }
 .reserve h2 { margin: 0 0 var(--s2); font-size: var(--fs-title); }
-.reserve-intro { margin: 0 0 var(--s5); color: var(--text-2); }
 .reserve .field-row { align-items: start; gap: var(--s3); }
 .reserve .divider { margin: var(--s6) 0 var(--s4); border: 0; border-top: 1px solid var(--line); }
 .reserve .lookup { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s2); align-items: end; }
