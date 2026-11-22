@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { Notice, PageToolbar } from '../../components/ui.jsx'
-import { fmtTime } from '../../lib/dates.js'
 import './Settings.css'
 
 const KEYS = ['arrival_grace_minutes', 'slot_length_minutes', 'opening_time', 'closing_time']
@@ -22,11 +21,6 @@ const SETTING_LABELS = {
 function toMinutes(hhmm) {
   const [h, m] = hhmm.split(':').map(Number)
   return h * 60 + m
-}
-
-function clockPlus(hhmm, mins) {
-  const t = (toMinutes(hhmm) + mins) % 1440
-  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
 }
 
 // Numbers are saved without stray spaces or zeros ("015" -> "15"); times as HH:MM.
@@ -143,9 +137,6 @@ export default function Settings() {
     setSaved(next)
   }
 
-  const grace = Number(draft?.arrival_grace_minutes)
-  const slot = Number(draft?.slot_length_minutes)
-
   return (
     <>
       <PageToolbar title="Settings" />
@@ -170,15 +161,6 @@ export default function Settings() {
                 onChange={(e) => change('arrival_grace_minutes', e.target.value)}
               />
             </label>
-            <p className="set-help">
-              A guest who has not arrived this long after the booked time is counted as a no-show
-              and the table is released.
-              {Number.isInteger(grace) && grace >= 1 && ' '}
-              {Number.isInteger(grace) &&
-                grace >= 1 &&
-                `Example: a 6:00 PM booking is released at ${fmtTime(clockPlus('18:00', grace))}.`}
-            </p>
-
             <label className="field">
               <span>Time slot length (minutes)</span>
               <input
