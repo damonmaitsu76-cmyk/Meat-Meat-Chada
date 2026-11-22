@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Papa from 'papaparse'
 import { supabase } from '../../supabaseClient.js'
+import { Notice, PageToolbar } from '../../components/ui.jsx'
 import { downloadText } from '../../lib/download.js'
 import { IMPORT_TYPES, MAX_ROWS, existingKey, planImport } from '../../lib/importRules.js'
 import './ImportData.css'
@@ -128,9 +129,7 @@ export default function ImportData() {
 
   return (
     <>
-      <div className="page-head">
-        <h1>Import data</h1>
-      </div>
+      <PageToolbar title="Import data" />
 
       <p className="hint">
         Load the restaurant&apos;s existing menu or table list from a CSV file instead of typing
@@ -195,26 +194,13 @@ export default function ImportData() {
           <h2>Import finished</h2>
           <p className="hint">{outcome.fileName}</p>
 
-          <div className="stats">
-            <div className="stat">
-              <span className="stat-num">{outcome.imported}</span>
-              <span className="stat-label">Imported</span>
-            </div>
-            <div className="stat">
-              <span className="stat-num">{outcome.skipped.length}</span>
-              <span className="stat-label">Skipped (already there)</span>
-            </div>
-            <div className="stat">
-              <span className="stat-num">{outcome.failed.length}</span>
-              <span className="stat-label">Failed</span>
-            </div>
-          </div>
+          <p className="imp-result">{outcome.imported} valid · {outcome.skipped.length} skipped · {outcome.failed.length} {outcome.failed.length === 1 ? 'error' : 'errors'}</p>
 
           {outcome.imported > 0 && outcome.typeKey === 'tables' && (
-            <p className="success">
+            <Notice tone="info">
               New tables need QR codes. Open Tables &amp; QR to show or print them, and check the
               website address first.
-            </p>
+            </Notice>
           )}
           {outcome.logWarning && (
             <p className="hint">The rows were saved, but the activity log entry could not be written.</p>
@@ -222,6 +208,7 @@ export default function ImportData() {
 
           {problems.length > 0 && (
             <>
+              <div className="imp-table-wrap">
               <table className="q-table imp-table">
                 <thead>
                   <tr>
@@ -233,15 +220,16 @@ export default function ImportData() {
                 <tbody>
                   {problems.slice(0, SHOW_ROWS).map((p) => (
                     <tr key={`${p.kind}-${p.row}`}>
-                      <td data-label="Row">{p.row}</td>
-                      <td data-label="Value">{preview(outcome.typeKey, p.data)}</td>
-                      <td data-label="Result">
+                      <td>{p.row}</td>
+                      <td>{preview(outcome.typeKey, p.data)}</td>
+                      <td>
                         <strong>{p.kind === 'failed' ? 'Failed' : 'Skipped'}.</strong> {p.reason}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
               <p className="hint">
                 Row 1 is the first row under the column names.
                 {problems.length > SHOW_ROWS && ` Showing the first ${SHOW_ROWS} of ${problems.length}.`}

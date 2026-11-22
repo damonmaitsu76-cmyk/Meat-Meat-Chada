@@ -1,77 +1,29 @@
-/* Menu Management. Table, button, and page-head styles come from global.css,
-   staff.css, and shared.css. */
-
-.mm-add {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  margin-bottom: 16px;
-  padding: 14px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-}
+/* Dish availability list and inline editing. */
+.toolbar-disclosure { position: relative; margin: 0; }
+.toolbar-disclosure[open] .disclosure-body { position: absolute; z-index: 10; top: calc(100% + var(--s2)); right: 0; width: min(440px, calc(100vw - var(--s8))); padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.mm-add { display: grid; gap: var(--s3); margin: 0; }
 .mm-add .field { margin: 0; }
-.mm-add .field input[type='text'] { width: 240px; max-width: 100%; }
-.mm-add select,
-.mm-edit-input {
-  font: inherit;
-  color: var(--text);
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: var(--card);
-}
-.mm-edit { display: flex; flex-wrap: wrap; gap: 8px; }
-.mm-edit-input { padding: 6px 8px; border-radius: 8px; width: 100%; max-width: 220px; }
+.mm-add .btn { justify-self: start; }
+.mm-section { max-width: 720px; margin: 0 0 var(--s6); }
+.mm-section h2 { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s1); margin: 0 0 var(--s2); font-size: var(--fs-title); }
+.mm-section h2 small { color: var(--text-3); font-size: var(--fs-sm); font-weight: 500; }
+.mm-list { list-style: none; margin: 0; padding: 0 var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.mm-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 56px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+.mm-row:last-child { border-bottom: 0; }
+.mm-name { min-width: 0; font-size: var(--fs-row); font-weight: 600; overflow-wrap: anywhere; }
+.mm-off .mm-name { color: var(--text-2); }
+.mm-row-actions, .mm-avail { display: flex; align-items: center; gap: var(--s3); }
+.mm-row-actions { flex: 0 0 auto; }
+.mm-state { color: var(--warn); font-size: var(--fs-meta); font-weight: 600; }
+.mm-edit { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; align-items: center; gap: var(--s2); width: 100%; }
+.mm-edit-input { min-width: 0; }
+.mm-actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
 
-.mm-section { margin: 0 0 24px; }
-.mm-section h2 {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-}
-.mm-section h2 small { color: var(--muted); font-weight: 600; font-size: 0.85rem; }
-.mm-off .mm-name { color: var(--muted); }
-
-/* ---------- availability switch ---------- */
-.mm-avail { display: flex; align-items: center; gap: 10px; }
-.mm-state { font-size: 0.85rem; font-weight: 600; color: var(--warn); }
-.mm-state.on { color: var(--ok); }
-.switch {
-  position: relative;
-  flex-shrink: 0;
-  width: 44px;
-  height: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: #cfc5c0;
-  transition: background 0.15s;
-}
-.switch::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  transition: transform 0.15s;
-}
-.switch[aria-checked='true'] { background: var(--ok); }
-.switch[aria-checked='true']::after { transform: translateX(18px); }
-.switch:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) {
-  .switch, .switch::after { transition: none; }
-}
-
-.mm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-
-@media (max-width: 720px) {
-  .mm-actions, .mm-avail, .mm-edit { justify-content: flex-end; }
+@media (max-width: 560px) {
+  .mm-list { padding-inline: var(--s3); }
+  .mm-row { flex-wrap: wrap; }
+  .mm-row-actions { gap: var(--s2); }
+  .mm-edit { grid-template-columns: minmax(0, 1fr); }
+  .mm-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .mm-actions .btn { padding-inline: var(--s2); }
 }
