@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import RequireAuth from './auth/RequireAuth.jsx'
 import { ADMIN_ROLES, STAFF_ROLES } from './auth/roles.js'
 import Login from './pages/staff/Login.jsx'
@@ -15,6 +15,7 @@ import StaffAccounts from './pages/staff/StaffAccounts.jsx'
 import StaffLayout from './pages/staff/StaffLayout.jsx'
 import TableManagement from './pages/staff/TableManagement.jsx'
 import DesignFixture from './pages/DesignFixture.jsx'
+import Home from './pages/Home.jsx'
 
 function Message({ title, text }) {
   return (
@@ -22,18 +23,6 @@ function Message({ title, text }) {
       <h1>{title}</h1>
       <p>{text}</p>
     </main>
-  )
-}
-
-function Home() {
-  return (
-    <div className="home-screen">
-      <header className="topbar"><span className="brand">Samgyup Chada</span></header>
-      <main className="home-content">
-        <h1>Meat Me at Chada</h1>
-        <Link className="btn" to="/reserve">Reserve a table</Link>
-      </main>
-    </div>
   )
 }
 
