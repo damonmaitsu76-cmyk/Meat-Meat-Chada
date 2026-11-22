@@ -14,26 +14,26 @@ import Settings from './pages/staff/Settings.jsx'
 import StaffAccounts from './pages/staff/StaffAccounts.jsx'
 import StaffLayout from './pages/staff/StaffLayout.jsx'
 import TableManagement from './pages/staff/TableManagement.jsx'
+import DesignFixture from './pages/DesignFixture.jsx'
 
 function Message({ title, text }) {
   return (
-    <div className="center-screen">
+    <main className="center-screen">
       <h1>{title}</h1>
       <p>{text}</p>
-    </div>
+    </main>
   )
 }
 
 function Home() {
   return (
-    <div className="center-screen">
-      <h1>Meat Me at Chada</h1>
-      <p>Please scan the QR code on your table to open the menu.</p>
-      <p>
-        <Link className="btn" to="/reserve">
-          Reserve a table
-        </Link>
-      </p>
+    <div className="home-screen">
+      <header className="topbar"><span className="brand">Samgyup Chada</span></header>
+      <main className="home-content">
+        <h1>Meat Me at Chada</h1>
+        <p>Scan the QR code at your table to order refills, or reserve a table ahead of your visit.</p>
+        <Link className="btn" to="/reserve">Reserve a table</Link>
+      </main>
     </div>
   )
 }
@@ -41,6 +41,7 @@ function Home() {
 export default function App() {
   return (
     <Routes>
+      {import.meta.env.DEV && <Route path="/__design" element={<DesignFixture />} />}
       {/* customers (no login) */}
       <Route path="/" element={<Home />} />
       <Route path="/menu/:qrToken" element={<QRMenu />} />

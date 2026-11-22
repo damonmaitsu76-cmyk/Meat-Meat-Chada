@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
+import { Disclosure, Field, Notice, PageToolbar, Switch } from '../../components/ui.jsx'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES } from '../../auth/roles.js'
 import './MenuManagement.css'
@@ -161,46 +162,33 @@ export default function MenuManagement() {
 
   return (
     <>
-      <div className="page-head">
-        <h1>Menu</h1>
-        <span className={`live ${live ? 'on' : ''}`}>{live ? '● Live' : '○ Reconnecting…'}</span>
-      </div>
+      <PageToolbar
+        title="Menu"
+        live={live}
+        action={canEdit && (
+          <Disclosure label="Add dish" className="toolbar-disclosure">
+            <form className="mm-add" onSubmit={addDish}>
+              <Field label="Dish name" type="text" maxLength={80} required value={newName} onChange={(event) => setNewName(event.target.value)} />
+              <label className="field">
+                <span>Category</span>
+                <select value={newCategory} onChange={(event) => setNewCategory(event.target.value)}>
+                  {CATEGORIES.map((category) => <option key={category.key} value={category.key}>{category.label}</option>)}
+                </select>
+              </label>
+              <button className="btn secondary" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add dish'}</button>
+            </form>
+          </Disclosure>
+        )}
+      />
 
       <p className="hint">
         Switch a dish off when the kitchen runs out.
         {!canEdit && ' The manager or owner can add, edit, and delete dishes.'}
       </p>
 
-      {canEdit && (
-        <form className="mm-add" onSubmit={addDish}>
-          <label className="field">
-            <span>Dish name</span>
-            <input
-              type="text"
-              maxLength={80}
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-            />
-          </label>
-          <label className="field">
-            <span>Category</span>
-            <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)}>
-              {CATEGORIES.map((c) => (
-                <option key={c.key} value={c.key}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="btn" type="submit" disabled={adding}>
-            {adding ? 'Adding…' : 'Add dish'}
-          </button>
-        </form>
-      )}
-
       {info && <div className="success">{info}</div>}
-      {(actionError || error) && <p className="error">{actionError || error}</p>}
-      {items === null && !error && <p className="hint">Loading…</p>}
+      {(actionError || error) && <Notice tone="warn" action={!items ? <button className="btn secondary small" type="button" onClick={load}>Try again</button> : undefined}>{actionError || error}</Notice>}
+      {items === null && !error && <p className="hint">Loading dishes…</p>}
 
       {items &&
         CATEGORIES.map((c) => {
@@ -209,122 +197,45 @@ export default function MenuManagement() {
           return (
             <section className="mm-section" key={c.key}>
               <h2>
-                {c.label}
-                <small>
-                  {list.length === 0 ? 'none yet' : `${on} of ${list.length} available`}
-                </small>
+                {c.label}<small> · {on} of {list.length} available</small>
               </h2>
 
               {list.length === 0 && <p className="empty-state">No dishes in this category.</p>}
 
-              {list.length > 0 && (
-                <table className="q-table">
-                  <thead>
-                    <tr>
-                      <th>Dish</th>
-                      <th>Available</th>
-                      {canEdit && <th>Action</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {list.map((item) => {
-                      const editing = edit?.id === item.item_id
-                      const busy = busyId === item.item_id
-                      return (
-                        <tr key={item.item_id} className={item.is_available ? '' : 'mm-off'}>
-                          <td data-label="Dish">
-                            {editing ? (
-                              <div className="mm-edit">
-                                <input
-                                  className="mm-edit-input"
-                                  type="text"
-                                  maxLength={80}
-                                  aria-label="Dish name"
-                                  value={edit.name}
-                                  onChange={(e) => setEdit({ ...edit, name: e.target.value })}
-                                />
-                                <select
-                                  className="mm-edit-input"
-                                  aria-label="Category"
-                                  value={edit.category}
-                                  onChange={(e) => setEdit({ ...edit, category: e.target.value })}
-                                >
-                                  {CATEGORIES.map((cat) => (
-                                    <option key={cat.key} value={cat.key}>
-                                      {cat.label}
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            ) : (
-                              <strong className="mm-name">{item.item_name}</strong>
-                            )}
-                          </td>
-                          <td data-label="Available">
+              {list.length > 0 && <ul className="mm-list">
+                {list.map((item) => {
+                  const editing = edit?.id === item.item_id
+                  const busy = busyId === item.item_id
+                  return (
+                    <li key={item.item_id} className={`mm-row ${item.is_available ? '' : 'mm-off'}`}>
+                      {editing ? (
+                        <div className="mm-edit">
+                          <input className="mm-edit-input" type="text" maxLength={80} aria-label="Dish name" value={edit.name} onChange={(event) => setEdit({ ...edit, name: event.target.value })} />
+                          <select className="mm-edit-input" aria-label="Category" value={edit.category} onChange={(event) => setEdit({ ...edit, category: event.target.value })}>
+                            {CATEGORIES.map((category) => <option key={category.key} value={category.key}>{category.label}</option>)}
+                          </select>
+                          <div className="mm-actions">
+                            <button className="btn small" type="button" disabled={busy} onClick={saveEdit}>Save</button>
+                            <button className="btn small secondary" type="button" disabled={busy} onClick={() => setEdit(null)}>Cancel</button>
+                            <button className="btn small danger" type="button" disabled={busy} onClick={() => remove(item)}>Delete</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <span className="mm-name">{item.item_name}</span>
+                          <div className="mm-row-actions">
                             <div className="mm-avail">
-                              <button
-                                type="button"
-                                role="switch"
-                                aria-checked={item.is_available}
-                                aria-label={`${item.item_name} is available`}
-                                className="switch"
-                                disabled={busy}
-                                onClick={() => toggle(item)}
-                              />
-                              <span className={`mm-state ${item.is_available ? 'on' : ''}`}>
-                                {item.is_available ? 'Available' : 'Unavailable'}
-                              </span>
+                              {!item.is_available && <span className="mm-state">Unavailable</span>}
+                              <Switch checked={item.is_available} label={`Set ${item.item_name} availability`} disabled={busy} onChange={() => toggle(item)} />
                             </div>
-                          </td>
-                          {canEdit && (
-                            <td data-label="Action">
-                              <div className="mm-actions">
-                                {editing ? (
-                                  <>
-                                    <button className="btn small" disabled={busy} onClick={saveEdit}>
-                                      Save
-                                    </button>
-                                    <button
-                                      className="btn small secondary"
-                                      disabled={busy}
-                                      onClick={() => setEdit(null)}
-                                    >
-                                      Cancel
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <button
-                                      className="btn small secondary"
-                                      disabled={busy}
-                                      onClick={() =>
-                                        setEdit({
-                                          id: item.item_id,
-                                          name: item.item_name,
-                                          category: item.category,
-                                        })
-                                      }
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      className="btn small secondary"
-                                      disabled={busy}
-                                      onClick={() => remove(item)}
-                                    >
-                                      Delete
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          )}
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              )}
+                            {canEdit && <button className="btn ghost small" type="button" disabled={busy} onClick={() => setEdit({ id: item.item_id, name: item.item_name, category: item.category })}>Edit</button>}
+                          </div>
+                        </>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>}
             </section>
           )
         })}

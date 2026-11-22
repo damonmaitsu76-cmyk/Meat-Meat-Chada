@@ -1,16 +1,11 @@
-/* Settings. Buttons, fields, and page-head styles come from global.css, staff.css, and shared.css. */
-
-.set-form { max-width: 520px; display: grid; gap: 16px; }
-.set-card {
-  padding: 16px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-}
-.set-card h2 { margin: 0 0 10px; font-size: 1.05rem; }
-.set-card .field { margin: 0 0 6px; }
-.set-card .field input { width: 100%; }
-.set-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.set-help { margin: 0 0 14px; color: var(--muted); font-size: 0.85rem; }
+/* Reservation and opening-hour settings. Shared fields and buttons live in components.css. */
+.set-form { display: grid; gap: var(--s4); max-width: 560px; }
+.set-card { padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.set-card h2 { margin: 0 0 var(--s3); font-size: var(--fs-title); }
+.set-card .field { margin: 0 0 var(--s2); }
+.set-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+.set-help { margin: 0 0 var(--s4); color: var(--text-3); font-size: var(--fs-sm); }
 .set-card .set-help:last-child { margin-bottom: 0; }
-.set-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.set-actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
+
+@media (max-width: 360px) { .set-row { grid-template-columns: minmax(0, 1fr); } }

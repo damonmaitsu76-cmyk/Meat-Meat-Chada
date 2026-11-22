@@ -1,90 +1,51 @@
-/* Table and QR Management. Table, button, and modal styles come from global.css,
-   staff.css, and shared.css. */
-
-.tm-base { max-width: 520px; margin-bottom: 16px; }
-.tm-base input {
-  width: 100%;
-  font: inherit;
-  color: var(--text);
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
-.tm-warn {
-  max-width: 520px;
-  margin: -6px 0 16px;
-  padding: 10px 14px;
-  background: #fff4e0;
-  border: 1px solid #f0d9a8;
-  color: #7a4b00;
-  border-radius: 12px;
-  font-size: 0.9rem;
-}
-
-.tm-add {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  margin-bottom: 16px;
-  padding: 14px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-}
+/* Table list, address control, QR preview, and print sheet. */
+.tm-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: var(--s2); }
+.tm-add-disclosure { position: relative; margin: 0; }
+.tm-add-disclosure[open] .disclosure-body { position: absolute; z-index: 10; top: calc(100% + var(--s2)); right: 0; width: min(400px, calc(100vw - var(--s8))); padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.tm-add { display: grid; gap: var(--s3); margin: 0; }
 .tm-add .field { margin: 0; }
-.tm-add input { width: 110px; }
-
-.tm-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  margin: 0 0 12px;
-}
-.tm-check { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.9rem; }
-
-.tm-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.tm-edit-input {
-  width: 90px;
-  font: inherit;
-  color: var(--text);
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-}
-.tm-removed td { opacity: 0.6; }
-
-.tm-qr { display: grid; justify-items: center; gap: 10px; margin-top: 12px; }
+.tm-add .btn { justify-self: start; }
+.tm-check { display: flex; align-items: center; gap: var(--s2); min-height: 44px; color: var(--text-2); font-size: var(--fs-sm); white-space: nowrap; }
+.tm-check input { width: 20px; height: 20px; accent-color: var(--charcoal); }
+.tm-address { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin: 0 0 var(--s3); color: var(--text-3); font-size: var(--fs-meta); }
+.tm-address span { min-width: 0; overflow-wrap: anywhere; }
+.tm-address code { color: var(--text-2); font: inherit; }
+.tm-address-edit { display: flex; align-items: end; flex-wrap: wrap; gap: var(--s2); max-width: 720px; margin-bottom: var(--s3); }
+.tm-address-edit .field { flex: 1 1 240px; margin: 0; }
+.tm-list { max-width: 900px; margin: 0; padding: 0 var(--s4); list-style: none; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.tm-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 56px; padding: var(--s2) 0; border-bottom: 1px solid var(--line); }
+.tm-row:last-child { border-bottom: 0; }
+.tm-row-main { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s3); min-width: 0; }
+.tm-table-title { font-family: var(--font-display); font-size: var(--fs-row); font-weight: 600; }
+.tm-capacity, .tm-removed-label { color: var(--text-3); font-size: var(--fs-meta); }
+.tm-removed .tm-table-title { color: var(--text-2); }
+.tm-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.tm-edit { display: grid; grid-template-columns: repeat(2, minmax(100px, 160px)); gap: var(--s3); }
+.tm-edit .field { margin: 0; }
+.tm-qr { display: grid; justify-items: center; gap: var(--s3); margin-top: var(--s3); }
 .tm-qr img { width: 260px; height: 260px; max-width: 100%; }
-.tm-url { font-size: 0.8rem; color: var(--muted); overflow-wrap: anywhere; text-align: center; }
-.tm-qr-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.tm-url { color: var(--text-3); font-size: var(--fs-meta); overflow-wrap: anywhere; text-align: center; }
+.tm-qr-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2); }
 
-@media (max-width: 720px) {
-  .tm-actions { justify-content: flex-end; }
+/* Keep the existing print layout and browser print flow. */
+.print-sheet { display: none; }
+@media print {
+  .staff-top, .staff-nav, .staff-bottom-nav, .no-print { display: none !important; }
+  .staff-main { max-width: none; padding: 0; }
+  body { background: var(--white); }
+  .print-sheet { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10mm; }
+  .print-card { break-inside: avoid; padding: var(--space-print-card); text-align: center; border: 1px dashed var(--print-cut); }
+  .print-brand { color: var(--brand); font-weight: 700; }
+  .print-table { margin: var(--space-print-gap) 0; font-size: var(--fs-print-table); font-weight: 700; }
+  .print-card img { width: 62mm; height: 62mm; }
+  .print-hint { margin-top: var(--space-print-gap); font-size: var(--fs-print-hint); }
 }
 
-/* ---------- printing: one card per table, the rest of the page is hidden ---------- */
-.print-sheet { display: none; }
-
-@media print {
-  .staff-top, .staff-nav, .no-print { display: none !important; }
-  .staff-main { padding: 0; max-width: none; }
-  body { background: #fff; }
-  .print-sheet {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10mm;
-  }
-  .print-card {
-    break-inside: avoid;
-    padding: 8mm;
-    text-align: center;
-    border: 1px dashed #888; /* cut line */
-  }
-  .print-brand { font-weight: 700; color: var(--brand); }
-  .print-table { margin: 2mm 0; font-size: 28pt; font-weight: 700; }
-  .print-card img { width: 62mm; height: 62mm; }
-  .print-hint { margin-top: 2mm; font-size: 11pt; }
+@media (max-width: 719px) {
+  .page-toolbar { align-items: flex-start; flex-wrap: wrap; }
+  .page-toolbar-action { flex: 1 1 100%; justify-content: space-between; flex-wrap: wrap; }
+  .tm-toolbar { justify-content: flex-start; }
+  .tm-list { padding-inline: var(--s3); }
+  .tm-row { flex-wrap: wrap; }
+  .tm-actions { width: 100%; }
 }

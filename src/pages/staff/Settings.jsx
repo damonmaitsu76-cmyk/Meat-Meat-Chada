@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
+import { Notice, PageToolbar } from '../../components/ui.jsx'
 import { fmtTime } from '../../lib/dates.js'
 import './Settings.css'
 
@@ -10,6 +11,12 @@ const DEFAULTS = {
   slot_length_minutes: '90',
   opening_time: '11:00',
   closing_time: '23:00',
+}
+const SETTING_LABELS = {
+  arrival_grace_minutes: 'arrival grace period',
+  slot_length_minutes: 'time slot length',
+  opening_time: 'opening time',
+  closing_time: 'closing time',
 }
 
 function toMinutes(hhmm) {
@@ -131,7 +138,7 @@ export default function Settings() {
       return
     }
     setActionError('')
-    setInfo('Settings saved. The new values apply right away.')
+    setInfo(`Saved ${changed.map((key) => SETTING_LABELS[key]).join(', ')}. The new values apply right away.`)
     setDraft(next)
     setSaved(next)
   }
@@ -141,13 +148,11 @@ export default function Settings() {
 
   return (
     <>
-      <div className="page-head">
-        <h1>Settings</h1>
-      </div>
+      <PageToolbar title="Settings" />
 
       {info && <div className="success">{info}</div>}
-      {(actionError || error) && <p className="error">{actionError || error}</p>}
-      {draft === null && !error && <p className="hint">Loading…</p>}
+      {(actionError || error) && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={() => load()}>Try again</button>}>{actionError || error}</Notice>}
+      {draft === null && !error && <p className="hint">Loading settings…</p>}
 
       {draft && (
         <form className="set-form" onSubmit={save}>

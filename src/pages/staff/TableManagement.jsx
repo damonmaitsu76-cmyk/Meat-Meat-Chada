@@ -3,11 +3,11 @@ import QRCode from 'qrcode'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
+import { Disclosure, Field, Notice, PageToolbar } from '../../components/ui.jsx'
 import './TableManagement.css'
 
 const BASE_KEY = 'chada_qr_base'
 const QR_OPTIONS = { width: 600, margin: 2, errorCorrectionLevel: 'M' }
-const STATUS_LABEL = { available: 'Available', reserved: 'Reserved', dining: 'Dining' }
 
 // The website address that goes inside the QR codes is kept in this browser.
 function readBase() {
@@ -117,6 +117,7 @@ export default function TableManagement() {
   const [actionError, setActionError] = useState('') // problems with a button press; a reload must not clear it
   const [info, setInfo] = useState('')
   const [baseInput, setBaseInput] = useState(() => readBase() || window.location.origin)
+  const [editingBase, setEditingBase] = useState(false)
   const [showRemoved, setShowRemoved] = useState(false)
   const [newNumber, setNewNumber] = useState('')
   const [newSeats, setNewSeats] = useState('4')
@@ -249,6 +250,7 @@ export default function TableManagement() {
       return
     }
     setInfo(`Table ${t.table_number} ${active ? 'restored' : 'removed'}.`)
+    if (!active) setEdit(null)
     load()
   }
 
@@ -275,194 +277,79 @@ export default function TableManagement() {
   return (
     <>
       <div className="no-print">
-        <div className="page-head">
-          <h1>Tables and QR codes</h1>
+        <PageToolbar
+          title="Tables and QR codes"
+          action={(
+            <div className="tm-toolbar">
+              <button className="btn" type="button" disabled={activeTables.length === 0} onClick={() => printTables(activeTables)}>Print all QR codes</button>
+              <Disclosure label="Add table" className="tm-add-disclosure">
+                <form className="tm-add" onSubmit={addTable}>
+                  <Field label="Table number" type="number" min={1} inputMode="numeric" placeholder={String(suggested)} value={newNumber} onChange={(event) => setNewNumber(event.target.value)} />
+                  <Field label="Seats" type="number" min={1} inputMode="numeric" value={newSeats} onChange={(event) => setNewSeats(event.target.value)} />
+                  <button className="btn secondary" type="submit" disabled={adding}>{adding ? 'Adding…' : 'Add table'}</button>
+                </form>
+              </Disclosure>
+              <label className="tm-check">
+                <input type="checkbox" checked={showRemoved} onChange={(event) => setShowRemoved(event.target.checked)} />
+                Show removed tables
+              </label>
+            </div>
+          )}
+        />
+
+        <div className="tm-address">
+          <span>QR codes open <code>{baseUrl}</code></span>
+          {!editingBase && <button className="btn ghost small" type="button" onClick={() => setEditingBase(true)}>Change</button>}
         </div>
-
-        <label className="field tm-base">
-          <span>Website address inside the QR codes</span>
-          <input
-            type="text"
-            inputMode="url"
-            autoCapitalize="none"
-            value={baseInput}
-            onChange={(e) => setBaseInput(e.target.value)}
-            onBlur={() => saveBase(baseInput.trim())}
-          />
-        </label>
-        {isLocal && (
-          <p className="tm-warn">
-            This address only works on your own computer or Wi-Fi. Before printing QR codes for the
-            tables, enter the restaurant's real website address.
-          </p>
+        {editingBase && (
+          <div className="tm-address-edit">
+            <Field label="Website address inside the QR codes" type="text" inputMode="url" autoCapitalize="none" value={baseInput} onChange={(event) => setBaseInput(event.target.value)} />
+            <button className="btn secondary small" type="button" onClick={() => { saveBase(baseInput.trim()); setEditingBase(false) }}>Save address</button>
+            <button className="btn ghost small" type="button" onClick={() => { setBaseInput(readBase() || window.location.origin); setEditingBase(false) }}>Cancel</button>
+          </div>
         )}
-
-        <form className="tm-add" onSubmit={addTable}>
-          <label className="field">
-            <span>Table number</span>
-            <input
-              type="number"
-              min={1}
-              inputMode="numeric"
-              placeholder={String(suggested)}
-              value={newNumber}
-              onChange={(e) => setNewNumber(e.target.value)}
-            />
-          </label>
-          <label className="field">
-            <span>Seats</span>
-            <input
-              type="number"
-              min={1}
-              inputMode="numeric"
-              value={newSeats}
-              onChange={(e) => setNewSeats(e.target.value)}
-            />
-          </label>
-          <button className="btn" type="submit" disabled={adding}>
-            {adding ? 'Adding…' : 'Add table'}
-          </button>
-        </form>
+        {isLocal && <Notice tone="warn">This address only works on your own computer or Wi-Fi. Enter the restaurant's website address before printing QR codes for tables.</Notice>}
 
         {info && <div className="success">{info}</div>}
-        {(actionError || error) && <p className="error">{actionError || error}</p>}
-        {tables === null && !error && <p className="hint">Loading…</p>}
+        {(actionError || error) && <Notice tone="warn" action={<button className="btn secondary small" type="button" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
+        {tables === null && !error && <p className="hint">Loading tables…</p>}
 
         {tables && (
           <>
-            <div className="tm-toolbar">
-              <label className="tm-check">
-                <input
-                  type="checkbox"
-                  checked={showRemoved}
-                  onChange={(e) => setShowRemoved(e.target.checked)}
-                />
-                Show removed tables
-              </label>
-              <button
-                className="btn secondary"
-                disabled={activeTables.length === 0}
-                onClick={() => printTables(activeTables)}
-              >
-                Print all QR codes
-              </button>
-            </div>
-
             {visible.length === 0 && (
-              <p className="empty-state">No tables yet. Add your first table above.</p>
+              <p className="empty-state">No tables yet. Add your first table from the toolbar.</p>
             )}
 
-            {visible.length > 0 && (
-              <table className="q-table">
-                <thead>
-                  <tr>
-                    <th>Table</th>
-                    <th>Seats</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((t) => {
-                    const editing = edit?.id === t.table_id
-                    const busy = busyId === t.table_id
-                    return (
-                      <tr key={t.table_id} className={t.is_active ? '' : 'tm-removed'}>
-                        <td data-label="Table">
-                          {editing ? (
-                            <input
-                              className="tm-edit-input"
-                              type="number"
-                              min={1}
-                              aria-label="Table number"
-                              value={edit.number}
-                              onChange={(e) => setEdit({ ...edit, number: e.target.value })}
-                            />
-                          ) : (
-                            <strong>Table {t.table_number}</strong>
-                          )}
-                        </td>
-                        <td data-label="Seats">
-                          {editing ? (
-                            <input
-                              className="tm-edit-input"
-                              type="number"
-                              min={1}
-                              aria-label="Seats"
-                              value={edit.seats}
-                              onChange={(e) => setEdit({ ...edit, seats: e.target.value })}
-                            />
-                          ) : (
-                            t.capacity
-                          )}
-                        </td>
-                        <td data-label="Status">
-                          {t.is_active ? (
-                            <span className={`tile-status ${t.status}`}>{STATUS_LABEL[t.status]}</span>
-                          ) : (
-                            <span>Removed</span>
-                          )}
-                        </td>
-                        <td data-label="Action">
-                          <div className="tm-actions">
-                            {editing && (
-                              <>
-                                <button className="btn small" disabled={busy} onClick={saveEdit}>
-                                  Save
-                                </button>
-                                <button
-                                  className="btn small secondary"
-                                  disabled={busy}
-                                  onClick={() => setEdit(null)}
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            )}
-                            {!editing && t.is_active && (
-                              <>
-                                <button className="btn small" onClick={() => setQrTable(t)}>
-                                  Show QR code
-                                </button>
-                                <button
-                                  className="btn small secondary"
-                                  disabled={busy}
-                                  onClick={() =>
-                                    setEdit({
-                                      id: t.table_id,
-                                      number: String(t.table_number),
-                                      seats: String(t.capacity),
-                                    })
-                                  }
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="btn small secondary"
-                                  disabled={busy}
-                                  onClick={() => setActive(t, false)}
-                                >
-                                  Remove
-                                </button>
-                              </>
-                            )}
-                            {!editing && !t.is_active && (
-                              <button
-                                className="btn small secondary"
-                                disabled={busy}
-                                onClick={() => setActive(t, true)}
-                              >
-                                Restore
-                              </button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            )}
+            {visible.length > 0 && <ul className="tm-list">
+              {visible.map((table) => {
+                const editing = edit?.id === table.table_id
+                const busy = busyId === table.table_id
+                return (
+                  <li key={table.table_id} className={`tm-row ${table.is_active ? '' : 'tm-removed'}`}>
+                    <div className="tm-row-main">
+                      {editing ? (
+                        <div className="tm-edit">
+                          <label className="field"><span>Table number</span><input className="tm-edit-input" type="number" min={1} aria-label="Table number" value={edit.number} onChange={(event) => setEdit({ ...edit, number: event.target.value })} /></label>
+                          <label className="field"><span>Seats</span><input className="tm-edit-input" type="number" min={1} aria-label="Seats" value={edit.seats} onChange={(event) => setEdit({ ...edit, seats: event.target.value })} /></label>
+                        </div>
+                      ) : <><strong className="tm-table-title">Table {table.table_number}</strong><span className="tm-capacity">{table.capacity} seats</span>{!table.is_active && <span className="tm-removed-label">Removed</span>}</>}
+                    </div>
+                    <div className="tm-actions">
+                      {editing && <>
+                        <button className="btn small" type="button" disabled={busy} onClick={saveEdit}>Save</button>
+                        <button className="btn small secondary" type="button" disabled={busy} onClick={() => setEdit(null)}>Cancel</button>
+                        {table.is_active && <button className="btn small danger" type="button" disabled={busy} onClick={() => setActive(table, false)}>Remove</button>}
+                      </>}
+                      {!editing && table.is_active && <>
+                        <button className="btn small secondary" type="button" onClick={() => setQrTable(table)}>Show QR code</button>
+                        <button className="btn small ghost" type="button" disabled={busy} onClick={() => setEdit({ id: table.table_id, number: String(table.table_number), seats: String(table.capacity) })}>Edit</button>
+                      </>}
+                      {!editing && !table.is_active && <button className="btn small secondary" type="button" disabled={busy} onClick={() => setActive(table, true)}>Restore</button>}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>}
           </>
         )}
 

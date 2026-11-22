@@ -1,41 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
+import { Field, StatusChip, Stepper } from '../../components/ui.jsx'
 import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
 import './Reserve.css'
 
 const STORAGE_KEY = 'chada_reservation_code'
-const POLL_MS = 5000 // how often a waiting customer's status refreshes
-const MAX_DAYS_AHEAD = 60 // same limit as submit_reservation in the database
+const POLL_MS = 5000
+const MAX_DAYS_AHEAD = 60
 
 const STATUS = {
-  pending: {
-    label: 'Pending',
-    text: 'We received your request. Staff will review it soon. Keep this page, or come back to it on this phone, to see the answer.',
-  },
-  approved: {
-    label: 'Approved',
-    text: 'Your table is confirmed. Show this reservation ID to the staff when you arrive. Please come on time: late bookings are released to other guests.',
-  },
-  declined: {
-    label: 'Declined',
-    text: 'We could not confirm this request. Try another date or time.',
-  },
+  pending: { label: 'Pending', text: 'We received your request. Staff will review it soon. Keep this page, or return to it on this phone, to see the answer.' },
+  approved: { label: 'Approved', text: 'Your table is confirmed. Show this reservation ID to the staff when you arrive. Please arrive on time; late bookings are released to other guests.' },
+  declined: { label: 'Declined', text: 'We could not confirm this request. Try another date or time.' },
   cancelled: { label: 'Cancelled', text: 'This reservation was cancelled.' },
-  arrived: { label: 'Arrived', text: 'Welcome to Samgyup Chada. Scan the QR code on your table to see the menu and ask for refills!' },
-  auto_cancelled: {
-    label: 'Released',
-    text: 'This reservation was released because you did not arrive in time. You can make a new one.',
-  },
+  arrived: { label: 'Arrived', text: 'Welcome to Samgyup Chada. Scan the QR code on your table to see the menu and ask for refills.' },
+  auto_cancelled: { label: 'Released', text: 'This reservation was released because you did not arrive in time. You can make a new one.' },
 }
 
-// The ID is kept in this browser so a customer who closes the page can come back to it.
 function readStoredCode() {
-  try {
-    return localStorage.getItem(STORAGE_KEY) || ''
-  } catch {
-    return ''
-  }
+  try { return localStorage.getItem(STORAGE_KEY) || '' } catch { return '' }
 }
 
 function storeCode(code) {
@@ -43,251 +27,232 @@ function storeCode(code) {
     if (code) localStorage.setItem(STORAGE_KEY, code)
     else localStorage.removeItem(STORAGE_KEY)
   } catch {
-    // private browsing: the page still works, it just cannot remember the ID
+    // The current page still works when private browsing blocks storage.
   }
 }
 
-// Accept "ch-7k4m2x", " 7K4M2X " and "CH-7K4M2X".
 function normalizeCode(raw) {
-  const v = raw.trim().toUpperCase().replace(/\s+/g, '')
-  return /^[A-Z0-9]{6}$/.test(v) ? `CH-${v}` : v
+  const value = raw.trim().toUpperCase().replace(/\s+/g, '')
+  return /^[A-Z0-9]{6}$/.test(value) ? `CH-${value}` : value
 }
 
-/* ------------------------------------------------------------------ */
-/* Reservation form                                                    */
-/* ------------------------------------------------------------------ */
 function ReservationForm({ onCreated }) {
   const [today] = useState(() => manilaDate())
   const [name, setName] = useState('')
   const [contact, setContact] = useState('')
-  const [guests, setGuests] = useState('2')
+  const [guests, setGuests] = useState(2)
   const [date, setDate] = useState(today)
   const [time, setTime] = useState('')
-  const [tick, setTick] = useState(0) // bump to reload the open times
-  const [slotResult, setSlotResult] = useState(null) // { key, slots, error }
+  const [tick, setTick] = useState(0)
+  const [slotResult, setSlotResult] = useState(null)
+  const [fieldErrors, setFieldErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
-  const guestsNum = Number(guests)
-  const slotsKey =
-    date && Number.isInteger(guestsNum) && guestsNum >= 1 ? `${date}|${guestsNum}|${tick}` : ''
+  const slotsKey = date && Number.isInteger(guests) && guests >= 1 ? `${date}|${guests}|${tick}` : ''
 
-  // Ask the database which times are still open for this date and party size.
   useEffect(() => {
     if (!slotsKey) return
     let cancelled = false
-    supabase.rpc('get_open_slots', { p_date: date, p_guests: guestsNum }).then(({ data, error }) => {
+    supabase.rpc('get_open_slots', { p_date: date, p_guests: guests }).then(({ data, error: slotError }) => {
       if (cancelled) return
-      setSlotResult({
-        key: slotsKey,
-        slots: error ? [] : (data || []).filter((s) => s.is_open),
-        error: error ? error.message : '',
-      })
+      setSlotResult({ key: slotsKey, slots: data || [], error: slotError ? slotError.message : '' })
     })
-    return () => {
-      cancelled = true
-    }
-  }, [slotsKey, date, guestsNum])
+    return () => { cancelled = true }
+  }, [slotsKey, date, guests])
 
   const loaded = slotsKey && slotResult?.key === slotsKey ? slotResult : null
   const slotsLoading = Boolean(slotsKey) && !loaded
-  const openSlots = loaded?.slots || []
-  // If the chosen time is no longer open (date or guests changed), the dropdown goes back to blank.
-  const chosenTime = openSlots.some((s) => s.slot_time === time) ? time : ''
+  const slots = loaded?.slots || []
+  const openSlots = slots.filter((slot) => slot.is_open)
+  const chosenTime = openSlots.some((slot) => slot.slot_time === time) ? time : ''
+  const noOpenSlots = loaded && !loaded.error && openSlots.length === 0
 
-  let placeholder = 'Choose a date and party size first'
-  if (slotsKey) {
-    if (slotsLoading) placeholder = 'Loading times…'
-    else placeholder = openSlots.length ? 'Choose a time' : 'No open times'
+  function updateField(field, setter, value) {
+    setter(value)
+    setFieldErrors((current) => ({ ...current, [field]: '' }))
+    setError('')
   }
 
-  async function onSubmit(e) {
-    e.preventDefault()
-    if (!chosenTime) {
-      setError('Choose a time.')
-      return
-    }
-    setSubmitting(true)
+  async function onSubmit(event) {
+    event.preventDefault()
+    const nextErrors = {}
+    if (!name.trim()) nextErrors.name = 'Enter your name.'
+    if (!contact.trim()) nextErrors.contact = 'Enter a contact number.'
+    if (!Number.isInteger(guests) || guests < 1 || guests > 50) nextErrors.guests = 'Choose between 1 and 50 guests.'
+    if (!date || date < today || date > shiftDate(today, MAX_DAYS_AHEAD)) nextErrors.date = 'Choose a date within the next 60 days.'
+    if (!chosenTime) nextErrors.time = 'Choose an open time.'
+    setFieldErrors(nextErrors)
     setError('')
-    const { data, error } = await supabase.rpc('submit_reservation', {
+    if (Object.keys(nextErrors).length > 0) return
+
+    setSubmitting(true)
+    const { data, error: submitError } = await supabase.rpc('submit_reservation', {
       p_name: name.trim(),
       p_contact: contact.trim(),
-      p_guests: guestsNum,
+      p_guests: guests,
       p_date: date,
       p_time: chosenTime,
     })
     setSubmitting(false)
-    if (error) {
-      setError(error.message)
-      setTick((t) => t + 1) // the time may have just been taken
+    if (submitError) {
+      setError(submitError.message)
+      setTick((value) => value + 1)
       return
     }
     onCreated(data.reservation_code)
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <h2>Reserve a table</h2>
-      <p className="hint">
-        Choose your party size, date, and time. Staff will review your request and give you a
-        reservation ID once it is approved.
-      </p>
+    <form onSubmit={onSubmit} noValidate>
+      <h1>Reserve a table</h1>
+      <p className="reserve-intro">Staff confirm your request and send you a reservation ID.</p>
 
-
-      <label className="field">
-        <span>Your name</span>
-        <input
-          type="text"
-          required
-          maxLength={80}
-          autoComplete="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </label>
-
-      <label className="field">
-        <span>Contact number</span>
-        <input
-          type="tel"
-          required
-          maxLength={40}
-          autoComplete="tel"
-          inputMode="tel"
-          value={contact}
-          onChange={(e) => setContact(e.target.value)}
-        />
-      </label>
+      <Field
+        id="reservation-name"
+        label="Your name"
+        type="text"
+        required
+        maxLength={80}
+        autoComplete="name"
+        value={name}
+        onChange={(event) => updateField('name', setName, event.target.value)}
+        error={fieldErrors.name}
+      />
+      <Field
+        id="reservation-contact"
+        label="Contact number"
+        type="tel"
+        required
+        maxLength={40}
+        autoComplete="tel"
+        inputMode="tel"
+        value={contact}
+        onChange={(event) => updateField('contact', setContact, event.target.value)}
+        error={fieldErrors.contact}
+      />
 
       <div className="field-row">
-        <label className="field">
-          <span>Guests</span>
-          <input
-            type="number"
-            required
-            min={1}
-            max={50}
-            inputMode="numeric"
-            value={guests}
-            onChange={(e) => setGuests(e.target.value)}
-          />
-        </label>
-        <label className="field">
-          <span>Date</span>
-          <input
-            type="date"
-            required
-            min={today}
-            max={shiftDate(today, MAX_DAYS_AHEAD)}
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
-        </label>
+        <div className="field">
+          <span id="reservation-guests-label">Guests</span>
+          <Stepper value={guests} min={1} max={50} label="guests" onChange={(delta) => updateField('guests', setGuests, Math.min(50, Math.max(1, guests + delta)))} />
+          {fieldErrors.guests && <small className="field-error" role="alert">{fieldErrors.guests}</small>}
+        </div>
+        <Field
+          id="reservation-date"
+          label="Date"
+          type="date"
+          required
+          min={today}
+          max={shiftDate(today, MAX_DAYS_AHEAD)}
+          value={date}
+          onChange={(event) => { updateField('date', setDate, event.target.value); setTime('') }}
+          error={fieldErrors.date}
+        />
       </div>
 
-      <label className="field">
-        <span>Time</span>
-        <select
-          required
-          value={chosenTime}
-          onChange={(e) => setTime(e.target.value)}
-          disabled={!slotsKey || slotsLoading || openSlots.length === 0}
-        >
-          <option value="">{placeholder}</option>
-          {openSlots.map((s) => (
-            <option key={s.slot_time} value={s.slot_time}>
-              {fmtTime(s.slot_time)}
-            </option>
-          ))}
-        </select>
-      </label>
+      <fieldset className="time-field" aria-invalid={fieldErrors.time ? 'true' : undefined} aria-describedby={fieldErrors.time ? 'reservation-time-error' : undefined}>
+        <legend>Time</legend>
+        {slotsLoading && <p className="field-hint">Loading times…</p>}
+        {loaded?.error && <div className="time-error"><p className="error">{loaded.error}</p><button type="button" className="btn secondary small" onClick={() => setTick((value) => value + 1)}>Try again</button></div>}
+        {!slotsLoading && !loaded?.error && !slots.length && <p className="field-hint">Choose a date and party size to see times.</p>}
+        {slots.length > 0 && (
+          <div className="time-grid">
+            {slots.map((slot) => {
+              const open = slot.is_open
+              return (
+                <button
+                  key={slot.slot_time}
+                  type="button"
+                  className={`time-option ${chosenTime === slot.slot_time ? 'selected' : ''}`}
+                  disabled={!open || slotsLoading}
+                  aria-label={`${fmtTime(slot.slot_time)}${open ? '' : ', unavailable'}`}
+                  aria-pressed={chosenTime === slot.slot_time}
+                  onClick={() => { updateField('time', setTime, slot.slot_time) }}
+                >
+                  {fmtTime(slot.slot_time)}{!open && <small>Unavailable</small>}
+                </button>
+              )
+            })}
+          </div>
+        )}
+        {fieldErrors.time && <small className="field-error" id="reservation-time-error" role="alert">{fieldErrors.time}</small>}
+      </fieldset>
 
-      {loaded && !loaded.error && openSlots.length === 0 && (
-        <p className="hint">
-          No tables are open for this party size on this date. Try another date, or ask the
-          restaurant about larger groups.
-        </p>
-      )}
-      {loaded?.error && <p className="error">{loaded.error}</p>}
-      {error && <p className="error">{error}</p>}
-
-      <button className="btn full" type="submit" disabled={submitting || !chosenTime}>
+      {noOpenSlots && <p className="hint">No tables are open for this party size on this date. Try another date.</p>}
+      {error && <p className="error" role="alert">{error}</p>}
+      <button className="btn full" type="submit" disabled={submitting}>
         {submitting ? 'Sending…' : 'Send reservation request'}
       </button>
     </form>
   )
 }
 
-/* ------------------------------------------------------------------ */
-/* Look up a reservation by its ID                                     */
-/* ------------------------------------------------------------------ */
 function LookupForm({ onFound }) {
   const [value, setValue] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  async function onSubmit(e) {
-    e.preventDefault()
+  async function onSubmit(event) {
+    event.preventDefault()
     const code = normalizeCode(value)
-    if (!code) return
+    if (!/^CH-[A-Z0-9]{6}$/.test(code)) {
+      setError('Enter a 6-character reservation ID, such as CH-XXXXXX.')
+      return
+    }
     setBusy(true)
     setError('')
-    const { data, error } = await supabase.rpc('get_reservation', { p_code: code })
+    const { data, error: lookupError } = await supabase.rpc('get_reservation', { p_code: code })
     setBusy(false)
-    if (error) setError(error.message)
+    if (lookupError) setError(lookupError.message)
     else if (!data) setError('No reservation found with that ID.')
     else onFound(code)
   }
 
   return (
-    <form onSubmit={onSubmit}>
-      <h2>Already have a reservation ID?</h2>
+    <form onSubmit={onSubmit} noValidate>
+      <h2>Have a reservation ID?</h2>
       <p className="hint">Enter it to check your status or cancel.</p>
       <div className="lookup">
-        <input
-          type="text"
-          placeholder="CH-XXXXXX"
-          autoCapitalize="characters"
-          autoComplete="off"
-          maxLength={12}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        />
-        <button className="btn" type="submit" disabled={busy || !value.trim()}>
+        <label className="field lookup-field" htmlFor="lookup-code">
+          <span>Reservation ID</span>
+          <input
+            id="lookup-code"
+            className="ticket"
+            type="text"
+            placeholder="CH-XXXXXX"
+            autoCapitalize="characters"
+            autoComplete="off"
+            maxLength={12}
+            value={value}
+            aria-invalid={error ? 'true' : undefined}
+            aria-describedby={error ? 'lookup-error' : undefined}
+            onChange={(event) => { setValue(event.target.value); setError('') }}
+          />
+        </label>
+        <button className="btn secondary" type="submit" disabled={busy || !value.trim()}>
           {busy ? 'Checking…' : 'Check status'}
         </button>
       </div>
-      {error && <p className="error" style={{ marginTop: 10 }}>{error}</p>}
+      {error && <p className="error" id="lookup-error" role="alert">{error}</p>}
     </form>
   )
 }
 
-/* ------------------------------------------------------------------ */
-/* Reservation status (refreshes itself every few seconds)             */
-/* ------------------------------------------------------------------ */
 function StatusCard({ code, onReset }) {
-  const [state, setState] = useState(null) // { code, data } - data is null when not found
+  const [state, setState] = useState(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
-
   const load = useCallback(async () => {
-    const { data, error } = await supabase.rpc('get_reservation', { p_code: code })
-    if (error) {
-      setError(error.message)
-    } else {
-      setState({ code, data })
-      setError('')
-    }
+    const { data, error: loadError } = await supabase.rpc('get_reservation', { p_code: code })
+    if (loadError) setError(loadError.message)
+    else { setState({ code, data }); setError('') }
   }, [code])
 
   useEffect(() => {
     const initialLoad = setTimeout(load, 0)
-    const timer = setInterval(() => {
-      if (!document.hidden) load()
-    }, POLL_MS)
-    const onVisible = () => {
-      if (!document.hidden) load()
-    }
+    const timer = setInterval(() => { if (!document.hidden) load() }, POLL_MS)
+    const onVisible = () => { if (!document.hidden) load() }
     document.addEventListener('visibilitychange', onVisible)
     return () => {
       clearTimeout(initialLoad)
@@ -297,123 +262,58 @@ function StatusCard({ code, onReset }) {
   }, [load])
 
   async function cancel() {
-    const ok = await confirmDialog({
-      title: 'Cancel this reservation?',
-      confirmLabel: 'Cancel reservation',
-      cancelLabel: 'Keep it',
-    })
+    const ok = await confirmDialog({ title: 'Cancel this reservation?', confirmLabel: 'Cancel reservation', cancelLabel: 'Keep it' })
     if (!ok) return
     setBusy(true)
     setError('')
-    const { error } = await supabase.rpc('cancel_reservation', { p_code: code })
+    const { error: cancelError } = await supabase.rpc('cancel_reservation', { p_code: code })
     setBusy(false)
-    if (error) setError(error.message)
+    if (cancelError) setError(cancelError.message)
     await load()
   }
 
-  const res = state?.code === code ? state.data : undefined // undefined = still loading
+  const reservation = state?.code === code ? state.data : undefined
+  if (reservation === undefined) return error ? <div><p className="error" role="alert">{error}</p><button className="btn secondary" type="button" onClick={load}>Try again</button></div> : <p className="hint">Loading reservation…</p>
+  if (reservation === null) return <div className="empty-state"><p>We could not find this reservation.</p><button className="btn" type="button" onClick={onReset}>Start over</button></div>
 
-  if (res === undefined) {
-    return error ? <p className="error">{error}</p> : <p className="hint">Loading…</p>
-  }
-
-
-  if (res === null) {
-    return (
-      <div className="empty-state">
-        <p>We could not find this reservation.</p>
-        <button className="btn" onClick={onReset}>
-          Start over
-        </button>
-      </div>
-    )
-  }
-
-  const info = STATUS[res.status] || { label: res.status, text: '' }
-  // The ID is only shown once staff approve, so a pending request has no proof of booking yet.
-  const showCode = res.status === 'approved' || res.status === 'arrived'
-  const canCancel = res.status === 'pending' || res.status === 'approved'
-
+  const info = STATUS[reservation.status] || { label: reservation.status, text: '' }
+  const showCode = reservation.status === 'approved' || reservation.status === 'arrived'
+  const canCancel = reservation.status === 'pending' || reservation.status === 'approved'
   return (
     <div className="res-card">
       <div className="res-head">
         <strong>Your reservation</strong>
-        <span className={`tag ${res.status}`}>{info.label}</span>
+        <StatusChip status={reservation.status}>{info.label}</StatusChip>
       </div>
-
-      <div className={`res-code ${showCode ? '' : 'waiting'}`}>
+      <div className={`res-code ticket ${showCode ? 'confirmed' : 'waiting'}`}>
         <small>Reservation ID</small>
-        <strong>{showCode ? res.reservation_code : 'Shown here once staff approve'}</strong>
+        <strong>{showCode ? reservation.reservation_code : 'Shown here once staff approve'}</strong>
       </div>
-
       <dl className="res-details">
-        <div>
-          <dt>Name</dt>
-          <dd>{res.customer_name}</dd>
-        </div>
-        <div>
-          <dt>Guests</dt>
-          <dd>{res.guest_count}</dd>
-        </div>
-        <div>
-          <dt>Date</dt>
-          <dd>{fmtDate(res.reservation_date)}</dd>
-        </div>
-        <div>
-          <dt>Time</dt>
-          <dd>{fmtTime(res.reservation_time)}</dd>
-        </div>
+        <div><dt>Name</dt><dd>{reservation.customer_name}</dd></div>
+        <div><dt>Guests</dt><dd>{reservation.guest_count}</dd></div>
+        <div><dt>Date</dt><dd>{fmtDate(reservation.reservation_date)}</dd></div>
+        <div><dt>Time</dt><dd>{fmtTime(reservation.reservation_time)}</dd></div>
       </dl>
-
       <p className="hint">{info.text}</p>
-      {res.status === 'declined' && res.decline_reason && (
-        <p className="decline-reason">
-          <strong>Message from the restaurant:</strong> {res.decline_reason}
-        </p>
-      )}
-      {error && <p className="error">{error}</p>}
-
+      {reservation.status === 'declined' && reservation.decline_reason && <p className="decline-reason"><strong>Message from the restaurant:</strong> {reservation.decline_reason}</p>}
+      {error && <p className="error" role="alert">{error}</p>}
       {canCancel ? (
-        <button className="btn secondary full" disabled={busy} onClick={cancel}>
-          {busy ? 'Cancelling…' : 'Cancel reservation'}
-        </button>
-      ) : (
-        <button className="btn full" onClick={onReset}>
-          Make a new reservation
-        </button>
-      )}
+        <button className="btn secondary full" type="button" disabled={busy} onClick={cancel}>{busy ? 'Cancelling…' : 'Cancel reservation'}</button>
+      ) : <button className="btn full" type="button" onClick={onReset}>Make a new reservation</button>}
     </div>
   )
 }
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
 export default function Reserve() {
   const [code, setCode] = useState(readStoredCode)
-
-  function show(next) {
-    storeCode(next)
-    setCode(next)
-  }
+  function show(next) { storeCode(next); setCode(next) }
 
   return (
     <div className="app reserve">
-      <header className="topbar">
-        <span className="brand">Samgyup Chada</span>
-        <span className="table-badge">Reservation</span>
-      </header>
-
+      <header className="topbar"><span className="brand">Samgyup Chada</span></header>
       <main className="content">
-        {code ? (
-          <StatusCard code={code} onReset={() => show('')} />
-        ) : (
-          <>
-            <ReservationForm onCreated={show} />
-            <hr className="divider" />
-            <LookupForm onFound={show} />
-          </>
-        )}
+        {code ? <><h1 className="sr-only">Reservation status</h1><StatusCard code={code} onReset={() => show('')} /></> : <><ReservationForm onCreated={show} /><hr className="divider" /><LookupForm onFound={show} /></>}
       </main>
     </div>
   )

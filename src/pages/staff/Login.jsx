@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.js'
 import { homeFor } from '../../auth/roles.js'
+import { Field } from '../../components/ui.jsx'
 import '../../styles/staff.css'
 
 export default function Login() {
@@ -27,40 +28,20 @@ export default function Login() {
   }
 
   return (
-    <div className="login-wrap">
+    <main className="login-wrap">
       <form className="login-card" onSubmit={onSubmit}>
         <h1>Samgyup Chada</h1>
         <p className="hint">Staff login</p>
 
-        <label className="field">
-          <span>Username</span>
-          <input
-            type="text"
-            autoComplete="username"
-            autoCapitalize="none"
-            required
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-        </label>
+        <Field label="Username" type="text" autoComplete="username" autoCapitalize="none" required value={username} onChange={(e) => setUsername(e.target.value)} />
+        <Field label="Password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
 
-        <label className="field">
-          <span>Password</span>
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </label>
-
-        {(error || authMessage) && <p className="error">{error || authMessage}</p>}
+        {(error || authMessage) && <p className="error" role="alert">{error || authMessage}</p>}
 
         <button className="btn full" type="submit" disabled={busy}>
           {busy ? 'Logging in…' : 'Log in'}
         </button>
       </form>
-    </div>
+    </main>
   )
 }

@@ -1,31 +1,88 @@
-/* Design tokens. Change a value here and the whole app follows. */
+/* Design tokens. Raw color values belong here and nowhere else in CSS. */
 :root {
-  /* colour: charcoal = structure, brand red = action and "dining", neutrals for the rest */
+  /* ink and paper */
   --charcoal: #1d1b1a;
+  --bg: #f6f5f3;
+  --card: #ffffff;
+  --white: #ffffff;
+  --text: #25201e;
+  --text-2: #5f5854;
+  --text-3: #6f6762;
+  --muted: var(--text-2);
+  --line: #e3dfda;
+  --control: #8c847e;
+  --ink-soft: #ebe8e4;
+  --disabled-text: #4d4642;
+
+  /* one accent */
   --brand: #b3261e;
   --brand-dark: #8c1d17;
   --brand-soft: #fbeceb;
-  --bg: #f6f5f3;
-  --card: #ffffff;
-  --text: #25201e;
-  --muted: #5f5854;
-  --line: #e3dfda;
+  --danger: var(--brand-dark);
+
+  /* status colors */
   --ok: #1e7a3c;
   --ok-soft: #e8f4ec;
+  --ok-line: #bfe0c9;
   --warn: #a15c00;
   --warn-soft: #fff2d9;
+  --warn-line: #f0d9a8;
+  --neutral-text: #4d4642;
+  --neutral-soft: #ebe8e4;
+  --neutral-line: #c9c4be;
+  --reserved-line: #a15c00;
+  --grid-line: #e7dfdb;
+  --chart-hover: #faf7f5;
+  --print-cut: #888888;
+  --scrim: rgba(29, 27, 26, 0.55);
 
-  /* radius by role, not one radius for everything */
+  /* fixed layout and print spacing */
+  --space-content-bottom: 104px;
+  --space-center-vertical: 80px;
+  --space-home-vertical: 96px;
+  --space-tray-bottom: 168px;
+  --space-staff-nav-clearance: 96px;
+  --space-print-card: 8mm;
+  --space-print-gap: 2mm;
+  --control-textarea-min-height: 96px;
+
+  /* spacing: 4px grid */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 20px;
+  --s6: 24px;
+  --s8: 32px;
+  --s10: 40px;
+  --s12: 48px;
+
+  /* radius by role */
+  --r-chip: 6px;
   --r-ctrl: 10px;
   --r-card: 14px;
-  --r-tile: 16px;
+  --r-tile: 14px;
   --r-sheet: 22px;
   --r-pill: 999px;
 
-  /* only floating things get a shadow */
-  --shadow-float: 0 10px 40px rgba(29, 27, 26, 0.28);
-
-  /* type: Bricolage Grotesque for headings and numbers, Figtree for reading */
+  /* type scale */
+  --fs-meta: 0.8125rem;
+  --fs-sm: 0.875rem;
+  --fs-body: 1rem;
+  --fs-row: 1.0625rem;
+  --fs-title: 1.375rem;
+  --fs-title-lg: 1.75rem;
+  --fs-figure: 2rem;
+  --fs-nav: 0.6875rem;
+  --fs-stepper: 1.15rem;
+  --fs-close: 1.6rem;
+  --fs-print-table: 28pt;
+  --fs-print-hint: 11pt;
   --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', system-ui, sans-serif;
   --font-body: 'Figtree Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  /* motion and floating surfaces */
+  --t-fast: 120ms ease-out;
+  --t-enter: 180ms ease-out;
+  --shadow-float: 0 10px 40px rgba(29, 27, 26, 0.28);
 }
