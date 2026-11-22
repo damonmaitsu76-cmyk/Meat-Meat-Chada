@@ -8,15 +8,19 @@
 .attention-row strong { min-width: 32px; color: var(--brand); font-family: var(--font-display); font-size: var(--fs-title); font-variant-numeric: tabular-nums; }
 .attention-row:hover span { text-decoration: underline; }
 .floor-section { margin-top: var(--s4); }
-.floor-heading { margin-bottom: var(--s3); }
-.floor-heading p { margin: var(--s1) 0 0; color: var(--text-3); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.floor-heading { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s3); }
+.floor-heading p { margin: 0; color: var(--text-3); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+
+/* Floor tiles. Each tile is a small table: its number, its chairs, and a ticket-style
+   state block that only appears when something is happening. */
 .floor { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: var(--s3); }
 .tile {
-  display: grid;
-  align-content: start;
-  gap: var(--s1);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--s2);
   min-width: 0;
-  min-height: 56px;
+  min-height: 88px;
   padding: var(--s3);
   border: 1px solid var(--line);
   border-radius: var(--r-tile);
@@ -25,15 +29,39 @@
   transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
 }
 .tile:active { transform: scale(0.98); }
-.tile.available { background: var(--card); border-color: var(--line); color: var(--text); }
+
+/* Open tables are dashed, like an empty seat. Held and dining tables are solid. */
+.tile.available { background: var(--card); border-style: dashed; border-color: var(--control); color: var(--text); }
 .tile.reserved { background: var(--warn-soft); border-color: var(--warn-line); color: var(--text); }
 .tile.dining { background: var(--charcoal); border-color: var(--charcoal); color: var(--white); }
-.tile-top { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2); }
-.tile-top strong { min-width: 0; font-family: var(--font-display); font-size: var(--fs-title); font-weight: 600; overflow-wrap: anywhere; }
-.tile-seats { flex: 0 0 auto; color: var(--text-3); font-size: var(--fs-meta); }
-.tile.dining .tile-seats { color: var(--white); }
-.tile-state { color: var(--text); font-size: var(--fs-meta); font-weight: 600; overflow-wrap: anywhere; }
-.tile.dining .tile-state { color: var(--white); }
+@media (hover: hover) { .tile.available:hover { background: var(--ink-soft); } }
+
+/* "Table" small, the number large, on one baseline. */
+.tile-head { display: flex; align-items: baseline; gap: var(--s1); min-width: 0; }
+.tile-label { color: var(--text-3); font-size: var(--fs-meta); }
+.tile-number { font-family: var(--font-display); font-size: var(--fs-title-lg); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.tile.dining .tile-label { color: var(--neutral-line); }
+
+/* Chairs. Two rows from five seats up, like the two long sides of a table. Filled = seated. */
+.tile-seats { display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--seat-rows, 1), 10px); justify-content: start; gap: var(--s1); }
+.seat { width: 10px; height: 10px; border: 1px solid var(--control); border-radius: var(--r-pill); }
+.tile.reserved .seat { border-color: var(--warn); }
+.tile.dining .seat { border-color: var(--neutral-line); }
+.tile.dining .seat.taken { background: var(--white); border-color: var(--white); }
+
+/* The order-ticket motif: a dashed tear line above the state, a mono timer on the right. */
+.tile-state { display: grid; gap: var(--s1); padding-top: var(--s2); border-top: 1px dashed var(--line); }
+.tile.reserved .tile-state { border-top-color: var(--warn-line); }
+.tile.dining .tile-state { border-top-color: var(--text-2); }
+.tile-state-row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s2); }
+.tile-state-word { font-size: var(--fs-meta); font-weight: 700; }
+.tile.reserved .tile-state-word { color: var(--warn); }
+.tile-timer { color: var(--text-2); font-size: var(--fs-meta); white-space: nowrap; }
+.tile.dining .tile-timer { color: var(--neutral-line); }
+.tile-guest { font-size: var(--fs-meta); font-weight: 600; overflow-wrap: anywhere; }
+
+/* Chili red is the only accent, so it marks the one thing that needs a person: open requests. */
+.tile-requests { align-self: flex-start; padding: var(--s1) var(--s2); border-radius: var(--r-chip); background: var(--brand); color: var(--white); font-size: var(--fs-meta); font-weight: 600; line-height: 1.2; white-space: nowrap; }
 
 .panel-section { margin-top: var(--s4); padding-top: var(--s3); border-top: 1px solid var(--line); }
 .panel-section h3 { margin: 0 0 var(--s2); font-size: var(--fs-row); }
@@ -42,9 +70,7 @@
 .panel-list { display: grid; gap: var(--s3); margin: 0; padding: 0; list-style: none; }
 .panel-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
 
+/* Phones: three tiles per row at 375px. */
 @media (max-width: 560px) {
   .floor { gap: var(--s1); margin-inline: calc(-1 * var(--s1)); }
-  .tile-top { gap: var(--s1); }
-  .tile-top strong { font-size: var(--fs-sm); white-space: nowrap; }
-  .tile-seats { white-space: nowrap; }
 }

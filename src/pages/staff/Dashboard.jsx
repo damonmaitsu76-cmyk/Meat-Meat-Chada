@@ -6,6 +6,7 @@ import { Notice, PageToolbar } from '../../components/ui.jsx'
 import { fmtTime, manilaDate } from '../../lib/dates.js'
 import { displayName, formatDuration } from '../../lib/format.js'
 import './Dashboard.css'
+import FloorTile from './FloorTile.jsx'
 
 const NOTICE_HOURS = 2 // how long a released no-show stays in the notice box
 const SAFETY_POLL_MS = 30000 // in case the live connection silently drops
@@ -72,128 +73,128 @@ function TablePanel({ table, session, bookings, now, onClose, onDone }) {
 
   return (
     <Modal title={`Table ${table.table_number}`} onClose={onClose}>
-        {session && (
-          <section className="panel-section">
-            <h3>Seated now</h3>
-            <p className="panel-session-summary">
-              <strong>{displayName(session.guest_name)}</strong>, party of {session.party_size}
-              <span className="dim">
-                {session.source === 'walk_in' ? 'Walk-in' : 'Reservation'}, seated{' '}
-                {sinceText(session.seated_at, now)} ago
-              </span>
-            </p>
-            <button
-              className="btn full"
-              disabled={busy}
-              onClick={() =>
-                run(
-                  () => supabase.rpc('end_session', { p_session_id: session.session_id }),
-                  () => `Table ${table.table_number} is free again.`
-                )
-              }
-            >
-              End session
-            </button>
-          </section>
-        )}
-
-        {bookings.length > 0 && (
-          <section className="panel-section">
-            <h3>Booked today</h3>
-            <ul className="panel-list">
-              {bookings.map((b) => (
-                <li key={b.reservation_id}>
-                  <div>
-                    <strong>{displayName(b.customer_name)}</strong> (<span className="ticket">{b.reservation_code}</span>)
-                    <span className="dim">
-                      {b.guest_count} guests at {fmtTime(b.reservation_time)}
-                    </span>
-                  </div>
-                  {table.status !== 'dining' && (
-                    <button
-                      className="btn small"
-                      disabled={busy}
-                      onClick={() =>
-                        run(
-                          () =>
-                            supabase.rpc('confirm_arrival', {
-                              p_code: b.reservation_code,
-                              p_table_id: table.table_id,
-                            }),
-                          () => `${b.customer_name} seated at Table ${table.table_number}.`
-                        )
-                      }
-                    >
-                      Confirm arrival
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {table.status === 'available' && (
-          <form className="panel-section" onSubmit={seatWalkIn}>
-            <h3>Seat a walk-in</h3>
-            {nextBooking && (
-              <p className="hint">
-                Booked for {fmtTime(nextBooking.reservation_time)} today. Walk-ins may not get this
-                table before then.
-              </p>
-            )}
-            <label className="field">
-              <span>Guest name</span>
-              <input
-                type="text"
-                maxLength={80}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </label>
-            <label className="field">
-              <span>Party size</span>
-              <input
-                type="number"
-                min={1}
-                inputMode="numeric"
-                value={party}
-                onChange={(e) => setParty(e.target.value)}
-              />
-            </label>
-            {tooBig && <p className="hint">This table seats {table.capacity}.</p>}
-            <button className="btn full" type="submit" disabled={busy}>
-              Seat walk-in
-            </button>
-          </form>
-        )}
-
-        {canOverride && (
-          <section className="panel-section">
-            <button
-              className="btn secondary full"
-              disabled={busy}
-              onClick={() =>
-                run(
-                  () =>
-                    supabase.rpc('set_table_status', {
-                      p_table_id: table.table_id,
-                      p_status: overrideTo,
-                    }),
-                  () => `Table ${table.table_number} marked ${overrideTo}.`
-                )
-              }
-            >
-              Mark as {overrideTo}
-            </button>
-          </section>
-        )}
-
-        {error && (
-          <p className="error panel-error">
-            {error}
+      {session && (
+        <section className="panel-section">
+          <h3>Seated now</h3>
+          <p className="panel-session-summary">
+            <strong>{displayName(session.guest_name)}</strong>, party of {session.party_size}
+            <span className="dim">
+              {session.source === 'walk_in' ? 'Walk-in' : 'Reservation'}, seated{' '}
+              {sinceText(session.seated_at, now)} ago
+            </span>
           </p>
-        )}
+          <button
+            className="btn full"
+            disabled={busy}
+            onClick={() =>
+              run(
+                () => supabase.rpc('end_session', { p_session_id: session.session_id }),
+                () => `Table ${table.table_number} is free again.`
+              )
+            }
+          >
+            End session
+          </button>
+        </section>
+      )}
+
+      {bookings.length > 0 && (
+        <section className="panel-section">
+          <h3>Booked today</h3>
+          <ul className="panel-list">
+            {bookings.map((b) => (
+              <li key={b.reservation_id}>
+                <div>
+                  <strong>{displayName(b.customer_name)}</strong> (<span className="ticket">{b.reservation_code}</span>)
+                  <span className="dim">
+                    {b.guest_count} guests at {fmtTime(b.reservation_time)}
+                  </span>
+                </div>
+                {table.status !== 'dining' && (
+                  <button
+                    className="btn small"
+                    disabled={busy}
+                    onClick={() =>
+                      run(
+                        () =>
+                          supabase.rpc('confirm_arrival', {
+                            p_code: b.reservation_code,
+                            p_table_id: table.table_id,
+                          }),
+                        () => `${b.customer_name} seated at Table ${table.table_number}.`
+                      )
+                    }
+                  >
+                    Confirm arrival
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {table.status === 'available' && (
+        <form className="panel-section" onSubmit={seatWalkIn}>
+          <h3>Seat a walk-in</h3>
+          {nextBooking && (
+            <p className="hint">
+              Booked for {fmtTime(nextBooking.reservation_time)} today. Walk-ins may not get this
+              table before then.
+            </p>
+          )}
+          <label className="field">
+            <span>Guest name</span>
+            <input
+              type="text"
+              maxLength={80}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+          <label className="field">
+            <span>Party size</span>
+            <input
+              type="number"
+              min={1}
+              inputMode="numeric"
+              value={party}
+              onChange={(e) => setParty(e.target.value)}
+            />
+          </label>
+          {tooBig && <p className="hint">This table seats {table.capacity}.</p>}
+          <button className="btn full" type="submit" disabled={busy}>
+            Seat walk-in
+          </button>
+        </form>
+      )}
+
+      {canOverride && (
+        <section className="panel-section">
+          <button
+            className="btn secondary full"
+            disabled={busy}
+            onClick={() =>
+              run(
+                () =>
+                  supabase.rpc('set_table_status', {
+                    p_table_id: table.table_id,
+                    p_status: overrideTo,
+                  }),
+                () => `Table ${table.table_number} marked ${overrideTo}.`
+              )
+            }
+          >
+            Mark as {overrideTo}
+          </button>
+        </section>
+      )}
+
+      {error && (
+        <p className="error panel-error">
+          {error}
+        </p>
+      )}
     </Modal>
   )
 }
@@ -226,7 +227,7 @@ export default function Dashboard() {
         .from('reservations')
         .select(
           'reservation_id, reservation_code, customer_name, guest_count, reservation_date, ' +
-            'reservation_time, status, table_id, updated_at'
+          'reservation_time, status, table_id, updated_at'
         )
         .or(
           `status.in.(pending,approved),and(status.eq.auto_cancelled,updated_at.gte.${noticeSince})`
@@ -300,7 +301,7 @@ export default function Dashboard() {
   const bookingsByTable = {}
   for (const r of reservations) {
     if (r.status === 'approved' && r.reservation_date === today && r.table_id) {
-      ;(bookingsByTable[r.table_id] ||= []).push(r)
+      ; (bookingsByTable[r.table_id] ||= []).push(r)
     }
   }
   for (const list of Object.values(bookingsByTable)) {
@@ -361,32 +362,17 @@ export default function Dashboard() {
             {tables.length === 0 && <p className="empty-state">No active tables. Add tables in Tables &amp; QR.</p>}
 
             <div className="floor">
-            {tables.map((t) => {
-              const session = sessionByTable[t.table_id]
-              const booking = (bookingsByTable[t.table_id] || [])[0]
-              const reqCount = requestCountByTable[t.table_id] || 0
-              const tableState = session
-                ? `Dining · ${displayName(session.guest_name)} · ${session.party_size} guests`
-                : booking
-                  ? `${t.status === 'reserved' ? 'Held for' : 'Booked'} ${displayName(booking.customer_name)} · ${fmtTime(booking.reservation_time)}`
-                  : t.status === 'reserved' ? 'Reserved' : ''
-              const detail = [tableState, reqCount > 0 ? `${reqCount} request${reqCount === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ')
-              return (
-                <button
+              {tables.map((t) => (
+                <FloorTile
                   key={t.table_id}
-                  className={`tile ${t.status}`}
-                  type="button"
-                  aria-label={`Table ${t.table_number}, ${t.capacity} seats, ${t.status}${session ? `, ${displayName(session.guest_name)}` : booking ? `, held for ${displayName(booking.customer_name)} at ${fmtTime(booking.reservation_time)}` : ''}`}
-                  onClick={() => setSelectedId(t.table_id)}
-                >
-                  <span className="tile-top">
-                    <strong>Table {t.table_number}</strong>
-                    <span className="tile-seats">{t.capacity} seats</span>
-                  </span>
-                  {detail && <span className="tile-state">{detail}</span>}
-                </button>
-              )
-            })}
+                  table={t}
+                  session={sessionByTable[t.table_id]}
+                  booking={(bookingsByTable[t.table_id] || [])[0]}
+                  requestCount={requestCountByTable[t.table_id] || 0}
+                  now={now}
+                  onSelect={() => setSelectedId(t.table_id)}
+                />
+              ))}
             </div>
           </section>
         </>
