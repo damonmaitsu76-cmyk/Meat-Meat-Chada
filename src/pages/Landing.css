@@ -35,7 +35,7 @@
   grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
   align-items: stretch;
   gap: clamp(var(--s6), 5vw, 80px);
-  padding: 88px var(--gutter) var(--s8);
+  padding: 48px var(--gutter) var(--s8);
 }
 .landing-copy { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; min-width: 0; }
 .landing-kicker {

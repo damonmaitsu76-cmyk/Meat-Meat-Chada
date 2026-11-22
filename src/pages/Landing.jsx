@@ -12,8 +12,6 @@ const FACTS = [
 export default function Landing() {
   return (
     <div className="landing">
-
-
       <main className="landing-hero" aria-labelledby="landing-title">
         <div className="landing-copy">
           <p className="landing-kicker ticket landing-brand landing-rise" style={{ '--i': 0 }}>SAMGYUP CHADA</p>
