@@ -44,4 +44,7 @@
 
 @media (max-width: 560px) {
   .floor { gap: var(--s1); margin-inline: calc(-1 * var(--s1)); }
+  .tile-top { gap: var(--s1); }
+  .tile-top strong { font-size: var(--fs-sm); white-space: nowrap; }
+  .tile-seats { white-space: nowrap; }
 }
