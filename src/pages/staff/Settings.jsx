@@ -190,13 +190,6 @@ export default function Settings() {
                 onChange={(e) => change('slot_length_minutes', e.target.value)}
               />
             </label>
-            <p className="set-help">
-              How long a booking holds its table. Times are offered every 30 minutes.
-              {Number.isInteger(slot) &&
-                slot >= 30 &&
-                ` Example: a table booked for 6:00 PM is held until ${fmtTime(clockPlus('18:00', slot))}.`}{' '}
-              Bookings that are already approved are not changed.
-            </p>
           </section>
 
           <section className="set-card">
