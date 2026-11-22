@@ -4,6 +4,7 @@ import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
 import { Field, Notice, PageToolbar } from '../../components/ui.jsx'
+import { getSiteBaseUrl, isLocalAddress } from '../../lib/siteUrl.js'
 import './TableManagement.css'
 
 const QR_OPTIONS = { width: 600, margin: 2, errorCorrectionLevel: 'M' }
@@ -60,7 +61,12 @@ function AddTableModal({ suggested, adding, onClose, onAdd }) {
 /* ------------------------------------------------------------------ */
 /* QR code for one table                                               */
 /* ------------------------------------------------------------------ */
-function QrModal({ table, baseUrl, onClose, onPrint }) {
+function LocalQrNotice({ hostname }) {
+  if (!hostname) return null
+  return <Notice tone="warn">These QR codes point to {hostname}, which only works on this computer. Open the live site and print them from there.</Notice>
+}
+
+function QrModal({ table, baseUrl, localHostname, onClose, onPrint }) {
   const url = `${baseUrl}/menu/${table.qr_token}`
   const [result, setResult] = useState(null) // { url, img }
 
@@ -83,21 +89,22 @@ function QrModal({ table, baseUrl, onClose, onPrint }) {
 
   return (
     <Modal title={`Table ${table.table_number}`} onClose={onClose}>
-        <div className="tm-qr">
-          {img === null && <p className="hint">Drawing the QR code…</p>}
-          {img === '' && <p className="error">Could not draw the QR code.</p>}
-          {img && <img src={img} alt={`QR code for Table ${table.table_number}`} />}
-          {img && (
-            <div className="tm-qr-actions">
-              <a className="btn" href={img} download={`table-${table.table_number}-qr.png`}>
-                Download image
-              </a>
-              <button className="btn secondary" onClick={() => onPrint(table)}>
-                Print
-              </button>
-            </div>
-          )}
-        </div>
+      <LocalQrNotice hostname={localHostname} />
+      <div className="tm-qr">
+        {img === null && <p className="hint">Drawing the QR code…</p>}
+        {img === '' && <p className="error">Could not draw the QR code.</p>}
+        {img && <img src={img} alt={`QR code for Table ${table.table_number}`} />}
+        {img && (
+          <div className="tm-qr-actions">
+            <a className="btn" href={img} download={`table-${table.table_number}-qr.png`}>
+              Download image
+            </a>
+            <button className="btn secondary" onClick={() => onPrint(table)}>
+              Print
+            </button>
+          </div>
+        )}
+      </div>
     </Modal>
   )
 }
@@ -155,8 +162,8 @@ export default function TableManagement() {
   const removedTables = all.filter((t) => !t.is_active)
   const visible = showRemoved ? all : activeTables
   const suggested = all.reduce((max, t) => Math.max(max, t.table_number), 0) + 1
-  const configuredSiteUrl = import.meta.env.VITE_PUBLIC_SITE_URL?.trim()
-  const baseUrl = (configuredSiteUrl || window.location.origin).replace(/\/+$/, '')
+  const baseUrl = getSiteBaseUrl()
+  const localHostname = isLocalAddress(baseUrl) ? new URL(baseUrl).hostname.replace(/^\[|\]$/g, '') : ''
 
   async function addTable(e, newNumber, newSeats) {
     e.preventDefault()
@@ -277,6 +284,7 @@ export default function TableManagement() {
           )}
         />
 
+        {all.length > 0 && <LocalQrNotice hostname={localHostname} />}
         {info && <div className="success">{info}</div>}
         {(actionError || error) && <Notice tone="warn" action={<button className="btn secondary small" type="button" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
         {tables === null && !error && <p className="hint">Loading tables…</p>}
@@ -328,6 +336,7 @@ export default function TableManagement() {
             key={qrTable.table_id}
             table={qrTable}
             baseUrl={baseUrl}
+            localHostname={localHostname}
             onClose={() => setQrTable(null)}
             onPrint={(t) => printTables([t])}
           />

@@ -71,6 +71,14 @@ links like `/menu/<token>` work after a page refresh.
 
 Print the QR codes from the live site, or set the optional `VITE_PUBLIC_SITE_URL` in Cloudflare Pages if the live site is reached through a different address.
 
+### Before you print the QR codes
+
+1. Deploy the site.
+2. Open the live site and log in.
+3. Open **Tables & QR**, then select **Print all QR codes**.
+
+A printed code contains the full web address. If the address changes later, print the codes again; the table tokens do not change.
+
 ## Before the restaurant uses it
 
 The tables and dishes from `supabase/sql/08_seed.sql` are placeholders. Replace them with the real ones through
