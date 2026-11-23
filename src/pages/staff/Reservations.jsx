@@ -34,6 +34,8 @@ export default function Reservations() {
   const [filter, setFilter] = useState('pending')
   const [search, setSearch] = useState('')
   const [tablePicker, setTablePicker] = useState(null)
+  const [pickerMode, setPickerMode] = useState('approve') // 'approve' picks a table for a request; 'arrive' seats a guest who is here
+  const [freeTables, setFreeTables] = useState([]) // tables that are free right now, for 'arrive'
   const [tableChoice, setTableChoice] = useState('')
   const [busyId, setBusyId] = useState(null)
   const [live, setLive] = useState(false)
@@ -106,8 +108,30 @@ export default function Reservations() {
     act(reservation, () => supabase.rpc('staff_cancel_reservation', { p_reservation_id: reservation.reservation_id, p_reason: reason }), () => `Cancelled ${displayName(reservation.customer_name)}'s reservation.`)
   }
 
-  function arrive(reservation) {
-    act(reservation, () => supabase.rpc('confirm_arrival', { p_code: reservation.reservation_code, p_table_id: null }), (data) => `${displayName(reservation.customer_name)} seated at Table ${data.table_number}.`)
+  function arrive(reservation, picked = '') {
+    act(reservation, () => supabase.rpc('confirm_arrival', { p_code: reservation.reservation_code, p_table_id: picked ? Number(picked) : null }), (data) => `${displayName(reservation.customer_name)} seated at Table ${data.table_number}.`)
+  }
+
+  // The booked table can be taken by guests who stayed on, so staff may seat the arriving guests elsewhere.
+  // The list is read fresh because the tables loaded at the start can be out of date.
+  async function openArrivePicker(reservation) {
+    setActionError('')
+    setInfo('')
+    const { data, error: tablesError } = await supabase
+      .from('restaurant_tables')
+      .select('table_id, table_number, capacity')
+      .eq('is_active', true)
+      .eq('status', 'available')
+      .gte('capacity', reservation.guest_count)
+      .order('table_number')
+    if (tablesError) {
+      setActionError(tablesError.message)
+      return
+    }
+    setFreeTables(data)
+    setTableChoice(data[0] ? String(data[0].table_id) : '')
+    setPickerMode('arrive')
+    setTablePicker(reservation)
   }
 
   const all = rows || []
@@ -129,7 +153,7 @@ export default function Reservations() {
         <div className="reservation-actions">
           <button className="btn small" type="button" disabled={busy} onClick={() => approve(reservation)}>Approve</button>
           <button className="btn small secondary" type="button" disabled={busy} onClick={() => decline(reservation)}>Decline</button>
-          <button className="btn small ghost" type="button" disabled={busy} onClick={() => { setTableChoice(''); setTablePicker(reservation) }}>Choose table</button>
+          <button className="btn small ghost" type="button" disabled={busy} onClick={() => { setTableChoice(''); setPickerMode('approve'); setTablePicker(reservation) }}>Choose table</button>
         </div>
       )
     }
@@ -139,6 +163,7 @@ export default function Reservations() {
           {reservation.reservation_date === today
             ? <button className="btn small" type="button" disabled={busy} onClick={() => arrive(reservation)}>Confirm arrival</button>
             : <span className="sub">Not for today</span>}
+          {reservation.reservation_date === today && <button className="btn small ghost" type="button" disabled={busy} onClick={() => openArrivePicker(reservation)}>Other table</button>}
           <button className="btn small secondary" type="button" disabled={busy} onClick={() => cancel(reservation)}>Cancel</button>
         </div>
       )
@@ -187,9 +212,10 @@ export default function Reservations() {
     }
   })
 
-  const pickerTables = tablePicker ? tables.filter((table) => table.capacity >= tablePicker.guest_count) : []
+  const seating = pickerMode === 'arrive'
+  const pickerTables = tablePicker ? (seating ? freeTables : tables).filter((table) => table.capacity >= tablePicker.guest_count) : []
   const pickerOptions = tablePicker ? [
-    { key: '', label: 'Automatic' },
+    ...(seating ? [] : [{ key: '', label: 'Automatic' }]),
     ...pickerTables.map((table) => ({ key: String(table.table_id), label: `Table ${table.table_number} · ${table.capacity} seats` })),
   ] : []
 
@@ -207,9 +233,11 @@ export default function Reservations() {
       {rows && query && records.length === 0 && <EmptyState>No reservation matches your search. Check the ID, name, or phone and try again.</EmptyState>}
       {records.length > 0 && <ResponsiveRecords className={`reservation-records ${hasActions ? '' : 'no-actions'}`.trim()} headers={headers} records={records} />}
       {tablePicker && (
-        <Modal title={`Table for ${displayName(tablePicker.customer_name)}`} onClose={() => setTablePicker(null)}>
-          <RadioCards label="Choose a table" items={pickerOptions} value={tableChoice} onChange={setTableChoice} />
-          <button className="btn full" type="button" disabled={busyId === tablePicker.reservation_id} onClick={() => { const reservation = tablePicker; setTablePicker(null); approve(reservation, tableChoice) }}>Approve</button>
+        <Modal title={seating ? `Seat ${displayName(tablePicker.customer_name)}` : `Table for ${displayName(tablePicker.customer_name)}`} onClose={() => setTablePicker(null)}>
+          {seating && pickerOptions.length === 0
+            ? <p className="hint">No free table fits a party of {tablePicker.guest_count} right now. End a finished session on the dashboard, then try again.</p>
+            : <RadioCards label="Choose a table" items={pickerOptions} value={tableChoice} onChange={setTableChoice} />}
+          <button className="btn full" type="button" disabled={busyId === tablePicker.reservation_id || (seating && !tableChoice)} onClick={() => { const reservation = tablePicker; setTablePicker(null); if (seating) arrive(reservation, tableChoice); else approve(reservation, tableChoice) }}>{seating ? 'Seat guests' : 'Approve'}</button>
         </Modal>
       )}
     </>

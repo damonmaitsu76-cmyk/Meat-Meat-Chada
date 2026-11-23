@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { EmptyState, Notice, StatusChip, Stepper } from '../../components/ui.jsx'
 import { supabase } from '../../supabaseClient.js'
+import { newToken } from '../../lib/token.js'
 
 const CATEGORIES = [
   { key: 'meats', label: 'Meats' },
@@ -209,6 +210,10 @@ export default function QRMenu() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [justSent, setJustSent] = useState('')
+  // One token per tray. If the reply to "Send request" is lost and the guest taps again, the
+  // database sees the same token and returns the first request instead of making a second one.
+  // Changing the tray or the note starts a new token, because that is a different request.
+  const attemptRef = useRef(null)
 
   const loadMenu = useCallback(() => {
     if (!validToken) return Promise.resolve()
@@ -239,13 +244,16 @@ export default function QRMenu() {
     return map
   }, [menu])
   const loadError = validToken ? fetchError : 'This QR code is not valid. Ask a staff member for help.'
-  const trayCount = Object.values(tray).reduce((sum, quantity) => sum + quantity, 0)
+  // Count only dishes the menu still has: a dish the manager deleted cannot be shown or removed.
+  const trayCount = Object.entries(tray).reduce((sum, [id, quantity]) => sum + (itemsById[id] ? quantity : 0), 0)
 
   function addItem(id) {
+    attemptRef.current = null
     setTray((current) => ({ ...current, [id]: Math.min((current[id] || 0) + 1, MAX_QTY) }))
   }
 
   function changeQty(id, delta) {
+    attemptRef.current = null
     setTray((current) => {
       const quantity = (current[id] || 0) + delta
       const next = { ...current }
@@ -255,14 +263,25 @@ export default function QRMenu() {
     })
   }
 
+  function changeNote(value) {
+    attemptRef.current = null
+    setNote(value)
+  }
+
   async function sendRequest() {
     setSending(true)
     setSendError('')
-    const items = Object.entries(tray).map(([id, quantity]) => ({ item_id: Number(id), quantity }))
+    if (!attemptRef.current) attemptRef.current = newToken()
+    // Send only what the tray shows. A dish that left the menu would make the database refuse
+    // the whole request, and the guest could not see which line to remove.
+    const items = Object.entries(tray)
+      .filter(([id]) => itemsById[id])
+      .map(([id, quantity]) => ({ item_id: Number(id), quantity }))
     const { data, error } = await supabase.rpc('submit_refill_request', {
       p_qr_token: qrToken,
       p_note: note.trim() || null,
       p_items: items,
+      p_client_token: attemptRef.current,
     })
     setSending(false)
     if (error) {
@@ -270,6 +289,7 @@ export default function QRMenu() {
       loadMenu()
       return
     }
+    attemptRef.current = null
     setTray({})
     setNote('')
     setJustSent(data.request_number)
@@ -304,7 +324,7 @@ export default function QRMenu() {
       <main className={`content ${view === 'tray' ? 'tray-content' : ''}`}>
         {fetchError && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={loadMenu}>Refresh menu</button>}>{fetchError}</Notice>}
         {view === 'menu' && <MenuView items={menu.items} tray={tray} onAdd={addItem} onChangeQty={changeQty} tableNumber={menu.table_number} />}
-        {view === 'tray' && <TrayView itemsById={itemsById} tray={tray} note={note} setNote={setNote} onChangeQty={changeQty} onSend={sendRequest} sending={sending} error={sendError} onBrowse={() => go('menu')} />}
+        {view === 'tray' && <TrayView itemsById={itemsById} tray={tray} note={note} setNote={changeNote} onChangeQty={changeQty} onSend={sendRequest} sending={sending} error={sendError} onBrowse={() => go('menu')} />}
         {view === 'status' && <StatusView qrToken={qrToken} justSent={justSent} />}
       </main>
       {view === 'menu' && trayCount > 0 && (

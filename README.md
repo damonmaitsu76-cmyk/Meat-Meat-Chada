@@ -19,7 +19,7 @@ Other scripts: `npm run lint`, `npm run build`, `npm run preview`.
 
 ## Set up the database
 
-In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 11:
+In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 12:
 
 1. `01_schema.sql` – tables, security rules, and functions
 2. `02_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
@@ -32,6 +32,9 @@ In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 0
 9. `09_add_on_category.sql` – adds the `add-on` menu category (meats, sides, drinks, add-on)
 10. `10_samgyup_menu.sql` – a starter samgyupsal menu: more meats, sides, drinks, and add-ons (needs 09)
 11. `11_phone_validation.sql` – reservations only accept a Philippine mobile number (09XXXXXXXXX)
+12. `12_state_machine_fixes.sql` – unanswered reservation requests expire, guests can be seated at another table, safer table status changes, no duplicate requests when a tap is retried, and the last manager account cannot be removed
+
+Already running an older version? Run only `12_state_machine_fixes.sql`, and run it **before** you deploy the new front end (the new QR menu sends an extra field that the old database function does not know). The rules behind it are written down in `docs/STATE_MACHINES.md`.
 
 ## Deploy the account function
 
