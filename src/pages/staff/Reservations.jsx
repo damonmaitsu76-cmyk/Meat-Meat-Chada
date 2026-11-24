@@ -5,6 +5,7 @@ import Modal from '../../components/Modal.jsx'
 import { EmptyState, FilterTabs, Notice, PageToolbar, RadioCards, RecordCard, ResponsiveRecords, StatusChip } from '../../components/ui.jsx'
 import { dayLabel, fmtTime, manilaDate, shiftDate, startMs } from '../../lib/dates.js'
 import { displayName } from '../../lib/format.js'
+import useDismissed, { noShowKey } from '../../lib/useDismissed.js'
 import './Reservations.css'
 
 const FILTERS = [
@@ -40,6 +41,7 @@ export default function Reservations() {
   const [busyId, setBusyId] = useState(null)
   const [live, setLive] = useState(false)
   const [now, setNow] = useState(() => Date.now())
+  const [dismissed, dismiss] = useDismissed()
 
   const load = useCallback(() => {
     const since = shiftDate(manilaDate(), -HISTORY_DAYS)
@@ -144,7 +146,7 @@ export default function Reservations() {
     : all.filter((reservation) => matchesFilter(reservation, filter))
   if (!query && filter === 'history') visible = visible.slice().reverse()
 
-  const noShows = all.filter((reservation) => reservation.status === 'auto_cancelled' && now - new Date(reservation.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000)
+  const noShows = all.filter((reservation) => reservation.status === 'auto_cancelled' && now - new Date(reservation.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000 && !dismissed.includes(noShowKey(reservation)))
 
   function actionsFor(reservation) {
     const busy = busyId === reservation.reservation_id
@@ -222,7 +224,7 @@ export default function Reservations() {
   return (
     <>
       <PageToolbar title="Reservations" live={live} />
-      {noShows.length > 0 && <Notice tone="warn"><strong>Released after the grace period</strong><ul>{noShows.map((reservation) => <li key={reservation.reservation_id}>{displayName(reservation.customer_name)} (<span className="ticket">{reservation.reservation_code}</span>), booked for {fmtTime(reservation.reservation_time)}{reservation.restaurant_tables ? `, Table ${reservation.restaurant_tables.table_number} released` : ''}</li>)}</ul></Notice>}
+      {noShows.length > 0 && <Notice tone="warn" onDismiss={() => dismiss(noShows.map(noShowKey))}><strong>Released after the grace period</strong><ul>{noShows.map((reservation) => <li key={reservation.reservation_id}>{displayName(reservation.customer_name)} (<span className="ticket">{reservation.reservation_code}</span>), booked for {fmtTime(reservation.reservation_time)}{reservation.restaurant_tables ? `, Table ${reservation.restaurant_tables.table_number} released` : ''}</li>)}</ul></Notice>}
       <div className="reservation-controls">
         <FilterTabs label="Reservation filters" items={FILTERS.map((item) => ({ ...item, count: count(item.key) }))} value={query ? '' : filter} onChange={(key) => { setSearch(''); setFilter(key) }} />
         <input className="search" type="search" aria-label="Search reservations by ID, name, or phone" placeholder="Search by ID, name, or phone" value={search} onChange={(event) => setSearch(event.target.value)} />

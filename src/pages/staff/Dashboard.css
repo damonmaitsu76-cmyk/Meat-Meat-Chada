@@ -105,6 +105,9 @@
 .panel-error { margin-top: var(--s3); }
 .panel-list { display: grid; gap: var(--s3); margin: 0; padding: 0; list-style: none; }
 .panel-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+/* A booking stacks who it is above the one button that seats them. */
+.panel-list .panel-booking { display: grid; align-items: stretch; justify-content: stretch; }
+.panel-list .panel-booking + .panel-booking { padding-top: var(--s3); border-top: 1px solid var(--line); }
 
 /* Phones: two tables per row, so numbers and names stay readable at arm's length. */
 @media (max-width: 560px) {

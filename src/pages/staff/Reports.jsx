@@ -80,6 +80,7 @@ function describe(log) {
     case 'staff_cancel:reservation': return <>Cancelled {ticket(details.reservation_code)} by staff{details.reason ? `: ${details.reason}` : ''}</>
     case 'arrive:reservation': return <>Seated {ticket(details.reservation_code)} at Table {details.table_number}</>
     case 'auto_cancel:reservation': return <>Released {ticket(details.reservation_code)} after the grace period (no-show)</>
+    case 'auto_end:dining_session': return `Freed Table ${details.table_number} automatically after no new request for ${details.quiet_minutes} min`
     case 'import:menu_items':
     case 'import:restaurant_tables': return `Imported ${log.record_type === 'menu_items' ? 'menu items' : 'tables'}: ${details.imported} saved, ${details.skipped} skipped, ${details.failed} failed`
     case 'update:menu_items': return `Edited dish ${details.item_name}`

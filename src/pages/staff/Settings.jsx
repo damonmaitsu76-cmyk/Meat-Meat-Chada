@@ -3,17 +3,19 @@ import { supabase } from '../../supabaseClient.js'
 import { Notice, PageToolbar } from '../../components/ui.jsx'
 import './Settings.css'
 
-const KEYS = ['arrival_grace_minutes', 'slot_length_minutes', 'opening_time', 'closing_time']
-// Used only if a setting row is missing from the database (the same values as supabase/sql/08_seed.sql).
+const KEYS = ['arrival_grace_minutes', 'slot_length_minutes', 'auto_release_minutes', 'opening_time', 'closing_time']
+// Used only if a setting row is missing from the database (the same values as supabase/sql/08_seed.sql and 13).
 const DEFAULTS = {
   arrival_grace_minutes: '15',
   slot_length_minutes: '90',
+  auto_release_minutes: '20',
   opening_time: '11:00',
   closing_time: '23:00',
 }
 const SETTING_LABELS = {
   arrival_grace_minutes: 'arrival grace period',
   slot_length_minutes: 'time slot length',
+  auto_release_minutes: 'automatic table release',
   opening_time: 'opening time',
   closing_time: 'closing time',
 }
@@ -28,6 +30,7 @@ function clean(d) {
   return {
     arrival_grace_minutes: String(Number(d.arrival_grace_minutes)),
     slot_length_minutes: String(Number(d.slot_length_minutes)),
+    auto_release_minutes: String(Number(d.auto_release_minutes)),
     opening_time: d.opening_time,
     closing_time: d.closing_time,
   }
@@ -42,6 +45,10 @@ function validate(d) {
   }
   if (!Number.isInteger(slot) || slot < 30 || slot > 240) {
     return 'The time slot length must be a whole number from 30 to 240 minutes.'
+  }
+  const quiet = Number(d.auto_release_minutes)
+  if (String(d.auto_release_minutes).trim() === '' || !Number.isInteger(quiet) || quiet < 0 || quiet > 240) {
+    return 'The automatic table release must be a whole number from 0 to 240 minutes. Enter 0 to turn it off.'
   }
   if (!/^\d{2}:\d{2}$/.test(d.opening_time) || !/^\d{2}:\d{2}$/.test(d.closing_time)) {
     return 'Enter both the opening time and the closing time.'
@@ -126,7 +133,7 @@ export default function Settings() {
       setActionError(
         r.error
           ? r.error.message
-          : `The setting "${changed[failedIndex]}" was not saved. Check your account role, and that supabase/sql/08_seed.sql was run.`
+          : `The setting "${changed[failedIndex]}" was not saved. Check your account role, and that supabase/sql/08_seed.sql and 13_bulk_orders_and_auto_release.sql were run.`
       )
       load(true)
       return
@@ -171,6 +178,22 @@ export default function Settings() {
                 value={draft.slot_length_minutes}
                 onChange={(e) => change('slot_length_minutes', e.target.value)}
               />
+            </label>
+          </section>
+
+          <section className="set-card">
+            <h2>Tables</h2>
+            <label className="field">
+              <span>Free a table when nothing new is requested for (minutes)</span>
+              <input
+                type="number"
+                min={0}
+                max={240}
+                inputMode="numeric"
+                value={draft.auto_release_minutes}
+                onChange={(e) => change('auto_release_minutes', e.target.value)}
+              />
+              <small className="field-hint">Only after the time slot has passed and everything the party ordered is served. Enter 0 to free tables by hand only.</small>
             </label>
           </section>
 

@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { confirmDialog } from '../../components/dialogs.js'
 import { EmptyState, Notice, StatusChip, Stepper } from '../../components/ui.jsx'
 import { supabase } from '../../supabaseClient.js'
 import { newToken } from '../../lib/token.js'
+import { groupByCategory, orderAgain } from '../../lib/tray.js'
+import './QRMenu.css'
 
 const CATEGORIES = [
   { key: 'meats', label: 'Meats' },
@@ -13,6 +16,7 @@ const CATEGORIES = [
 const STATUS_ORDER = ['sent', 'accepted', 'ready', 'served']
 const STATUS_LABELS = { sent: 'Sent', accepted: 'Accepted', ready: 'Ready', served: 'Served' }
 const MAX_QTY = 20
+const MAX_LINES = 100 // different dishes in one request; the database allows the same
 const POLL_MS = 4000
 const MENU_POLL_MS = 10000
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -85,36 +89,54 @@ function MenuView({ items, tray, onAdd, onChangeQty, tableNumber }) {
   )
 }
 
-function TrayView({ itemsById, tray, note, setNote, onChangeQty, onSend, sending, error, onBrowse }) {
+function TrayView({ itemsById, tray, note, setNote, notice, onChangeQty, onClear, onSend, sending, error, onBrowse }) {
   const lines = Object.entries(tray)
     .map(([id, quantity]) => ({ id: Number(id), quantity, item: itemsById[id] }))
     .filter((line) => line.item)
   const hasUnavailable = lines.some((line) => !line.item.is_available)
+  const tooMany = lines.length > MAX_LINES
   const itemCount = lines.reduce((total, line) => total + line.quantity, 0)
+  const groups = groupByCategory(lines, CATEGORIES)
+  const skippedNotice = notice ? <Notice tone="warn">{notice}</Notice> : null
 
   if (lines.length === 0) {
-    return <EmptyState action={<button className="btn" type="button" onClick={onBrowse}>Browse the menu</button>}>Your tray is empty. Add dishes from the menu to start a request.</EmptyState>
+    return (
+      <>
+        {skippedNotice}
+        <EmptyState action={<button className="btn" type="button" onClick={onBrowse}>Browse the menu</button>}>Your tray is empty. Add dishes from the menu to start a request.</EmptyState>
+      </>
+    )
   }
 
   return (
     <>
-      <h1 className="customer-title">Your tray · {itemCount} {itemCount === 1 ? 'item' : 'items'}</h1>
-      <ul className="list tray-list">
-        {lines.map(({ id, quantity, item }) => (
-          <li key={id} className={`row tray-row ${item.is_available ? '' : 'unavailable'}`}>
-            <div className="row-main">
-              <span className="row-name">{item.item_name}</span>
-              {!item.is_available && <span className="out-for-now">No longer available</span>}
-            </div>
-            <Stepper
-              value={quantity}
-              label={item.item_name}
-              max={MAX_QTY}
-              onChange={(delta) => onChangeQty(id, delta)}
-            />
-          </li>
-        ))}
-      </ul>
+      {skippedNotice}
+      <div className="tray-head">
+        <h1 className="customer-title">Your tray · {itemCount} {itemCount === 1 ? 'item' : 'items'}</h1>
+        <button className="btn ghost small" type="button" onClick={onClear}>Clear tray</button>
+      </div>
+
+      {groups.map((group) => (
+        <section className="tray-group" key={group.key} aria-labelledby={`tray-${group.key}`}>
+          <h2 className="tray-group-title" id={`tray-${group.key}`}>{group.label}</h2>
+          <ul className="menu-list">
+            {group.lines.map(({ id, quantity, item }) => (
+              <li key={id} className={`menu-row ${item.is_available ? '' : 'unavailable'}`}>
+                <div className="row-main">
+                  <span className="menu-name">{item.item_name}</span>
+                  {!item.is_available && <span className="out-for-now">No longer available</span>}
+                </div>
+                <Stepper
+                  value={quantity}
+                  label={item.item_name}
+                  max={MAX_QTY}
+                  onChange={(delta) => onChangeQty(id, delta)}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
 
       <label className="field">
         <span>Note for staff (optional)</span>
@@ -128,9 +150,10 @@ function TrayView({ itemsById, tray, note, setNote, onChangeQty, onSend, sending
       </label>
 
       {hasUnavailable && <p className="error">Remove dishes that are no longer available before sending.</p>}
+      {tooMany && <p className="error">One request holds up to {MAX_LINES} different dishes. Remove some and send them in a second request.</p>}
       {error && <p className="error" role="alert">{error}</p>}
       <div className="tray-submit">
-        <button className="btn full" type="button" disabled={sending || hasUnavailable} onClick={onSend}>
+        <button className="btn full" type="button" disabled={sending || hasUnavailable || tooMany} onClick={onSend}>
           {sending ? 'Sending…' : 'Send request'}
         </button>
       </div>
@@ -138,7 +161,7 @@ function TrayView({ itemsById, tray, note, setNote, onChangeQty, onSend, sending
   )
 }
 
-function StatusView({ qrToken, justSent }) {
+function StatusView({ qrToken, justSent, onOrderAgain }) {
   const [requests, setRequests] = useState(null)
   const [error, setError] = useState('')
   const [refresh, setRefresh] = useState(0)
@@ -191,6 +214,11 @@ function StatusView({ qrToken, justSent }) {
               </ul>
               {request.note && <p className="request-note">Note for staff: {request.note}</p>}
               <p className="request-time">Sent at {formatTime(request.created_at)}</p>
+              {request.items.length > 0 && (
+                <div className="ticket-actions">
+                  <button type="button" className="btn secondary small" onClick={() => onOrderAgain(request.items)}>Order again</button>
+                </div>
+              )}
             </li>
           )
         })}
@@ -210,6 +238,7 @@ export default function QRMenu() {
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState('')
   const [justSent, setJustSent] = useState('')
+  const [trayNotice, setTrayNotice] = useState('')
   // One token per tray. If the reply to "Send request" is lost and the guest taps again, the
   // database sees the same token and returns the first request instead of making a second one.
   // Changing the tray or the note starts a new token, because that is a different request.
@@ -268,15 +297,49 @@ export default function QRMenu() {
     setNote(value)
   }
 
-  async function sendRequest() {
-    setSending(true)
+  // Puts the dishes of an earlier request back into the tray and opens it.
+  function reorder(lines) {
+    const result = orderAgain(tray, lines, menu?.items || [], MAX_QTY)
+    const skipped = result.skipped
+    attemptRef.current = null
+    setTray(result.tray)
+    setTrayNotice(skipped > 0 ? `${skipped} ${skipped === 1 ? 'dish is' : 'dishes are'} out for now, so ${skipped === 1 ? 'it was' : 'they were'} left out.` : '')
+    setJustSent('')
+    setView('tray')
+  }
+
+  async function clearTray() {
+    const ok = await confirmDialog({
+      title: 'Clear your tray?',
+      message: 'Every dish in the tray is removed.',
+      confirmLabel: 'Clear tray',
+      cancelLabel: 'Keep it',
+      danger: true,
+    })
+    if (!ok) return
+    attemptRef.current = null
+    setTray({})
+    setNote('')
     setSendError('')
-    if (!attemptRef.current) attemptRef.current = newToken()
+  }
+
+  async function sendRequest() {
     // Send only what the tray shows. A dish that left the menu would make the database refuse
     // the whole request, and the guest could not see which line to remove.
     const items = Object.entries(tray)
       .filter(([id]) => itemsById[id])
       .map(([id, quantity]) => ({ item_id: Number(id), quantity }))
+    if (items.length === 0) {
+      setSendError('Your tray is empty. Add a dish to send a request.')
+      return
+    }
+    if (items.length > MAX_LINES) {
+      setSendError(`One request holds up to ${MAX_LINES} different dishes. Remove some and send them in a second request.`)
+      return
+    }
+    setSending(true)
+    setSendError('')
+    if (!attemptRef.current) attemptRef.current = newToken()
     const { data, error } = await supabase.rpc('submit_refill_request', {
       p_qr_token: qrToken,
       p_note: note.trim() || null,
@@ -298,6 +361,7 @@ export default function QRMenu() {
 
   function go(next) {
     if (next !== 'status') setJustSent('')
+    if (next !== 'tray') setTrayNotice('')
     setView(next)
   }
 
@@ -324,8 +388,8 @@ export default function QRMenu() {
       <main className={`content ${view === 'tray' ? 'tray-content' : ''}`}>
         {fetchError && <Notice tone="warn" action={<button type="button" className="btn secondary small" onClick={loadMenu}>Refresh menu</button>}>{fetchError}</Notice>}
         {view === 'menu' && <MenuView items={menu.items} tray={tray} onAdd={addItem} onChangeQty={changeQty} tableNumber={menu.table_number} />}
-        {view === 'tray' && <TrayView itemsById={itemsById} tray={tray} note={note} setNote={changeNote} onChangeQty={changeQty} onSend={sendRequest} sending={sending} error={sendError} onBrowse={() => go('menu')} />}
-        {view === 'status' && <StatusView qrToken={qrToken} justSent={justSent} />}
+        {view === 'tray' && <TrayView itemsById={itemsById} tray={tray} note={note} setNote={changeNote} notice={trayNotice} onChangeQty={changeQty} onClear={clearTray} onSend={sendRequest} sending={sending} error={sendError} onBrowse={() => go('menu')} />}
+        {view === 'status' && <StatusView qrToken={qrToken} justSent={justSent} onOrderAgain={reorder} />}
       </main>
       {view === 'menu' && trayCount > 0 && (
         <div className="menu-review">

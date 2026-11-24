@@ -50,11 +50,16 @@ export function StatusChip({ status, children, className = '' }) {
   return <span className={`status-chip ${tone} ${className}`.trim()}>{children || label}</span>
 }
 
-export function Notice({ tone = 'info', action, children, className = '' }) {
+export function Notice({ tone = 'info', action, onDismiss, children, className = '' }) {
   return (
     <div className={`notice notice-${tone} ${className}`.trim()} role="status">
       <div>{children}</div>
       {action}
+      {onDismiss && (
+        <button type="button" className="notice-dismiss" aria-label="Dismiss" onClick={onDismiss}>
+          ×
+        </button>
+      )}
     </div>
   )
 }

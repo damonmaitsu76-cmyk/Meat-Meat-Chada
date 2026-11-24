@@ -75,6 +75,10 @@ a.btn { text-decoration: none; }
 .notice-warn { background: var(--warn-soft); color: var(--warn); }
 .notice strong { display: block; margin-bottom: var(--s1); }
 .notice ul { margin: 0; padding-left: var(--s5); }
+/* The negative margins let the 44px target sit flush in the corner without making the notice taller. */
+.notice-dismiss { flex: 0 0 auto; align-self: flex-start; width: 44px; height: 44px; margin: calc(var(--s3) * -1) calc(var(--s4) * -1) calc(var(--s3) * -1) 0; border: 0; border-radius: var(--r-ctrl); background: transparent; color: inherit; font-size: var(--fs-close); line-height: 1; }
+.notice-warn .notice-dismiss:hover { background: var(--warn-line); }
+.notice-info .notice-dismiss:hover { background: var(--neutral-line); }
 
 .record-cards { display: none; }
 .record-card { padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); min-width: 0; }

@@ -1,0 +1,7 @@
+/* Tray grouping and the "Order again" action. Menu rows and tickets live in global.css. */
+.tray-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin: 0 0 var(--s4); }
+.tray-head .customer-title { min-width: 0; margin: 0; }
+.tray-head .btn { flex: 0 0 auto; }
+.tray-group { margin: 0 0 var(--s5); }
+.tray-group-title { margin: 0 0 var(--s2); color: var(--text-2); font-size: var(--fs-sm); font-weight: 600; }
+.ticket-actions { margin-top: var(--s3); }

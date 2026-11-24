@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
-import { Notice, PageToolbar } from '../../components/ui.jsx'
+import { Disclosure, Notice, PageToolbar } from '../../components/ui.jsx'
 import { fmtTime, manilaDate } from '../../lib/dates.js'
-import { DEFAULT_SLOT_MINUTES, minutesOver, minutesSince } from '../../lib/floor.js'
+import { DEFAULT_SLOT_MINUTES, minutesOver, minutesSince, plural } from '../../lib/floor.js'
 import { displayName, formatDuration } from '../../lib/format.js'
+import useDismissed, { noShowKey } from '../../lib/useDismissed.js'
 import './Dashboard.css'
 import AttentionList from './AttentionList.jsx'
 import FloorMap from './FloorMap.jsx'
@@ -23,12 +24,17 @@ function sinceText(iso, now) {
 /* ------------------------------------------------------------------ */
 /* Panel that opens when a table is clicked                            */
 /* ------------------------------------------------------------------ */
-function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDone }) {
+function TablePanel({ table, session, bookings, slotMinutes, autoReleaseMinutes, now, onClose, onDone }) {
   const [name, setName] = useState('')
   const [party, setParty] = useState('2')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const errorRef = useRef(null)
 
+  // The window scrolls, and the error appears near its end, so bring it into view.
+  useEffect(() => {
+    if (error) errorRef.current?.scrollIntoView({ block: 'nearest' })
+  }, [error])
 
   // Runs one staff action. Errors stay inside the panel; success closes it.
   async function run(call, message) {
@@ -43,25 +49,23 @@ function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDon
     onDone(message(data))
   }
 
+  // A walk-in's name is optional: staff should not have to ask for it before seating anyone.
   function seatWalkIn(e) {
     e.preventDefault()
     const size = Number(party)
-    if (!name.trim()) {
-      setError('Enter the guest name.')
-      return
-    }
     if (!Number.isInteger(size) || size < 1) {
       setError('Enter a party size of 1 or more.')
       return
     }
+    const guest = name.trim() || 'Walk-in'
     run(
       () =>
         supabase.rpc('record_walkin', {
-          p_name: name.trim(),
+          p_name: guest,
           p_party_size: size,
           p_table_id: table.table_id,
         }),
-      () => `${name.trim()} seated at Table ${table.table_number}.`
+      () => `${guest} seated at Table ${table.table_number}.`
     )
   }
 
@@ -72,6 +76,41 @@ function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDon
   const canOverride = table.status !== 'dining' || !session
   const overrideTo = table.status === 'available' ? 'reserved' : 'available'
   const over = session ? minutesOver(session.seated_at, slotMinutes, now) : 0
+
+  const walkInForm = (
+    <form onSubmit={seatWalkIn}>
+      {nextBooking && (
+        <p className="hint">
+          Booked for {fmtTime(nextBooking.reservation_time)} today. Walk-ins may not get this
+          table before then.
+        </p>
+      )}
+      <label className="field">
+        <span>Guest name (optional)</span>
+        <input
+          type="text"
+          maxLength={80}
+          placeholder="Walk-in"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </label>
+      <label className="field">
+        <span>Party size</span>
+        <input
+          type="number"
+          min={1}
+          inputMode="numeric"
+          value={party}
+          onChange={(e) => setParty(e.target.value)}
+        />
+      </label>
+      {tooBig && <p className="hint">This table seats {table.capacity}.</p>}
+      <button className={`btn full ${bookings.length > 0 ? 'secondary' : ''}`.trim()} type="submit" disabled={busy}>
+        Seat walk-in
+      </button>
+    </form>
+  )
 
   return (
     <Modal title={`Table ${table.table_number}`} onClose={onClose}>
@@ -91,7 +130,9 @@ function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDon
             </span>
             {over > 0 && (
               <span className="dim">
-                {formatDuration(over)} past the {slotMinutes} minute time slot. The table stays taken until you end the session.
+                {formatDuration(over)} past the {slotMinutes} minute time slot.
+                {autoReleaseMinutes > 0 &&
+                  ` It also frees itself once their last request is served and nothing new comes in for ${autoReleaseMinutes} min.`}
               </span>
             )}
           </p>
@@ -114,17 +155,18 @@ function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDon
         <section className="panel-section">
           <h3>Booked today</h3>
           <ul className="panel-list">
-            {bookings.map((b) => (
-              <li key={b.reservation_id}>
+            {bookings.map((b, index) => (
+              <li key={b.reservation_id} className="panel-booking">
                 <div>
-                  <strong>{displayName(b.customer_name)}</strong> (<span className="ticket">{b.reservation_code}</span>)
+                  <strong>{displayName(b.customer_name)}</strong>
                   <span className="dim">
-                    {b.guest_count} guests at {fmtTime(b.reservation_time)}
+                    <span className="ticket">{b.reservation_code}</span> · {plural(b.guest_count, 'guest', 'guests')} · {fmtTime(b.reservation_time)}
                   </span>
                 </div>
                 {table.status !== 'dining' && (
                   <button
-                    className="btn small"
+                    className={`btn full ${index === 0 ? '' : 'secondary'}`.trim()}
+                    type="button"
                     disabled={busy}
                     onClick={() =>
                       run(
@@ -133,11 +175,11 @@ function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDon
                             p_code: b.reservation_code,
                             p_table_id: table.table_id,
                           }),
-                        () => `${b.customer_name} seated at Table ${table.table_number}.`
+                        () => `${displayName(b.customer_name)} seated at Table ${table.table_number}.`
                       )
                     }
                   >
-                    Confirm arrival
+                    Seat {displayName(b.customer_name)}
                   </button>
                 )}
               </li>
@@ -147,38 +189,16 @@ function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDon
       )}
 
       {table.status === 'available' && (
-        <form className="panel-section" onSubmit={seatWalkIn}>
-          <h3>Seat a walk-in</h3>
-          {nextBooking && (
-            <p className="hint">
-              Booked for {fmtTime(nextBooking.reservation_time)} today. Walk-ins may not get this
-              table before then.
-            </p>
+        <section className="panel-section">
+          {bookings.length > 0 ? (
+            <Disclosure label="Seat a walk-in instead">{walkInForm}</Disclosure>
+          ) : (
+            <>
+              <h3>Seat a walk-in</h3>
+              {walkInForm}
+            </>
           )}
-          <label className="field">
-            <span>Guest name</span>
-            <input
-              type="text"
-              maxLength={80}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </label>
-          <label className="field">
-            <span>Party size</span>
-            <input
-              type="number"
-              min={1}
-              inputMode="numeric"
-              value={party}
-              onChange={(e) => setParty(e.target.value)}
-            />
-          </label>
-          {tooBig && <p className="hint">This table seats {table.capacity}.</p>}
-          <button className="btn full" type="submit" disabled={busy}>
-            Seat walk-in
-          </button>
-        </form>
+        </section>
       )}
 
       {canOverride && (
@@ -203,7 +223,7 @@ function TablePanel({ table, session, bookings, slotMinutes, now, onClose, onDon
       )}
 
       {error && (
-        <p className="error panel-error">
+        <p ref={errorRef} className="error panel-error" role="alert">
           {error}
         </p>
       )}
@@ -223,10 +243,11 @@ export default function Dashboard() {
   const [now, setNow] = useState(() => Date.now())
   const reloadTimer = useRef(null)
   const navigate = useNavigate()
+  const [dismissed, dismiss] = useDismissed()
 
   const load = useCallback(async () => {
     const noticeSince = new Date(Date.now() - NOTICE_HOURS * 3600 * 1000).toISOString()
-    const [t, s, r, q, slot] = await Promise.all([
+    const [t, s, r, q, settings] = await Promise.all([
       supabase
         .from('restaurant_tables')
         .select('table_id, table_number, capacity, status')
@@ -249,16 +270,18 @@ export default function Dashboard() {
         .from('refill_requests')
         .select('request_id, table_id, status, created_at')
         .in('status', ['sent', 'accepted', 'ready']),
-      supabase.from('settings').select('setting_value').eq('setting_key', 'slot_length_minutes').maybeSingle(),
+      supabase.from('settings').select('setting_key, setting_value').in('setting_key', ['slot_length_minutes', 'auto_release_minutes']),
     ])
     const failed = [t, s, r, q].find((x) => x.error)
     if (failed) {
       setError(failed.error.message)
       return
     }
-    // If the setting cannot be read, fall back to the default instead of blocking the floor.
-    const slotMinutes = Number(slot.data?.setting_value) > 0 ? Number(slot.data.setting_value) : DEFAULT_SLOT_MINUTES
-    setData({ tables: t.data, sessions: s.data, reservations: r.data, requests: q.data, slotMinutes })
+    // If a setting cannot be read, fall back to its default instead of blocking the floor.
+    const setting = (key) => Number(settings.data?.find((row) => row.setting_key === key)?.setting_value)
+    const slotMinutes = setting('slot_length_minutes') > 0 ? setting('slot_length_minutes') : DEFAULT_SLOT_MINUTES
+    const autoReleaseMinutes = setting('auto_release_minutes') > 0 ? setting('auto_release_minutes') : 0
+    setData({ tables: t.data, sessions: s.data, reservations: r.data, requests: q.data, slotMinutes, autoReleaseMinutes })
     setError('')
   }, [])
 
@@ -303,6 +326,7 @@ export default function Dashboard() {
   const reservations = data?.reservations || []
   const requests = data?.requests || []
   const slotMinutes = data?.slotMinutes ?? DEFAULT_SLOT_MINUTES
+  const autoReleaseMinutes = data?.autoReleaseMinutes ?? 0
   const today = manilaDate(new Date(now))
 
   const tablesById = {}
@@ -334,7 +358,8 @@ export default function Dashboard() {
   const noShows = reservations.filter(
     (r) =>
       r.status === 'auto_cancelled' &&
-      now - new Date(r.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000
+      now - new Date(r.updated_at).getTime() < NOTICE_HOURS * 3600 * 1000 &&
+      !dismissed.includes(noShowKey(r))
   )
   const pendingReservations = reservations.filter((r) => r.status === 'pending')
 
@@ -359,7 +384,7 @@ export default function Dashboard() {
           />
 
           {noShows.length > 0 && (
-            <Notice tone="warn">
+            <Notice tone="warn" onDismiss={() => dismiss(noShows.map(noShowKey))}>
               <strong>Released after the grace period</strong>
               <ul>
                 {noShows.map((r) => (
@@ -392,6 +417,7 @@ export default function Dashboard() {
           session={sessionByTable[selected.table_id]}
           bookings={bookingsByTable[selected.table_id] || []}
           slotMinutes={slotMinutes}
+          autoReleaseMinutes={autoReleaseMinutes}
           now={now}
           onClose={closePanel}
           onDone={onDone}

@@ -1,30 +1,41 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
-import { Notice, PageToolbar, RecordCard, StatusChip } from '../../components/ui.jsx'
+import { confirmDialog } from '../../components/dialogs.js'
+import { EmptyState, Notice, PageToolbar, RecordCard } from '../../components/ui.jsx'
+import { plural } from '../../lib/floor.js'
 import { formatDuration } from '../../lib/format.js'
 import './RequestQueue.css'
 
-const STATUS_LABEL = { sent: 'New', accepted: 'Accepted', ready: 'Ready', served: 'Served' }
 const NEXT = {
-  sent: { status: 'accepted', label: 'Accept' },
-  accepted: { status: 'ready', label: 'Mark ready' },
-  ready: { status: 'served', label: 'Mark served' },
+  sent: { status: 'accepted', label: 'Accept', bulk: 'Accept all' },
+  accepted: { status: 'ready', label: 'Mark ready', bulk: 'Mark all ready' },
+  ready: { status: 'served', label: 'Mark served', bulk: 'Mark all served' },
 }
+const GROUPS = [
+  { status: 'sent', label: 'New' },
+  { status: 'accepted', label: 'Accepted' },
+  { status: 'ready', label: 'Ready' },
+]
 const LATE_MINUTES = 5
 const SAFETY_POLL_MS = 30000
 const SERVED_HOURS = 12
-const TICKET_ITEM_LIMIT = 8 // lines shown on a ticket before "Show more"
+const SERVED_SHOWN = 10 // served rows listed before "Show all"
+const TICKET_ITEM_LIMIT = 6 // lines shown on a ticket before "Show more"
 let channelSeq = 0
 
 function formatTime(iso) {
   return new Date(iso).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })
 }
 
-function servedText(request) {
-  if (!request.served_at) return 'Served'
+// How long a request took from sent to served: "under 1 min", "2 min" or "1 h 34 min".
+function servedIn(request) {
+  if (!request.served_at) return '—'
   const minutes = (new Date(request.served_at).getTime() - new Date(request.created_at).getTime()) / 60000
-  if (minutes < 1) return 'Served in under 1 min'
-  return `Served in ${formatDuration(minutes)}`
+  return minutes < 1 ? 'under 1 min' : formatDuration(minutes)
+}
+
+function totalQuantity(items) {
+  return items.reduce((sum, item) => sum + item.quantity, 0)
 }
 
 // An order can hold a large part of the menu, so lists stay dense and long ones fold.
@@ -36,7 +47,7 @@ function ItemList({ items, limit = Infinity }) {
   return (
     <>
       <ul className="ticket-items">
-        {shown.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
+        {shown.map((item) => <li key={item.item_name}><strong>{item.quantity}×</strong><span>{item.item_name}</span></li>)}
       </ul>
       {items.length > limit && (
         <button className="btn ghost small ticket-items-toggle" type="button" aria-expanded={expanded} onClick={() => setExpanded((value) => !value)}>
@@ -47,22 +58,30 @@ function ItemList({ items, limit = Infinity }) {
   )
 }
 
+// One served request as a single line: when, which table, what, and how long it took.
 function ServedRow({ request, items }) {
   const table = request.restaurant_tables?.table_number ?? '—'
-  const preview = items.map((item) => `${item.quantity} × ${item.item_name}`).join(', ')
+  const preview = items.map((item) => `${item.quantity}× ${item.item_name}`).join(', ')
   return (
-    <div className="served-request-row">
-      <p className="served-request-head"><strong>Table {table}</strong> · <span className="ticket">{request.request_number}</span> · {formatTime(request.created_at)} · {servedText(request)}</p>
-      {items.length > 0 && (
-        <details className="served-items">
-          <summary>
-            <span className="served-items-count">{items.length} {items.length === 1 ? 'item' : 'items'}</span>
-            <span className="served-items-preview">{preview}</span>
-          </summary>
+    <li>
+      <details className="served-row">
+        <summary>
+          <time className="served-when" dateTime={request.created_at}>{formatTime(request.created_at)}</time>
+          <span className="served-table">Table {table}</span>
+          <span className="served-preview">{preview || 'No items'}</span>
+          <span className="served-took">{servedIn(request)}</span>
+        </summary>
+        <div className="served-detail">
+          <p className="served-meta">
+            <span className="ticket">{request.request_number}</span>
+            <span> · Sent {formatTime(request.created_at)}</span>
+            {request.served_at && <span> · Served {formatTime(request.served_at)}</span>}
+          </p>
           <ItemList items={items} />
-        </details>
-      )}
-    </div>
+          {request.note && <p className="ticket-note"><strong>Note:</strong> {request.note}</p>}
+        </div>
+      </details>
+    </li>
   )
 }
 
@@ -71,6 +90,8 @@ export default function RequestQueue() {
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
   const [busyId, setBusyId] = useState(null)
+  const [busyGroup, setBusyGroup] = useState(null)
+  const [showAllServed, setShowAllServed] = useState(false)
   const [live, setLive] = useState(false)
   const [now, setNow] = useState(() => Date.now())
 
@@ -121,13 +142,34 @@ export default function RequestQueue() {
     load()
   }
 
+  // Moves every request in one group forward together, for a table that sent several in a row.
+  async function advanceAll(group) {
+    const next = NEXT[group.status]
+    if (next.status === 'served') {
+      const ok = await confirmDialog({
+        title: `Mark ${group.requests.length} requests served?`,
+        message: 'Guests see them as served right away.',
+        confirmLabel: 'Mark all served',
+        cancelLabel: 'Not yet',
+      })
+      if (!ok) return
+    }
+    setBusyGroup(group.status)
+    const results = await Promise.all(
+      group.requests.map((request) =>
+        supabase.rpc('advance_refill_request', { p_request_id: request.request_id, p_status: next.status })
+      )
+    )
+    setBusyGroup(null)
+    const failed = results.find((result) => result.error)
+    setActionError(failed ? failed.error.message : '')
+    load()
+  }
+
   const all = requests || []
-  const activeGroups = [
-    { status: 'sent', label: 'New' },
-    { status: 'accepted', label: 'Accepted' },
-    { status: 'ready', label: 'Ready' },
-  ].map((group) => ({ ...group, requests: all.filter((request) => request.status === group.status) })).filter((group) => group.requests.length > 0)
+  const activeGroups = GROUPS.map((group) => ({ ...group, requests: all.filter((request) => request.status === group.status) })).filter((group) => group.requests.length > 0)
   const served = all.filter((request) => request.status === 'served').reverse()
+  const shownServed = showAllServed ? served : served.slice(0, SERVED_SHOWN)
 
   return (
     <>
@@ -135,32 +177,40 @@ export default function RequestQueue() {
 
       {(actionError || error) && <Notice tone="warn" action={<button className="btn secondary small" type="button" onClick={load}>Try again</button>}>{actionError || error}</Notice>}
       {requests === null && !error && <p className="hint">Loading requests…</p>}
+      {requests && !error && activeGroups.length === 0 && <EmptyState>No open requests. New ones show up here as soon as a table sends one.</EmptyState>}
 
       {activeGroups.map((group) => (
         <section className="queue-group" key={group.status} aria-labelledby={`queue-${group.status}`}>
-          <h2 className="queue-group-heading" id={`queue-${group.status}`}>{group.label} <span>{group.requests.length}</span></h2>
+          <div className="queue-group-head">
+            <h2 className="queue-group-heading" id={`queue-${group.status}`}>{group.label} <span>{group.requests.length}</span></h2>
+            {group.requests.length > 1 && (
+              <button className="btn ghost small" type="button" disabled={busyGroup === group.status} onClick={() => advanceAll(group)}>
+                {busyGroup === group.status ? 'Saving…' : NEXT[group.status].bulk}
+              </button>
+            )}
+          </div>
           <div className="request-grid">
             {group.requests.map((request) => {
               const next = NEXT[request.status]
               const waited = Math.max(0, Math.floor((now - new Date(request.created_at).getTime()) / 60000))
               const late = request.status === 'sent' && waited >= LATE_MINUTES
               const items = request.request_items || []
+              const busy = busyId === request.request_id || busyGroup === group.status
               return (
                 <RecordCard
                   key={request.request_id}
-                  className={`request-ticket ${late ? 'late' : ''}`}
+                  className={`request-ticket ${late ? 'late' : ''}`.trim()}
                   title={`Table ${request.restaurant_tables?.table_number ?? '—'}`}
-                  status={<StatusChip status={request.status}>{STATUS_LABEL[request.status]}</StatusChip>}
-                  subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span></>}
+                  status={<span className="ticket request-age">{late ? 'Waiting ' : ''}{formatDuration(waited)}</span>}
+                  subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span><span> · {plural(totalQuantity(items), 'item', 'items')}</span></>}
                   actions={next ? (
-                    <button className="btn full" type="button" disabled={busyId === request.request_id} onClick={() => advance(request)}>
+                    <button className="btn full" type="button" disabled={busy} onClick={() => advance(request)}>
                       {busyId === request.request_id ? 'Saving…' : next.label}
                     </button>
                   ) : undefined}
                 >
-                  {late && <p className="request-waiting">Waiting {formatDuration(waited)}</p>}
                   <ItemList items={items} limit={TICKET_ITEM_LIMIT} />
-                  {request.note && <p className="ticket-note">{request.note}</p>}
+                  {request.note && <p className="ticket-note"><strong>Note:</strong> {request.note}</p>}
                 </RecordCard>
               )
             })}
@@ -171,7 +221,13 @@ export default function RequestQueue() {
       {served.length > 0 && (
         <section className="served-group" aria-labelledby="queue-served">
           <h2 className="queue-group-heading" id="queue-served">Served in the last {SERVED_HOURS} hours <span>{served.length}</span></h2>
-          <div className="served-list">{served.map((request) => <ServedRow key={request.request_id} request={request} items={request.request_items || []} />)}</div>
+          <div className="served-head" aria-hidden="true"><span>Sent</span><span>Table</span><span>Order</span><span>Served in</span></div>
+          <ul className="served-list">{shownServed.map((request) => <ServedRow key={request.request_id} request={request} items={request.request_items || []} />)}</ul>
+          {served.length > SERVED_SHOWN && (
+            <button className="btn ghost small served-toggle" type="button" aria-expanded={showAllServed} onClick={() => setShowAllServed((value) => !value)}>
+              {showAllServed ? 'Show fewer' : `Show all ${served.length}`}
+            </button>
+          )}
         </section>
       )}
     </>

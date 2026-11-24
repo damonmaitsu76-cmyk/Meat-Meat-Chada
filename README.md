@@ -19,7 +19,7 @@ Other scripts: `npm run lint`, `npm run build`, `npm run preview`.
 
 ## Set up the database
 
-In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 12:
+In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 01 to 13:
 
 1. `01_schema.sql` – tables, security rules, and functions
 2. `02_cron.sql` – the every-minute task that releases late reservations (needs the `pg_cron` extension)
@@ -33,8 +33,11 @@ In the Supabase SQL Editor, run the files in `supabase/sql` in filename order, 0
 10. `10_samgyup_menu.sql` – a starter samgyupsal menu: more meats, sides, drinks, and add-ons (needs 09)
 11. `11_phone_validation.sql` – reservations only accept a Philippine mobile number (09XXXXXXXXX)
 12. `12_state_machine_fixes.sql` – unanswered reservation requests expire, guests can be seated at another table, safer table status changes, no duplicate requests when a tap is retried, and the last manager account cannot be removed
+13. `13_bulk_orders_and_auto_release.sql` – one table request can hold up to 100 different dishes (it was 30), and tables free themselves: once a party is past the time slot, everything it ordered is served, and nothing new was requested for 20 minutes (Settings, 0 turns it off)
 
-Already running an older version? Run only `12_state_machine_fixes.sql`, and run it **before** you deploy the new front end (the new QR menu sends an extra field that the old database function does not know). The rules behind it are written down in `docs/STATE_MACHINES.md`.
+Already running an older version? Run `12_state_machine_fixes.sql` and then `13_bulk_orders_and_auto_release.sql`, and run them **before** you deploy the new front end (the new QR menu sends an extra field that the old database function does not know). The rules behind them are written down in `docs/STATE_MACHINES.md`.
+
+If the QR menu says "Could not find the function public.submit_refill_request", the database is missing those files: run 12, then 13, in that order.
 
 ## Deploy the account function
 
