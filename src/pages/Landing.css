@@ -1,7 +1,8 @@
 /* Landing page. Mobile first.
-   Phone: the shop sign fills the first screen, a red sheet slides up over it with the title and the one
-   action, and the dining room follows below. Desktop: copy and dining room on the left, the sign on the right.
-   Colours come from tokens.css only. Motion runs once on load. */
+   One charcoal order ticket on a chili red ground: the sign, the title and the one action, with the facts on a
+   tear-off stub cut by a dashed perforation. The dining room follows as a plain photo.
+   Phone: everything stacks. 720px: sign beside the title, the stub runs along the bottom.
+   1200px: sign | title and action | stub, with the perforation running down. Colours come from tokens.css only. */
 
 /* Condensed + heavy cut of the brand font, used on this page only. */
 @font-face {
@@ -15,47 +16,43 @@
 }
 
 .landing {
-  --gutter: clamp(20px, 5vw, 64px);
   --display: 'Chada Display', var(--font-display);
   display: grid;
-  grid-template-rows: 1fr auto;
+  align-content: start;
+  gap: var(--s3);
   min-height: 100vh;
   min-height: 100svh;
+  padding: var(--s4) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom, 0px));
   background: var(--brand);
   color: var(--bg);
   overflow-x: clip;
 }
 .landing :focus-visible { outline-color: var(--white); }
 
-/* ---------- phone: photo on top, red sheet over its lower edge ---------- */
-.landing-hero { display: flex; flex-direction: column; min-height: 100vh; min-height: 100svh; }
-.landing-photo { position: relative; flex: 1 1 auto; min-height: 240px; margin: 0; background: var(--charcoal); }
-.landing-sign { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 84%; }
-
-.landing-copy {
+/* ---------- the ticket ---------- */
+.landing-ticket {
   position: relative;
-  margin-top: calc(var(--s6) * -1);
-  padding: var(--s5) var(--gutter) var(--s6);
-  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
-  background: var(--brand);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  border-radius: var(--r-sheet);
+  background: var(--charcoal);
+  color: var(--bg);
+  overflow: hidden;
 }
-.landing-brand { display: flex; align-items: center; gap: var(--s3); margin: 0 0 var(--s4); }
-.landing-emblem { flex: 0 0 auto; width: 52px; height: 52px; border-radius: var(--r-pill); background: var(--charcoal); }
-.landing-kicker {
-  margin: 0;
-  padding: var(--s1) var(--s3);
-  border: 1px dashed currentColor;
-  border-radius: var(--r-chip);
-  font-size: var(--fs-meta);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
+
+.landing-sign { position: relative; margin: 0; aspect-ratio: 4 / 3.3; background: var(--charcoal); }
+.landing-sign img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 74%; }
+
+.landing-main { display: grid; gap: var(--s6); padding: var(--s6) var(--s5) var(--s8); }
 .landing-title {
-  margin: 0 0 var(--s5);
+  margin: 0;
   font-family: var(--display);
   font-weight: 800;
   font-stretch: 75%;
-  font-size: min(27.5vw, 9rem, 16svh);
+  font-size: min(24.5vw, 9rem);
   line-height: 0.84;
   letter-spacing: -0.03em;
 }
@@ -69,57 +66,105 @@
   min-height: 60px;
   padding: 0 var(--s10);
   border-radius: var(--r-ctrl);
-  background: var(--bg);
-  color: var(--charcoal);
+  background: var(--brand);
+  color: var(--white);
   font-size: var(--fs-row);
   font-weight: 700;
   text-decoration: none;
   transition: background var(--t-fast), transform var(--t-fast);
 }
-.landing-btn:hover { background: var(--white); }
+.landing-btn:hover { background: var(--brand-dark); }
 .landing-btn:active { transform: scale(0.98); }
 .landing-link { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; color: var(--bg); font-weight: 600; text-underline-offset: 4px; }
 
-/* the dining room, a framed strip under the sheet */
-.landing-room { display: flex; margin: 0; padding: var(--s2) var(--gutter) var(--s8); }
-.landing-room img { display: block; width: 100%; height: auto; aspect-ratio: 1568 / 673; object-fit: cover; object-position: 60% 50%; border-radius: var(--r-sheet); background: var(--charcoal); }
+/* ---------- the stub: cut off by a perforation, with a notch at each end ---------- */
+.landing-stub {
+  position: relative;
+  display: grid;
+  margin: 0;
+  padding: var(--s2) var(--s5) var(--s3);
+  border-top: 2px dashed var(--control);
+}
+.landing-stub::before,
+.landing-stub::after {
+  content: '';
+  position: absolute;
+  top: -15px;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--r-pill);
+  background: var(--brand);
+}
+.landing-stub::before { left: -14px; }
+.landing-stub::after { right: -14px; }
+.landing-stub > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: var(--s3); align-items: baseline; padding: var(--s3) 0; }
+.landing-stub > div + div { border-top: 1px solid var(--ink-line); }
+.landing-stub dt { color: var(--neutral-line); font-size: var(--fs-meta); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.landing-stub dd { margin: 0; font-size: var(--fs-row); font-weight: 600; line-height: 1.25; }
 
-/* ---------- facts strip, cut like a ticket ---------- */
-.landing-facts { background: var(--charcoal); color: var(--bg); padding-bottom: env(safe-area-inset-bottom, 0px); }
-.landing-facts dl { display: grid; grid-template-columns: minmax(0, 1fr); margin: 0; }
-.landing-facts div { display: grid; align-content: start; gap: var(--s1); padding: var(--s4) var(--gutter); }
-.landing-facts div + div { border-top: 1px dashed var(--control); }
-.landing-facts dt { color: var(--neutral-line); font-size: var(--fs-meta); letter-spacing: 0.08em; text-transform: uppercase; }
-.landing-facts dd { margin: 0; font-family: var(--display); font-size: var(--fs-title); font-weight: 600; line-height: 1.2; }
+/* ---------- the dining room: a proper 4:3 crop on phones, never a squashed strip ---------- */
+.landing-room {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--r-sheet);
+  background: var(--charcoal);
+  overflow: hidden;
+}
+.landing-room img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 1% 55%; }
 
-/* ---------- one-time entrance ---------- */
-.landing-rise { animation: landing-rise 640ms cubic-bezier(0.2, 0.8, 0.25, 1) both; animation-delay: calc(80ms + var(--i, 0) * 110ms); }
-@keyframes landing-rise { from { opacity: 0; transform: translateY(var(--s6)); } }
+/* ---------- 720px: sign beside the title, the stub along the bottom ---------- */
+@media (min-width: 720px) {
+  .landing { gap: var(--s4); padding: var(--s8) var(--s8) calc(var(--s8) + env(safe-area-inset-bottom, 0px)); }
 
-/* ---------- desktop: copy and room on the left, the sign as a tall framed print on the right ---------- */
-@media (min-width: 860px) {
-  .landing-main {
-    display: grid;
-    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-    grid-template-rows: auto minmax(180px, 1fr);
-    grid-template-areas: 'copy photo' 'room photo';
-    column-gap: clamp(var(--s6), 4vw, 64px);
-    padding: var(--s12) var(--gutter) var(--s8);
-  }
-  .landing-hero { display: contents; }
-  .landing-copy { grid-area: copy; margin: 0; padding: 0; border-radius: 0; background: none; }
-  .landing-photo { grid-area: photo; min-height: 480px; overflow: hidden; border-radius: var(--r-sheet); }
-  .landing-sign { object-position: 50% 70%; }
-  .landing-brand { margin-bottom: var(--s5); }
-  .landing-emblem { width: 64px; height: 64px; }
-  .landing-title { margin-bottom: var(--s6); font-size: min(11vw, 19svh, 12.5rem); }
+  .landing-ticket { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); }
+  .landing-sign { grid-column: 1; grid-row: 1; aspect-ratio: auto; min-height: 380px; }
+  .landing-main { grid-column: 2; grid-row: 1; align-content: space-between; padding: var(--s10); }
+  .landing-title { font-size: min(calc((100vw - 64px) * 0.17 - 18px), 11rem); line-height: 0.82; }
   .landing-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s6); }
-  .landing-btn { min-width: 280px; }
+  .landing-btn { min-width: 240px; }
   .landing-link { justify-content: flex-start; white-space: nowrap; }
-  /* The image is taken out of the flow so it fills whatever height is left under the copy. */
-  .landing-room { position: relative; grid-area: room; min-height: 0; margin-top: var(--s8); padding: 0; }
-  .landing-room img { position: absolute; inset: 0; height: 100%; aspect-ratio: auto; }
-  .landing-facts dl { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .landing-facts div { padding: var(--s5) var(--gutter); }
-  .landing-facts div + div { border-top: 0; border-left: 1px dashed var(--control); }
+
+  .landing-stub {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: var(--s6);
+    padding: var(--s3) var(--s8) var(--s5);
+  }
+  .landing-stub > div { grid-template-columns: minmax(0, 1fr); align-content: start; gap: var(--s1); padding: var(--s3) 0 0; }
+  .landing-stub > div + div { border-top: 0; }
+  .landing-stub dd { font-family: var(--display); font-size: var(--fs-title); line-height: 1.15; }
+
+  .landing-room { aspect-ratio: 1568 / 673; }
+  .landing-room img { object-position: 50% 50%; }
+}
+
+/* ---------- 1200px: sign | title and action | stub, the perforation runs down ---------- */
+@media (min-width: 1200px) {
+  .landing { padding: var(--s8); }
+
+  .landing-ticket { grid-template-columns: 410px minmax(0, 1fr) 290px; min-height: 560px; }
+  .landing-main { padding: var(--s12); }
+  /* Sized from the room left for the title, and capped so a very wide screen does not stretch it. */
+  .landing-title { font-size: min(calc((min(100vw, 1504px) - 860px) / 3.55), 11rem); }
+  .landing-btn { min-width: 270px; }
+
+  .landing-stub {
+    grid-column: 3;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr);
+    align-content: center;
+    padding: var(--s8);
+    border-top: 0;
+    border-left: 2px dashed var(--control);
+  }
+  .landing-stub::before,
+  .landing-stub::after { left: -15px; right: auto; }
+  .landing-stub::before { top: -14px; }
+  .landing-stub::after { top: auto; bottom: -14px; }
+  .landing-stub > div { padding: var(--s5) 0; }
+  .landing-stub > div + div { border-top: 1px solid var(--ink-line); }
+  .landing-stub dd { font-size: 1.5rem; }
 }
