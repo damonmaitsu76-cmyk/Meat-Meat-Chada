@@ -5,6 +5,7 @@ import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
 import { Field, Notice, PageToolbar, StatusChip } from '../../components/ui.jsx'
 import { getSiteBaseUrl, isLocalAddress } from '../../lib/siteUrl.js'
+import { newToken } from '../../lib/token.js'
 import './TableManagement.css'
 
 const QR_OPTIONS = { width: 600, margin: 2, errorCorrectionLevel: 'M' }
@@ -66,7 +67,7 @@ function LocalQrNotice({ hostname }) {
   return <Notice tone="warn">These QR codes point to {hostname}, which only works on this computer. Open the live site and print them from there.</Notice>
 }
 
-function QrModal({ table, baseUrl, localHostname, onClose, onPrint }) {
+function QrModal({ table, baseUrl, localHostname, onClose, onPrint, onReset }) {
   const url = `${baseUrl}/menu/${table.qr_token}`
   const [result, setResult] = useState(null) // { url, img }
 
@@ -101,6 +102,9 @@ function QrModal({ table, baseUrl, localHostname, onClose, onPrint }) {
             </a>
             <button className="btn secondary" onClick={() => onPrint(table)}>
               Print
+            </button>
+            <button className="btn danger" type="button" onClick={() => onReset(table)}>
+              Reset QR code
             </button>
           </div>
         )}
@@ -251,6 +255,33 @@ export default function TableManagement() {
     load()
   }
 
+  // Use after a table's code was copied or abused: the old printed code stops working at once.
+  async function resetQr(t) {
+    const ok = await confirmDialog({
+      title: `Reset the QR code for Table ${t.table_number}?`,
+      message: 'The printed code stops working right away. Print the new one and replace the sticker.',
+      confirmLabel: 'Reset QR code',
+      danger: true,
+    })
+    if (!ok) return
+    setBusyId(t.table_id)
+    setInfo('')
+    setActionError('')
+    const { data, error } = await supabase
+      .from('restaurant_tables')
+      .update({ qr_token: newToken() })
+      .eq('table_id', t.table_id)
+      .select('table_id, qr_token')
+    setBusyId(null)
+    if (error || data.length === 0) {
+      setActionError(error ? friendly(error) : 'The change was not saved. Check your account role.')
+      return
+    }
+    setInfo(`Table ${t.table_number} has a new QR code. Print it and replace the old sticker.`)
+    setQrTable((current) => (current?.table_id === t.table_id ? { ...current, qr_token: data[0].qr_token } : current))
+    load()
+  }
+
   async function printTables(list) {
     if (list.length === 0) {
       setActionError('There are no tables to print.')
@@ -345,6 +376,7 @@ export default function TableManagement() {
             localHostname={localHostname}
             onClose={() => setQrTable(null)}
             onPrint={(t) => printTables([t])}
+            onReset={resetQr}
           />
         )}
       </div>

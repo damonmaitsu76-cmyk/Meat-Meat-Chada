@@ -10,6 +10,8 @@ import './Reports.css'
 
 const MAX_DAYS = 92
 const LOG_LIMIT = 100
+// A cell that starts with = + - or @ would run as a formula when the CSV is opened in Excel.
+const SAFE_CSV = { escapeFormulae: true }
 
 function daysBetween(a, b) {
   const [ay, am, ad] = a.split('-').map(Number)
@@ -81,6 +83,7 @@ function describe(log) {
     case 'arrive:reservation': return <>Seated {ticket(details.reservation_code)} at Table {details.table_number}</>
     case 'auto_cancel:reservation': return <>Released {ticket(details.reservation_code)} after the grace period (no-show)</>
     case 'auto_end:dining_session': return `Freed Table ${details.table_number} automatically after no new request for ${details.quiet_minutes} min`
+    case 'reject:refill_request': return <>Rejected request {ticket(details.request_number)} from Table {details.table_number}</>
     case 'import:menu_items':
     case 'import:restaurant_tables': return `Imported ${log.record_type === 'menu_items' ? 'menu items' : 'tables'}: ${details.imported} saved, ${details.skipped} skipped, ${details.failed} failed`
     case 'update:menu_items': return `Edited dish ${details.item_name}`
@@ -147,7 +150,7 @@ export default function Reports() {
     const rows = daily.map((day) => ({ Date: day.day, 'Reservation requests': day.reservations, Arrived: day.arrived, 'No-shows': day.no_shows, 'Guests served': day.guests, 'Table requests': day.requests }))
     rows.push({ Date: 'Total', 'Reservation requests': sum('reservations'), Arrived: sum('arrived'), 'No-shows': sum('no_shows'), 'Guests served': sum('guests'), 'Table requests': sum('requests') })
     const summary = [['Booking-to-arrival rate', arrivalRate], ['Average time from sent to served (minutes)', requests.avg_serve_minutes ?? '']]
-    downloadText(`chada-report_${from}_to_${to}.csv`, `${Papa.unparse(rows)}\r\n\r\n${Papa.unparse(summary)}`)
+    downloadText(`chada-report_${from}_to_${to}.csv`, `${Papa.unparse(rows, SAFE_CSV)}\r\n\r\n${Papa.unparse(summary, SAFE_CSV)}`)
   }
 
   function applyPreset(preset) { setFrom(preset.from); setTo(preset.to) }

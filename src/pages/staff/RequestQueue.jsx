@@ -103,7 +103,7 @@ export default function RequestQueue() {
         'request_id, request_number, status, note, created_at, served_at, ' +
           'restaurant_tables(table_number), request_items(item_name, quantity)'
       )
-      .or(`status.neq.served,created_at.gte.${since}`)
+      .or(`status.in.(sent,accepted,ready),and(status.eq.served,created_at.gte.${since})`)
       .order('created_at', { ascending: true })
       .then(({ data, error: loadError }) => {
         if (loadError) setError(loadError.message)
@@ -139,6 +139,23 @@ export default function RequestQueue() {
     })
     setBusyId(null)
     setActionError(advanceError ? advanceError.message : '')
+    load()
+  }
+
+  // For a request that is not real (a prank, a wrong table). It leaves the queue and the reports.
+  async function reject(request) {
+    const ok = await confirmDialog({
+      title: `Reject ${request.request_number}?`,
+      message: 'The table sees this request as cancelled.',
+      confirmLabel: 'Reject request',
+      cancelLabel: 'Keep it',
+      danger: true,
+    })
+    if (!ok) return
+    setBusyId(request.request_id)
+    const { error: rejectError } = await supabase.rpc('cancel_refill_request', { p_request_id: request.request_id })
+    setBusyId(null)
+    setActionError(rejectError ? rejectError.message : '')
     load()
   }
 
@@ -204,9 +221,12 @@ export default function RequestQueue() {
                   status={<span className="ticket request-age">{late ? 'Waiting ' : ''}{formatDuration(waited)}</span>}
                   subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span><span> · {plural(totalQuantity(items), 'item', 'items')}</span></>}
                   actions={next ? (
-                    <button className="btn full" type="button" disabled={busy} onClick={() => advance(request)}>
-                      {busyId === request.request_id ? 'Saving…' : next.label}
-                    </button>
+                    <>
+                      <button className="btn full" type="button" disabled={busy} onClick={() => advance(request)}>
+                        {busyId === request.request_id ? 'Saving…' : next.label}
+                      </button>
+                      <button className="btn ghost full" type="button" disabled={busy} onClick={() => reject(request)}>Reject</button>
+                    </>
                   ) : undefined}
                 >
                   <ItemList items={items} limit={TICKET_ITEM_LIMIT} />

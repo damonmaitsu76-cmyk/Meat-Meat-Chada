@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { confirmDialog } from '../../components/dialogs.js'
 import { EmptyState, Notice, StatusChip, Stepper } from '../../components/ui.jsx'
 import { supabase } from '../../supabaseClient.js'
+import { friendlyError } from '../../lib/errors.js'
 import { newToken } from '../../lib/token.js'
 import { groupByCategory, orderAgain } from '../../lib/tray.js'
 import './QRMenu.css'
@@ -14,7 +15,7 @@ const CATEGORIES = [
   { key: 'add-on', label: 'Add-ons' },
 ]
 const STATUS_ORDER = ['sent', 'accepted', 'ready', 'served']
-const STATUS_LABELS = { sent: 'Sent', accepted: 'Accepted', ready: 'Ready', served: 'Served' }
+const STATUS_LABELS = { sent: 'Sent', accepted: 'Accepted', ready: 'Ready', served: 'Served', cancelled: 'Cancelled' }
 const MAX_QTY = 20
 const MAX_LINES = 100 // different dishes in one request; the database allows the same
 const POLL_MS = 4000
@@ -172,7 +173,7 @@ function StatusView({ qrToken, justSent, onOrderAgain }) {
       if (document.hidden) return
       const { data, error: requestError } = await supabase.rpc('get_table_requests', { p_qr_token: qrToken })
       if (cancelled) return
-      if (requestError) setError(requestError.message)
+      if (requestError) setError(friendlyError(requestError))
       else {
         setRequests(data)
         setError('')
@@ -212,7 +213,6 @@ function StatusView({ qrToken, justSent, onOrderAgain }) {
               <ul className="request-items">
                 {request.items.map((item) => <li key={item.item_name}><span>{item.quantity}</span> × {item.item_name}</li>)}
               </ul>
-              {request.note && <p className="request-note">Note for staff: {request.note}</p>}
               <p className="request-time">Sent at {formatTime(request.created_at)}</p>
               {request.items.length > 0 && (
                 <div className="ticket-actions">
@@ -247,7 +247,7 @@ export default function QRMenu() {
   const loadMenu = useCallback(() => {
     if (!validToken) return Promise.resolve()
     return supabase.rpc('get_menu', { p_qr_token: qrToken }).then(({ data, error }) => {
-      if (error) setFetchError(error.message)
+      if (error) setFetchError(friendlyError(error))
       else {
         setMenu(data)
         setFetchError('')
@@ -348,7 +348,7 @@ export default function QRMenu() {
     })
     setSending(false)
     if (error) {
-      setSendError(error.message)
+      setSendError(friendlyError(error))
       loadMenu()
       return
     }

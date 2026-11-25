@@ -3,10 +3,11 @@ import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
 import { Field, Segmented, StatusChip, Stepper } from '../../components/ui.jsx'
 import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
+import { friendlyError } from '../../lib/errors.js'
 import { normalizePhone } from '../../lib/phone.js'
 import './Reserve.css'
 
-const STORAGE_KEY = 'chada_reservation_code'
+const STORAGE_KEY = 'chada_reservation'
 const POLL_MS = 5000
 const MAX_DAYS_AHEAD = 60
 
@@ -19,13 +20,18 @@ const STATUS = {
   auto_cancelled: { label: 'Released', text: 'You did not arrive in time, so the table was released.' },
 }
 
-function readStoredCode() {
-  try { return localStorage.getItem(STORAGE_KEY) || '' } catch { return '' }
+// What this phone remembers about its reservation: the ID and the last 4 digits of the phone
+// number. The database needs both to show the reservation or cancel it.
+function readStored() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
+    return saved && /^CH-[A-Z0-9]{6}$/.test(saved.code) && /^\d{4}$/.test(saved.last4) ? saved : null
+  } catch { return null }
 }
 
-function storeCode(code) {
+function store(reservation) {
   try {
-    if (code) localStorage.setItem(STORAGE_KEY, code)
+    if (reservation) localStorage.setItem(STORAGE_KEY, JSON.stringify(reservation))
     else localStorage.removeItem(STORAGE_KEY)
   } catch {
     // The current page still works when private browsing blocks storage.
@@ -58,7 +64,7 @@ function ReservationForm({ onCreated }) {
     let cancelled = false
     supabase.rpc('get_open_slots', { p_date: date, p_guests: guests }).then(({ data, error: slotError }) => {
       if (cancelled) return
-      setSlotResult({ key: slotsKey, slots: data || [], error: slotError ? slotError.message : '' })
+      setSlotResult({ key: slotsKey, slots: data || [], error: friendlyError(slotError) })
     })
     return () => { cancelled = true }
   }, [slotsKey, date, guests])
@@ -109,11 +115,11 @@ function ReservationForm({ onCreated }) {
     })
     setSubmitting(false)
     if (submitError) {
-      setError(submitError.message)
+      setError(friendlyError(submitError))
       setTick((value) => value + 1)
       return
     }
-    onCreated(data.reservation_code)
+    onCreated({ code: data.reservation_code, last4: phone.slice(-4) })
   }
 
   return (
@@ -194,6 +200,7 @@ function ReservationForm({ onCreated }) {
 
       {noOpenSlots && <p className="hint">No tables are open for this party size on this date. Try another date.</p>}
       {error && <p className="error" role="alert">{error}</p>}
+      <p className="hint">We use your name and number only to confirm your booking, and we remove your number from our records after 60 days.</p>
       <button className="btn full" type="submit" disabled={submitting}>
         {submitting ? 'Sending…' : 'Send reservation request'}
       </button>
@@ -203,6 +210,7 @@ function ReservationForm({ onCreated }) {
 
 function LookupForm({ onFound }) {
   const [value, setValue] = useState('')
+  const [last4, setLast4] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -213,13 +221,17 @@ function LookupForm({ onFound }) {
       setError('Enter a 6-character reservation ID, such as CH-XXXXXX.')
       return
     }
+    if (!/^\d{4}$/.test(last4)) {
+      setError('Enter the last 4 digits of the phone number you booked with.')
+      return
+    }
     setBusy(true)
     setError('')
-    const { data, error: lookupError } = await supabase.rpc('get_reservation', { p_code: code })
+    const { data, error: lookupError } = await supabase.rpc('get_reservation', { p_code: code, p_phone_last4: last4 })
     setBusy(false)
-    if (lookupError) setError(lookupError.message)
-    else if (!data) setError('No reservation found with that ID.')
-    else onFound(code)
+    if (lookupError) setError(friendlyError(lookupError))
+    else if (!data) setError('No reservation found. Check the ID and the last 4 digits of your phone number.')
+    else onFound({ code, last4 })
   }
 
   return (
@@ -227,6 +239,7 @@ function LookupForm({ onFound }) {
       <h2>Have a reservation ID?</h2>
       <div className="lookup">
         <label className="field lookup-field" htmlFor="lookup-code">
+          <span>Reservation ID</span>
           <input
             id="lookup-code"
             className="ticket"
@@ -241,7 +254,20 @@ function LookupForm({ onFound }) {
             onChange={(event) => { setValue(event.target.value); setError('') }}
           />
         </label>
-        <button className="btn secondary" type="submit" disabled={busy || !value.trim()}>
+        <label className="field lookup-field" htmlFor="lookup-phone">
+          <span>Last 4 digits of your phone</span>
+          <input
+            id="lookup-phone"
+            type="text"
+            inputMode="numeric"
+            placeholder="4567"
+            autoComplete="off"
+            maxLength={4}
+            value={last4}
+            onChange={(event) => { setLast4(event.target.value.replace(/\D/g, '')); setError('') }}
+          />
+        </label>
+        <button className="btn secondary" type="submit" disabled={busy || !value.trim() || last4.length !== 4}>
           {busy ? 'Checking…' : 'Check status'}
         </button>
       </div>
@@ -250,15 +276,15 @@ function LookupForm({ onFound }) {
   )
 }
 
-function StatusCard({ code, onReset }) {
+function StatusCard({ code, last4, onReset }) {
   const [state, setState] = useState(null)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const load = useCallback(async () => {
-    const { data, error: loadError } = await supabase.rpc('get_reservation', { p_code: code })
-    if (loadError) setError(loadError.message)
+    const { data, error: loadError } = await supabase.rpc('get_reservation', { p_code: code, p_phone_last4: last4 })
+    if (loadError) setError(friendlyError(loadError))
     else { setState({ code, data }); setError('') }
-  }, [code])
+  }, [code, last4])
 
   useEffect(() => {
     const initialLoad = setTimeout(load, 0)
@@ -277,9 +303,9 @@ function StatusCard({ code, onReset }) {
     if (!ok) return
     setBusy(true)
     setError('')
-    const { error: cancelError } = await supabase.rpc('cancel_reservation', { p_code: code })
+    const { error: cancelError } = await supabase.rpc('cancel_reservation', { p_code: code, p_phone_last4: last4 })
     setBusy(false)
-    if (cancelError) setError(cancelError.message)
+    if (cancelError) setError(friendlyError(cancelError))
     await load()
   }
 
@@ -317,14 +343,14 @@ function StatusCard({ code, onReset }) {
 }
 
 export default function Reserve() {
-  const [code, setCode] = useState(readStoredCode)
-  function show(next) { storeCode(next); setCode(next) }
+  const [saved, setSaved] = useState(readStored)
+  function show(next) { store(next); setSaved(next) }
 
   return (
     <div className="app reserve">
       <header className="topbar"><span className="brand">Samgyup Chada</span></header>
       <main className="content">
-        {code ? <><h1 className="sr-only">Reservation status</h1><StatusCard code={code} onReset={() => show('')} /></> : <><ReservationForm onCreated={show} /><hr className="divider" /><LookupForm onFound={show} /></>}
+        {saved ? <><h1 className="sr-only">Reservation status</h1><StatusCard code={saved.code} last4={saved.last4} onReset={() => show(null)} /></> : <><ReservationForm onCreated={show} /><hr className="divider" /><LookupForm onFound={show} /></>}
       </main>
     </div>
   )

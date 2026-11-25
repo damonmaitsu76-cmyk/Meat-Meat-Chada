@@ -48,6 +48,12 @@ With the Supabase CLI installed and the project linked:
 supabase functions deploy manage-staff
 ```
 
+## Hardening
+
+Run `supabase/sql/14_hardening.sql` after 13 (SQL Editor, same as the others), then deploy the matching front end straight away: the reservation lookup and cancel functions now take the last 4 digits of the guest's phone number. It adds a 20-second cooldown per table, a Reject action for table requests, a cap on pending online reservations (`max_pending_reservations`, 40), and masks reservation phone numbers after `contact_retention_days` (60) days. If you change that number, change "60 days" in the reservation form notice too.
+
+`public/_headers` adds security headers on Cloudflare Pages. Its Content-Security-Policy is report-only: click through every screen, and if the browser console shows no "Refused to..." lines, rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and redeploy.
+
 ## Roles
 
 | Role | Can do |

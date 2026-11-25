@@ -3,10 +3,10 @@
 .reserve h2 { margin: 0 0 var(--s2); font-size: var(--fs-title); }
 .reserve .field-row { align-items: start; gap: var(--s3); }
 .reserve .divider { margin: var(--s6) 0 var(--s4); border: 0; border-top: 1px solid var(--line); }
-.reserve .lookup { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--s2); align-items: end; }
+.reserve .lookup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); align-items: start; }
 .lookup-field { min-width: 0; margin-bottom: 0; }
 .lookup-field input { text-transform: uppercase; }
-.lookup .btn { min-width: 120px; }
+.lookup .btn { grid-column: 1 / -1; width: 100%; }
 .time-field { min-width: 0; margin: 0 0 var(--s4); padding: 0; border: 0; }
 .time-field legend { margin-bottom: var(--s2); color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; }
 .time-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); align-content: start; gap: var(--s2); max-height: 168px; margin-top: var(--s3); overflow-y: auto; }

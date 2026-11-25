@@ -1,0 +1,14 @@
+# Cloudflare Pages reads this file from the build output; Vite copies public/ into dist/.
+#
+# The Content-Security-Policy line is "Report-Only" on purpose: it only logs problems in the
+# browser console and breaks nothing. After you have clicked through every screen and seen no
+# "Refused to ..." messages, delete "-Report-Only" from its name and redeploy.
+#
+# https://*.supabase.co is broad on purpose so this file needs no editing.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  X-Frame-Options: DENY
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' data: blob:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'

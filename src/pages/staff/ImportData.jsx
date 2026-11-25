@@ -139,7 +139,7 @@ export default function ImportData() {
     const columns = [...new Set([...outcome.fields, 'error'])]
     const rows = outcome.failed.map((f) => ({ ...f.data, error: f.reason }))
     const base = outcome.fileName.replace(/\.csv$/i, '')
-    downloadText(`${base}_failed_rows.csv`, Papa.unparse(rows, { columns }))
+    downloadText(`${base}_failed_rows.csv`, Papa.unparse(rows, { columns, escapeFormulae: true }))
   }
 
   const problems = outcome

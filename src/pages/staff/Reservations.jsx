@@ -22,8 +22,21 @@ const NOTICE_HOURS = 2
 const SAFETY_POLL_MS = 30000
 let channelSeq = 0
 
-function phoneHref(contact) {
-  return `tel:${String(contact || '').replace(/[^+0-9*#,;]/g, '')}`
+// Opens the phone's messaging app. For a pending request the text is already written, so staff
+// check that a real person is behind the booking before they approve it.
+function smsHref(reservation, today) {
+  const number = String(reservation.contact_number || '').replace(/[^+0-9]/g, '')
+  if (reservation.status !== 'pending') return `sms:${number}`
+  const when = `${dayLabel(reservation.reservation_date, today)} at ${fmtTime(reservation.reservation_time)}`
+  const text = `Hi ${displayName(reservation.customer_name)}, this is Samgyup Chada. Please reply YES to confirm your table for ${reservation.guest_count} (${when}).`
+  return `sms:${number}?&body=${encodeURIComponent(text)}`
+}
+
+// A phone number that was masked after the retention period has no digits and shows nothing.
+function ContactLink({ reservation, today, className }) {
+  const number = String(reservation.contact_number || '')
+  if (!/\d/.test(number)) return null
+  return <a className={className} href={smsHref(reservation, today)}>{reservation.status === 'pending' ? `Text ${number} to confirm` : number}</a>
 }
 
 export default function Reservations() {
@@ -183,9 +196,9 @@ export default function Reservations() {
     const tableNo = reservation.restaurant_tables?.table_number
     const name = displayName(reservation.customer_name)
     const when = `${dayLabel(reservation.reservation_date, today)} ${fmtTime(reservation.reservation_time)}`
-    const guest = <span>{name}{reservation.contact_number && <a className="sub contact-link" href={phoneHref(reservation.contact_number)}>{reservation.contact_number}</a>}</span>
+    const guest = <span>{name}<ContactLink reservation={reservation} today={today} className="sub contact-link" /></span>
     const status = <StatusChip status={reservation.status}>{STATUS_LABEL[reservation.status]}</StatusChip>
-    const phoneMeta = <><span>{tableNo ? `Table ${tableNo}` : 'Auto table'} · </span><span className="ticket">{reservation.reservation_code}</span>{reservation.contact_number && <a className="contact-link" href={phoneHref(reservation.contact_number)}>{reservation.contact_number}</a>}</>
+    const phoneMeta = <><span>{tableNo ? `Table ${tableNo}` : 'Auto table'} · </span><span className="ticket">{reservation.reservation_code}</span><ContactLink reservation={reservation} today={today} className="contact-link" /></>
     const card = (
       <RecordCard
         className={late ? 'reservation-late' : ''}
