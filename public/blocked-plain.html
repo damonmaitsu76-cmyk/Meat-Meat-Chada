@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#1d1b1a">
+  <title>Access blocked | Samgyup Chada</title>
+  <!--
+    Same page as blocked.html without the Cloudflare request code. Use it as the target of a
+    Redirect rule on the Free plan (see "Branded blocked page" in the README).
+  -->
+  <style>
+    :root { color-scheme: light; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px 16px;
+      background: #f6f5f3;
+      color: #25201e;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+    .ticket {
+      width: 100%;
+      max-width: 440px;
+      overflow: hidden;
+      background: #ffffff;
+      border: 1px solid #e3dfda;
+      border-radius: 14px;
+    }
+    .bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 56px;
+      padding: 12px 20px;
+      background: #1d1b1a;
+      color: #ffffff;
+    }
+    .brand { font-weight: 700; font-size: 1.0625rem; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+    .code { color: #ebe8e4; font-size: 0.875rem; font-weight: 600; }
+    .body { padding: 24px 20px 20px; }
+    h1 { margin: 0 0 12px; font-size: 1.75rem; line-height: 1.15; text-wrap: balance; }
+    p { margin: 0 0 12px; color: #5f5854; }
+    p:last-child { margin-bottom: 0; }
+    .action { padding: 20px; border-top: 1px solid #e3dfda; }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 0 16px;
+      border-radius: 10px;
+      background: #b3261e;
+      color: #ffffff;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .btn:hover { background: #8c1d17; }
+    .btn:focus-visible { outline: 3px solid #b3261e; outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <main class="ticket" aria-labelledby="title">
+    <header class="bar">
+      <span class="brand">Samgyup Chada</span>
+      <span class="code mono">403</span>
+    </header>
+    <div class="body">
+      <h1 id="title">This page is blocked</h1>
+      <p>Our security rules stopped this request before it reached the site. Guests do not need this page: the menu and reservations are on the main address.</p>
+      <p>If you think this is a mistake, tell the staff.</p>
+    </div>
+    <div class="action">
+      <a class="btn" href="https://meat-me-at-chada.tech/">Go to meat-me-at-chada.tech</a>
+    </div>
+  </main>
+</body>
+</html>
