@@ -1,0 +1,44 @@
+/* Address-retired page. One order ticket on paper: charcoal bar, message, tear-off stub, one action. */
+.blocked {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--s6) var(--s4);
+  background: var(--bg);
+}
+.blocked-ticket {
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+}
+.blocked-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  min-height: 56px;
+  padding: var(--s3) var(--s5);
+  background: var(--charcoal);
+  color: var(--white);
+}
+.blocked-brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-row); }
+.blocked-code { color: var(--ink-soft); font-size: var(--fs-sm); font-weight: 600; }
+.blocked-body { padding: var(--s6) var(--s5) var(--s5); }
+.blocked-body h1 { margin: 0 0 var(--s3); font-size: var(--fs-title-lg); line-height: 1.15; text-wrap: balance; }
+.blocked-body p { margin: 0 0 var(--s3); color: var(--text-2); }
+.blocked-body p:last-child { margin-bottom: 0; }
+.blocked-stub {
+  display: grid;
+  gap: var(--s3);
+  margin: 0;
+  padding: var(--s4) var(--s5);
+  border-top: 1px dashed var(--control);
+  background: var(--bg);
+}
+.blocked-stub div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--s1) var(--s3); }
+.blocked-stub dt { color: var(--text-2); font-size: var(--fs-meta); font-weight: 600; }
+.blocked-stub dd { margin: 0; font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; text-align: right; }
+.blocked-action { padding: var(--s5); border-top: 1px solid var(--line); }

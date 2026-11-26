@@ -11,6 +11,12 @@
 //
 // If either one is missing (local dev, a pages.dev preview), nothing is split or redirected
 // and every page works on every address, as before.
+//
+// When both are set, the app only runs on the guest address, the staff address, www of the
+// guest address and localhost. Any other address (the old *.workers.dev address, a preview
+// URL) shows the "address retired" page from src/pages/Blocked.jsx and loads nothing else.
+// That is a courtesy for visitors, not a lock: turn the old addresses off in Cloudflare too
+// (see "Turn off the old addresses" in the README).
 // VITE_PUBLIC_SITE_URL is also what src/lib/siteUrl.js puts inside the printed QR codes, so
 // QR codes always point at the guest address, even when they are printed from the staff one.
 
@@ -33,9 +39,18 @@ const staffHostname = hostnameOf(staffUrl)
 // The split only switches on when both addresses are valid and different.
 export const splitEnabled = Boolean(siteHostname && staffHostname && siteHostname !== staffHostname)
 
-// 'staff' on the staff address, 'guest' on any other address (including www),
-// or 'both' when the split is off.
-export function currentSide() {
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '[::1]'])
+
+// 'staff' on the staff address, 'guest' on the guest address (also www and localhost),
+// 'blocked' on any other address, or 'both' when the split is off.
+export function sideForHost(hostname) {
   if (!splitEnabled) return 'both'
-  return window.location.hostname.toLowerCase() === staffHostname ? 'staff' : 'guest'
+  const host = String(hostname ?? '').toLowerCase()
+  if (host === staffHostname) return 'staff'
+  if (host === siteHostname || host === `www.${siteHostname}` || LOCAL_HOSTNAMES.has(host)) return 'guest'
+  return 'blocked'
+}
+
+export function currentSide() {
+  return sideForHost(window.location.hostname)
 }

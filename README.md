@@ -54,6 +54,35 @@ Run `supabase/sql/14_hardening.sql` after 13 (SQL Editor, same as the others), t
 
 `public/_headers` adds security headers on Cloudflare Pages. Its Content-Security-Policy is report-only: click through every screen, and if the browser console shows no "Refused to..." lines, rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and redeploy.
 
+## Turn off the old addresses
+
+Once `VITE_PUBLIC_SITE_URL` and `VITE_STAFF_SITE_URL` are set, the app only runs on those two addresses (plus `www` and `localhost`). Any other address, such as the old `*.workers.dev` one, shows an "address retired" page with a button to the same page on the right address (`src/pages/Blocked.jsx`). That is a courtesy, not a lock, so also switch the old addresses off in Cloudflare:
+
+1. Worker > Settings > Domains & Routes: disable **workers.dev** and, separately, **Preview URLs**. Disabling workers.dev does not disable preview, version or deployment URLs.
+2. Put the same two settings in the Worker's config file, or the next deploy turns them back on (a dashboard-only change is undone by the next `wrangler deploy`, which is what Workers Builds runs):
+
+   ```jsonc
+   // wrangler.jsonc: keep your existing name and assets settings, add the last two lines
+   {
+     "workers_dev": false,
+     "preview_urls": false
+   }
+   ```
+
+   `name` must match the Worker's name in Cloudflare exactly. `npm run build` output goes to `dist`.
+
+Clearing the DNS cache on your computer (`ipconfig /flushdns`) does not matter here: a workers.dev address is answered by Cloudflare, not by a DNS record you control.
+
+## Branded blocked page
+
+Cloudflare's default "Sorry, you have been blocked" page can only be replaced on a paid plan (Pro or higher). `public/blocked.html` is a ready, self-contained replacement in the app's look. After deploying:
+
+1. Cloudflare dashboard > your domain > **Rules** > **Error Pages** (or **Custom Errors**) > WAF block > **Edit** > **Custom page**.
+2. Enter `https://meat-me-at-chada.tech/blocked.html` and confirm.
+3. After any later change to the file, select **Fetch custom page again** (Cloudflare keeps its own copy).
+
+On the Free plan, the page cannot be replaced. Instead of a Block rule, use a Redirect rule to `https://meat-me-at-chada.tech/blocked.html` (or to the right address), or let the app handle the path, as it already does for `/staff/*` on the guest address.
+
 ## Roles
 
 | Role | Can do |
