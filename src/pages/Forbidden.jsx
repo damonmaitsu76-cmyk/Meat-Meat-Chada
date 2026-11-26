@@ -23,12 +23,6 @@ export default function Forbidden({ home = '/' }) {
           <p>You do not have permission to open this page.</p>
         </div>
 
-        <dl className="blocked-stub">
-          <div>
-            <dt>You opened</dt>
-            <dd className="ticket">{pathname}</dd>
-          </div>
-        </dl>
 
         <div className="blocked-action">
           <a className="btn full" href={home}>Go to the home page</a>
