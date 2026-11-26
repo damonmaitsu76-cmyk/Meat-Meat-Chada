@@ -83,7 +83,7 @@ Cloudflare's default "Sorry, you have been blocked" page can only be replaced on
 
 **On the Free plan** the Cloudflare page cannot be replaced, so stop using a Block rule for things a visitor can be sent away from:
 
-- A rule that only blocks `/staff` or `/login` on `meat-me-at-chada.tech`: delete it. The app already moves those paths to the staff address.
+- A rule that only blocks `/staff` or `/login` on `meat-me-at-chada.tech`: delete it. The app itself shows a branded "Forbidden" page for those paths on every address except the staff one, and never names or links to the staff address.
 - A rule you want to keep (bots, a country, an IP list): the block page stays Cloudflare's. To show the branded one instead, turn the Block rule into a Redirect rule (**Rules** > **Redirect Rules** > **Create rule**): keep the same expression, add `and http.request.uri.path ne "/blocked-plain.html"` (without it, a country or IP rule catches the redirect itself and loops), choose **Static** and enter `https://meat-me-at-chada.tech/blocked-plain.html`. `public/blocked-plain.html` is `blocked.html` without Cloudflare's request code, which only the Custom page route can fill in.
 
 A redirect sends the visitor on, it does not stop the request, so do not use it for anything that must be kept out. Keep a real Block rule for those and accept Cloudflare's page.

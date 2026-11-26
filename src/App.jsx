@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import RequireAuth from './auth/RequireAuth.jsx'
 import { ADMIN_ROLES, STAFF_ROLES } from './auth/roles.js'
-import { currentSide, siteUrl, staffUrl } from './lib/hosts.js'
+import { currentSide, siteUrl } from './lib/hosts.js'
 import Login from './pages/staff/Login.jsx'
 import QRMenu from './pages/customer/QRMenu.jsx'
 import Reserve from './pages/customer/Reserve.jsx'
@@ -17,6 +17,7 @@ import StaffAccounts from './pages/staff/StaffAccounts.jsx'
 import StaffLayout from './pages/staff/StaffLayout.jsx'
 import TableManagement from './pages/staff/TableManagement.jsx'
 import DesignFixture from './pages/DesignFixture.jsx'
+import Forbidden from './pages/Forbidden.jsx'
 import Landing from './pages/Landing.jsx'
 
 function Message({ title, text }) {
@@ -92,9 +93,9 @@ export default function App() {
         </>
       ) : (
         <>
-          {/* old /staff bookmarks and links on the main address move to the staff address */}
-          <Route path="/login" element={<GoTo base={staffUrl} />} />
-          <Route path="/staff/*" element={<GoTo base={staffUrl} />} />
+          {/* staff-only pages are forbidden here; this page never names or links to the staff address */}
+          <Route path="/login" element={<Forbidden />} />
+          <Route path="/staff/*" element={<Forbidden />} />
         </>
       )}
 

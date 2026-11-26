@@ -1,15 +1,12 @@
 import { useEffect } from 'react'
-import { siteUrl, staffUrl } from '../lib/hosts.js'
+import { siteUrl } from '../lib/hosts.js'
+import Forbidden from './Forbidden.jsx'
 import './Blocked.css'
 
-// Shown on any address that is not the guest or staff address (see src/lib/hosts.js),
-// for example the old *.workers.dev address. It sends people to the same page on the right address.
-export default function Blocked() {
+function Retired() {
   const { hostname, pathname, search, hash } = window.location
-  const wantsStaff = pathname === '/login' || pathname.startsWith('/staff')
-  const base = wantsStaff ? staffUrl : siteUrl
-  const target = `${base}${pathname}${search}${hash}`
-  const targetHost = new URL(base).host
+  const target = `${siteUrl}${pathname}${search}${hash}`
+  const targetHost = new URL(siteUrl).host
 
   useEffect(() => {
     document.title = 'Address retired | Samgyup Chada'
@@ -48,4 +45,13 @@ export default function Blocked() {
       </div>
     </main>
   )
+}
+
+// Shown on any address that is not the guest or staff address (see src/lib/hosts.js),
+// for example the old *.workers.dev address. Staff-only paths get the plain Forbidden page,
+// which never names the staff address; everything else is sent to the same page on the guest address.
+export default function Blocked() {
+  const { pathname } = window.location
+  const wantsStaff = pathname === '/login' || pathname === '/staff' || pathname.startsWith('/staff/')
+  return wantsStaff ? <Forbidden home={siteUrl} /> : <Retired />
 }
