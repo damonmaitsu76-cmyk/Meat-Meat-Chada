@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { withViewTransition } from '../../lib/viewTransition.js'
 import { glue, nextReservation, requestSummary, reservationLine } from '../../lib/floor.js'
 import './Dashboard.css'
 
@@ -11,9 +12,10 @@ function Chevron() {
 }
 
 function Row({ to, count, label, detail }) {
+  const navigate = useNavigate()
   return (
     <li>
-      <Link className="attention-row" to={to} aria-label={`${count} ${label}${detail ? `. ${detail}` : ''}`}>
+      <Link className="attention-row" to={to} onClick={withViewTransition(navigate, to)} aria-label={`${count} ${label}${detail ? `. ${detail}` : ''}`}>
         <strong className="attention-count">{count}</strong>
         <span className="attention-text">
           <span className="attention-label">{label}</span>

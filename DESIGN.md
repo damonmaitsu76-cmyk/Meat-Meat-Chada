@@ -1,30 +1,52 @@
-Product: QR table requests and reservations for a Korean BBQ restaurant, used by guests on phones mid-meal and by staff on phones or tablets mid-service.
-Character: fast, sturdy, warm.
-World: charcoal grill, kitchen order tickets, enamel, a paper menu. Near-black charcoal is structure, chili red is the only accent, warm paper is the ground.
-Moments: the guest's request ticket, which shows where their order is; the staff floor map, where table state reads in one glance.
-Signature: the order-ticket motif. Request numbers and reservation IDs use small tabular monospace tickets wherever they appear, and the Live dot stays as the only live indicator.
+Product: QR table requests and reservations for a Korean BBQ restaurant, used by guests on phones mid-meal and by staff on phones, tablets or a desk mid-service.
+Character: fast, sturdy, warm, a little loud.
+World: charcoal grill, kitchen order tickets, tear-off stubs, enamel, a paper menu, the neon and black marble of the dining room. Chili red is the ground, charcoal is the ticket, warm paper is the sheet you work on.
+Moments: the guest's request ticket, which prints in and shows where their order is; the staff floor map, where table state reads in one glance; the reservation ID, which prints onto a charcoal stub.
+Signature: the order ticket. Every screen is a ticket on the chili ground: a dashed perforation with a half circle cut into each end, the condensed heavy display face from the landing page, small tracked capitals for labels, and request numbers and reservation IDs in tabular monospace.
 
 # Design contract
 
 ## Direction
 
-Use quiet charcoal and paper surfaces to make the restaurant's working information easy to scan. Reserve chili red for a primary action, the active navigation marker, or one number that needs attention. Use the request ticket and floor map as the memorable details. The body type is Figtree Variable; display type is Bricolage Grotesque Variable. Copy is short, specific, and sentence case.
+The landing page is the reference, and every screen follows it. The page ground is chili red (`--brand`). Work happens on paper sheets (`--bg`, with white `--card` records on them), under a charcoal masthead (`--charcoal`). Titles, table numbers and big figures use the condensed display face (`--font-ticket`, the landing title's face). Body text is Figtree Variable. Copy is short, specific, and sentence case.
+
+Layouts follow the job, not a template:
+
+- Guest on a phone mid-meal (`QRMenu`, `Reserve`): one thumb. A rounded masthead with a table stamp, one paper sheet, a floating charcoal dock for Menu, Tray and Status, and a paper bar above it with the one primary action. Dishes are ticket lines with a dotted leader. A request prints as a receipt with a tear line, and its progress bar fills as staff act. The approved reservation ID prints onto a charcoal stub.
+- Staff at the floor (`Dashboard`): the floor plan leads and "Needs attention" is a rail beside it on screens 1000px and wider. On a phone the rail comes first.
+- Staff in the kitchen (`RequestQueue`): a rail of columns (New, Accepted, Ready), tickets stacked in each. On a phone the columns stack.
+- Manager at a desk: `Reports` opens with a charcoal tape of headline figures. `TableManagement` shows each table as a table tent with its number big. `MenuManagement` is a ledger with dotted leaders. The rest are ledgers and cards on the same sheet.
+- Login, Blocked and Forbidden are tickets on the ground. The sign photo, the dining-room photo and the emblem come from `src/assets`; no stock images. The emblem is on black, so it sits on charcoal with `mix-blend-mode: lighten`.
 
 ## Tokens and layout
 
 Keep color, spacing, type, radius, and motion values in `src/styles/tokens.css`.
 
-- Color roles: `--charcoal` is structure, `--bg` and `--card` are paper surfaces, `--text`/`--text-2`/`--text-3` set text hierarchy, `--line` is decorative only, `--control` draws control borders, and `--brand` is the single accent. `--ok`, `--warn`, and neutral tokens carry status.
-- Spacing: use the 4px scale `--s1`, `--s2`, `--s3`, `--s4`, `--s5`, `--s6`, `--s8`, `--s10`, and `--s12`. Semantic layout and print tokens preserve fixed clearances and the existing print sheet measurements.
-- Type: use `--font-display` (Bricolage Grotesque Variable) for display figures and titles, `--font-body` (Figtree Variable) elsewhere, and the `--fs-meta` through `--fs-figure` scale.
-- Radius: use `--r-chip`, `--r-ctrl`, `--r-card`, `--r-sheet`, and `--r-pill` by component role. Pills are reserved for dots and switches.
-- Motion: use `--t-fast` for control changes and `--t-enter` for short dialog or sheet entrances. Keep reduced-motion support.
+- Color roles: `--brand` is the ground and the action color, `--charcoal` is the masthead and ticket, `--bg` and `--card` are paper surfaces, `--text`/`--text-2`/`--text-3` set text hierarchy, `--line` is decorative only, `--control` draws control borders and perforations, and `--ink-line` and `--neutral-line` are for dividers and text on charcoal. `--ok`, `--warn`, and neutral tokens carry status. Text on chili red is `--bg` or `--white` only.
+- Spacing: use the 4px scale `--s1` to `--s12`. Notches use `--size-notch`, `--size-notch-half` and `--notch-offset`.
+- Type: `--font-ticket` for display (titles, table numbers, big figures, the 403 stamp), `--font-body` elsewhere, and the `--fs-meta` through `--fs-figure-lg` scale. Display type is never used below 1.15rem.
+- Radius: `--r-chip`, `--r-ctrl`, `--r-card`, `--r-sheet`, and `--r-pill` by component role. Pills are reserved for dots, switches and notches.
+- Shadow: only on dialogs, sheets and the floating dock (`--shadow-float`).
+- Motion: `--ease-out` and `--ease-spring` for curves, `--t-fast`, `--t-enter`, `--t-press`, `--t-slow` and `--t-print` for timing, and `--stagger` between siblings.
 
-Spacing follows a 4px grid. Hairlines are decorative only; controls use the stronger control token. Text and non-text contrast are checked from the final token pairs. Avoid shadows except on dialogs and sheets.
+## Style layers
+
+`tokens.css`, `global.css`, `shared.css` and `components.css` hold structure. The ticket system loads after every other stylesheet (see `main.jsx`) and wins at equal specificity: `ticket.css` (ground, display face, notches, shared controls), `ticket-customer.css` (guest screens, login, full-page messages), `ticket-staff.css` (masthead, sheet, dashboard rail, request rail, tables, reports) and `motion.css` (every animation and transition). Page styles keep layout details. `Blocked.css` styles the blocked and forbidden pages. `public/blocked.html` and `public/blocked-plain.html` repeat the same look with inline CSS and an embedded emblem, because Cloudflare stores them and they must load nothing else.
+
+## Motion
+
+Motion makes state changes and arrivals feel physical. It is allowed to be big, and it is always one-shot.
+
+- Entrances: a ticket drops in, sheets and lists rise, rows arrive one after another (`--i`, the position among siblings, times `--stagger`), tables on the floor are dealt, receipts and request tickets print from the top, and notches pop open after their ticket lands.
+- State changes: a status chip stamps in, an active tab pops, a table that changes state thunks, a progress bar fills from the left, an error shakes once.
+- Controls are tactile: buttons fill with ink from the left on hover and squash on press, switches widen under a finger, steppers and chips spring, chairs on a floor tile slide out on hover. Nothing lifts or glows.
+- Route changes use the browser's View Transitions API through React Router's `viewTransition` links. The masthead and the dock keep their own names so they stay still while the page changes.
+- Nothing loops. No infinite animation, no pulsing, no marquee. The audit script fails on `infinite`.
+- Everything respects `prefers-reduced-motion`: `global.css` switches off every animation and transition, `motion.css` switches off the view transition, and the landing page's pointer effect is not attached. Content must read correctly with no motion.
 
 ## Component rules
 
-Use the shared Button, Field, StatusChip, Notice, RecordCard, ResponsiveRecords, FilterTabs, Disclosure, Stepper, Switch, EmptyState, and PageToolbar primitives. Give each screen one primary action. A normal state is represented by absence; visible status text accompanies every exception. Phone layouts use purposeful records; dense comparison may use a real table on wide screens. Keep touch actions at least 44px high.
+Use the shared Button, Field, StatusChip, Notice, RecordCard, ResponsiveRecords, FilterTabs, Disclosure, Stepper, Switch, EmptyState, and PageToolbar primitives. Give each screen one primary action. A normal state is represented by absence; visible status text accompanies every exception. Phone layouts use purposeful records; dense comparison may use a real table on wide screens. Keep touch actions at least 44px high. The page title is the `h1` that `PageToolbar` renders; it is visible and sits over the perforation.
 
 ## Floor map
 
@@ -33,19 +55,23 @@ The staff floor is drawn like a floor plan, and service fills it in.
 - An open table is a dashed outline with its chairs drawn as empty outlines and its seat count in the corner. It stays quiet so tables in use stand out.
 - A table in use fills in. Dining is solid charcoal with a filled chair for each seated guest, in facing pairs. Reserved or held is warning-soft with a solid edge. Every tile is the same size in every state, so the room does not shift when guests sit.
 - State is never color alone: dashed versus solid edge, filled versus empty chairs, and a visible word (Dining, Booked, Held, Reserved) with a mono stamp for the time seated or the booking time.
-- Chili red appears twice: the request flag on a tile, and the count in Needs attention. Nothing else on the floor is red.
-- Needs attention is one grouped list of links. Each row says what, where and how long (tables, oldest wait, next reservation). With nothing to do, the section is absent.
-- The state block slides in once when a table changes state. It never loops, and reduced motion turns it off.
+- On the floor sheet, chili red appears twice: the request flag on a tile, and the count in Needs attention.
+- Needs attention is one grouped list of links, in a rail beside the floor on wide screens. Each row says what, where and how long (tables, oldest wait, next reservation). With nothing to do, the section is absent.
+- A table that changes state lands with one short thunk and its state block slides in. It never loops.
 - Phones show two tables per row. Wider screens fill the row with tiles of at least `--size-tile-min`.
 - Tile logic (state, chair fill, attention lines) lives in `src/lib/floor.js` with tests in `floor.test.js`; `/__design` in development shows every state.
 
 ## Copy rules
 
-Use sentence case and concrete action labels. Short labels have no terminal period. Help text uses complete sentences. Loading text names what is loading. Empty and error messages say what is missing or happened and what to do next. Never alter stored names to improve display casing.
+Use sentence case and concrete action labels. Short labels have no terminal period. Help text uses complete sentences. Loading text names what is loading. Empty and error messages say what is missing or happened and what to do next. Never alter stored names to improve display casing. The forbidden page never names or links to the staff address.
 
 ## Do not
 
-Do not change Supabase schema, RLS, RPC names, route paths, authentication logic, realtime channel logic, import rules, QR URLs, print behavior, or product names. Do not add runtime dependencies, fonts, icon packs, invented data, gradients, blur, glows, colored shadows, emoji, looping motion, `transition: all`, hover lift, or decoration without a product purpose.
+Do not change Supabase schema, RLS, RPC names, route paths, host logic (`src/lib/hosts.js`), authentication logic, realtime channel logic, import rules, QR URLs, print behavior, or product names. Do not add runtime dependencies, fonts, icon packs, stock images, invented data, gradients, blur, glows, colored shadows, emoji, looping or infinite animation, `transition: all`, hover lift, or decoration without a purpose. Do not show state by color alone. Do not put raw color values anywhere but `tokens.css` (the two static pages in `public/` are the exception, because they must stand alone).
+
+## Checks
+
+`node scripts/audit-design.mjs` checks the contrast of every token pair the design uses (including text on chili red and on charcoal) and counts raw colors, gradients, blur, infinite animation, `transition: all`, wide colored borders and duplicated input styles. `npm test` and `npm run lint` must pass.
 
 ## Recon audit
 

@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext.js'
 import { homeFor } from '../../auth/roles.js'
 import { Field } from '../../components/ui.jsx'
 import { unlockRequestAlarm } from '../../lib/requestAlarm.js'
+import sign from '../../assets/chada-sign.webp'
 import '../../styles/staff.css'
 
 export default function Login() {
@@ -31,6 +32,10 @@ export default function Login() {
 
   return (
     <main className="login-wrap">
+      <div className="login-ticket">
+      <figure className="login-sign">
+        <img src={sign} width="1080" height="1440" alt="" />
+      </figure>
       <form className="login-card" onSubmit={onSubmit}>
         <h1>Samgyup Chada</h1>
 
@@ -43,6 +48,7 @@ export default function Login() {
           {busy ? 'Logging in…' : 'Log in'}
         </button>
       </form>
+      </div>
     </main>
   )
 }

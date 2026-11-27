@@ -12,6 +12,11 @@ import DialogHost from './components/DialogHost.jsx'
 import AuthProvider from './auth/AuthProvider.jsx'
 import { currentSide } from './lib/hosts.js'
 import Blocked from './pages/Blocked.jsx'
+// The ticket system loads last, so it restyles everything above it.
+import './styles/ticket.css'
+import './styles/ticket-customer.css'
+import './styles/ticket-staff.css'
+import './styles/motion.css'
 
 // On an address that is neither the guest nor the staff address, show the retired-address page
 // alone: no router, no sign-in, no database calls.

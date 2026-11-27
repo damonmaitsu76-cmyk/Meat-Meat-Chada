@@ -5,6 +5,7 @@ import { Field, Segmented, StatusChip, Stepper } from '../../components/ui.jsx'
 import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
 import { friendlyError } from '../../lib/errors.js'
 import { normalizePhone } from '../../lib/phone.js'
+import diningRoom from '../../assets/chada-dining-room.webp'
 import './Reserve.css'
 
 const STORAGE_KEY = 'chada_reservation'
@@ -124,6 +125,9 @@ function ReservationForm({ onCreated }) {
 
   return (
     <form onSubmit={onSubmit} noValidate>
+      <figure className="reserve-photo">
+        <img src={diningRoom} width="1568" height="673" alt="The Samgyup Chada dining room: black marble tables with tabletop grills and a neon-lit counter" />
+      </figure>
       <h1>Reserve a table</h1>
 
       <Field

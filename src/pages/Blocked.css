@@ -1,44 +1,77 @@
-/* Address-retired page. One order ticket on paper: charcoal bar, message, tear-off stub, one action. */
+/* Address-retired and Forbidden pages: a void ticket on the chili ground. The emblem sits on the
+   charcoal ticket (it is on black, so it blends in), a 403 stamp lands once, and the perforation
+   above the action has a notch cut into each end. Movement lives in styles/motion.css. */
 .blocked {
   min-height: 100vh;
   display: grid;
   place-items: center;
   padding: var(--s6) var(--s4);
-  background: var(--bg);
+  background: var(--brand);
 }
+.blocked :focus-visible { outline-color: var(--white); }
 .blocked-ticket {
+  position: relative;
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
   overflow: hidden;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--r-card);
+  border-radius: var(--r-sheet);
+  background: var(--charcoal);
+  color: var(--bg);
 }
 .blocked-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--s3);
-  min-height: 56px;
+  min-height: 64px;
   padding: var(--s3) var(--s5);
-  background: var(--charcoal);
-  color: var(--white);
 }
-.blocked-brand { font-family: var(--font-display); font-weight: 700; font-size: var(--fs-row); }
-.blocked-code { color: var(--ink-soft); font-size: var(--fs-sm); font-weight: 600; }
-.blocked-body { padding: var(--s6) var(--s5) var(--s5); }
-.blocked-body h1 { margin: 0 0 var(--s3); font-size: var(--fs-title-lg); line-height: 1.15; text-wrap: balance; }
-.blocked-body p { margin: 0 0 var(--s3); color: var(--text-2); }
+.blocked-brand { font-family: var(--font-ticket); font-weight: 800; font-stretch: 75%; font-size: 1.5rem; line-height: 1; letter-spacing: -0.015em; }
+.blocked-code {
+  padding: var(--s1) var(--s3);
+  border: 2px solid var(--neutral-line);
+  border-radius: var(--r-chip);
+  color: var(--neutral-line);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  rotate: -6deg;
+}
+.blocked-emblem { margin: 0; }
+.blocked-emblem img { display: block; width: min(76%, 280px); height: auto; margin: 0 auto; mix-blend-mode: lighten; }
+.blocked-body { padding: var(--s2) var(--s6) var(--s6); text-align: center; }
+.blocked-body h1 {
+  margin: 0 0 var(--s3);
+  color: var(--bg);
+  font-family: var(--font-ticket);
+  font-weight: 800;
+  font-stretch: 75%;
+  font-size: clamp(2.4rem, 10vw, 3.4rem);
+  line-height: 0.92;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.blocked-body p { margin: 0 auto var(--s3); max-width: 34ch; color: var(--neutral-line); }
 .blocked-body p:last-child { margin-bottom: 0; }
 .blocked-stub {
   display: grid;
   gap: var(--s3);
   margin: 0;
-  padding: var(--s4) var(--s5);
-  border-top: 1px dashed var(--control);
-  background: var(--bg);
+  padding: var(--s4) var(--s6);
+  border-top: 1px solid var(--ink-line);
 }
 .blocked-stub div { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: var(--s1) var(--s3); }
-.blocked-stub dt { color: var(--text-2); font-size: var(--fs-meta); font-weight: 600; }
-.blocked-stub dd { margin: 0; font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; text-align: right; }
-.blocked-action { padding: var(--s5); border-top: 1px solid var(--line); }
+.blocked-stub dt { color: var(--neutral-line); font-size: var(--fs-meta); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.blocked-stub dd { margin: 0; color: var(--bg); font-size: var(--fs-sm); font-weight: 600; overflow-wrap: anywhere; text-align: right; }
+.blocked-action { position: relative; padding: var(--s6); border-top: 2px dashed var(--control); }
+.blocked-action::before, .blocked-action::after {
+  content: '';
+  position: absolute;
+  top: var(--notch-offset);
+  width: var(--size-notch);
+  height: var(--size-notch);
+  border-radius: var(--r-pill);
+  background: var(--brand);
+}
+.blocked-action::before { left: calc(var(--size-notch-half) * -1); }
+.blocked-action::after { right: calc(var(--size-notch-half) * -1); }

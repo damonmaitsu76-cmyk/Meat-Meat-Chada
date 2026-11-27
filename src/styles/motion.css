@@ -1,0 +1,256 @@
+/* Ticket system, part 4 of 4: movement. Everything that animates lives here, so it is easy to tune.
+
+   Rules of the road
+   - Nothing loops. Every animation plays once, when something appears or changes state.
+   - Entrances use "backwards" fill, so the element waits invisibly during its delay and the real
+     styles take over the moment the animation ends. Hover and press transitions keep working.
+   - Staggers read --i, the element's position among its siblings (set below, capped at 12).
+   - The reduced-motion rule in global.css switches every animation and transition off, and the
+     elements simply appear in their final state. */
+
+/* position among siblings, for staggers */
+:nth-child(1) { --i: 0; }
+:nth-child(2) { --i: 1; }
+:nth-child(3) { --i: 2; }
+:nth-child(4) { --i: 3; }
+:nth-child(5) { --i: 4; }
+:nth-child(6) { --i: 5; }
+:nth-child(7) { --i: 6; }
+:nth-child(8) { --i: 7; }
+:nth-child(9) { --i: 8; }
+:nth-child(10) { --i: 9; }
+:nth-child(11) { --i: 10; }
+:nth-child(12) { --i: 11; }
+:nth-child(n + 13) { --i: 12; }
+
+/* ---------- keyframes ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(var(--s5)); } }
+@keyframes rise-soft { from { opacity: 0; transform: translateY(var(--s2)); } }
+@keyframes drop { from { opacity: 0; transform: translateY(calc(var(--s5) * -1)); } }
+@keyframes fade { from { opacity: 0; } }
+@keyframes pop { from { transform: scale(0.86); } 60% { transform: scale(1.05); } }
+@keyframes stamp { from { opacity: 0; transform: scale(1.8) rotate(-10deg); } 55% { opacity: 1; transform: scale(0.93) rotate(2deg); } }
+@keyframes print { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes type-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes deal { from { opacity: 0; transform: translateY(var(--s6)) rotate(-5deg) scale(0.9); } }
+@keyframes shake { 20% { translate: -6px 0; } 40% { translate: 5px 0; } 60% { translate: -3px 0; } 80% { translate: 2px 0; } }
+@keyframes bar-fill { from { transform: scaleX(0); } }
+@keyframes notch-pop { from { transform: scale(0); } }
+@keyframes dock-in { from { translate: 0 calc(100% + var(--s8)); } }
+@keyframes modal-print {
+  from { opacity: 0; clip-path: inset(0 0 100% 0 round var(--r-sheet)); transform: translate(-50%, calc(-50% - var(--s4))); }
+  to { opacity: 1; clip-path: inset(0 0 0 0 round var(--r-sheet)); transform: translate(-50%, -50%); }
+}
+@keyframes sheet-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes ticket-drop { from { opacity: 0; transform: translateY(-64px) rotate(-1.4deg); } }
+@keyframes letter-in { from { opacity: 0; transform: translateY(0.7em) rotate(7deg) scale(0.7); } }
+@keyframes sign-settle { from { transform: scale(1.25); } }
+@keyframes room-pan { from { transform: scale(1.16) translateY(-4%); } to { transform: scale(1.04) translateY(4%); } }
+
+/* ---------- pages arrive ---------- */
+.staff-top { animation: drop var(--t-print) backwards; }
+.staff-nav a { animation: rise-soft var(--t-slow) backwards; animation-delay: calc(var(--i) * var(--stagger) + 120ms); }
+.staff-main > *, .content > * { animation: rise-soft var(--t-print) backwards; animation-delay: calc(var(--i) * var(--stagger)); }
+.topbar { animation: drop var(--t-print) backwards; }
+.center-screen { animation: rise var(--t-print) backwards; }
+.backdrop { animation: fade var(--t-slow) backwards; }
+.modal { animation: modal-print var(--t-print) backwards; }
+.modal-close { transition: transform var(--t-press), background var(--t-fast), color var(--t-fast); }
+.bottom-nav, .staff-bottom-nav, .menu-review, .tray-submit { animation: dock-in var(--t-print) backwards; }
+@media (max-width: 560px) {
+  .modal { animation-name: sheet-rise; }
+}
+
+/* ---------- lists and grids: each row arrives a beat after the one before ---------- */
+.menu-list > li, .mm-list > li, .tm-list > li, .attention-list > li, .rep-list > li,
+.activity-list > li, .served-list > li, .record-cards > *, .time-grid > *, .tray-group,
+.set-form > *, .rep-summary-tier > *, .imp-card, .rep-card, .queue-group, .q-table tbody tr {
+  animation: rise var(--t-print) backwards;
+  animation-delay: calc(var(--i) * var(--stagger));
+}
+.floor > li { animation: deal var(--t-print) var(--ease-spring) backwards; animation-delay: calc(var(--i) * var(--stagger)); }
+/* Tickets are printed. A new request prints in at the top of its column. */
+.request-grid > *, .request-list > li, .res-card, .ticket-card {
+  animation: print var(--t-print) backwards;
+  animation-delay: calc(var(--i) * var(--stagger));
+}
+.res-code.confirmed strong { animation: type-in 900ms steps(9, end) 300ms backwards; }
+
+/* notches pop open once their ticket has printed */
+:is(.center-screen h1:not(.sr-only), .ticket-card .request-head, .res-card .res-head,
+    .request-ticket .record-body, .page-toolbar, .staff-main > h1.sr-only)::before,
+:is(.center-screen h1:not(.sr-only), .ticket-card .request-head, .res-card .res-head,
+    .request-ticket .record-body, .page-toolbar, .staff-main > h1.sr-only)::after,
+.staff-top::before, .staff-top::after {
+  animation: notch-pop var(--t-press) 420ms backwards;
+}
+
+/* ---------- state changes ---------- */
+.status-chip, .tag { animation: stamp var(--t-press) backwards; }
+.filter-tab.active, .chip.active, .radio-card.selected, .time-option.selected, .menu-tabs .tab.active,
+.bottom-nav button.active, .staff-bottom-nav a.active, .staff-bottom-nav button.active, .staff-nav a.active,
+.stepper { animation: pop var(--t-press); }
+.error { animation: shake var(--t-slow); }
+.success, .notice { animation: drop var(--t-slow) backwards; }
+.empty-state { animation: rise var(--t-print) backwards; }
+.request-progress li.filled::after { animation: bar-fill 620ms var(--ease-out) backwards; animation-delay: calc(var(--i) * 120ms); }
+.tm-qr img { animation: stamp 520ms var(--ease-spring) backwards; }
+
+/* ---------- controls ---------- */
+.btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  letter-spacing: 0.01em;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-press);
+}
+/* Ink sweeps across the button from the left. */
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--brand-dark);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--t-slow);
+}
+.btn.secondary::before, .btn.ghost::before { background: var(--ink-soft); }
+.btn.danger::before { background: var(--brand-soft); }
+.btn:disabled::before { content: none; }
+.btn:hover:not(:disabled) { background: var(--brand); }
+.btn.secondary:hover:not(:disabled), .btn.danger:hover:not(:disabled) { background: var(--card); }
+.btn.ghost:hover:not(:disabled) { background: transparent; }
+.btn:active:not(:disabled) { transform: scale(0.96); }
+@media (hover: hover) { .btn:hover:not(:disabled)::before { transform: scaleX(1); } }
+
+.btn-link { transition: background var(--t-fast), transform var(--t-press); }
+.btn-link:active { transform: scale(0.96); }
+.field > span, .field input, .field select, .field textarea, .search { transition: color var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast); }
+.filter-tab, .segmented-option { transition: color var(--t-fast); }
+.filter-tab::after, .segmented-option::after { transition: transform var(--t-slow); }
+.radio-card, .time-option, .chip, .tab { transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-press); }
+.radio-card:active, .time-option:active:not(:disabled), .chip:active { transform: scale(0.97); }
+.stepper button { transition: transform var(--t-press), background var(--t-fast); }
+.stepper button:active:not(:disabled) { transform: scale(0.84); }
+.switch::after { transition: transform var(--t-press), width var(--t-fast); }
+.file-drop { transition: border-color var(--t-fast), background var(--t-fast), transform var(--t-press); }
+.file-drop.dragging { transform: scale(1.015); }
+.record-card { transition: border-color var(--t-fast); }
+.staff-nav a, .staff-bottom-nav a, .staff-bottom-nav button, .bottom-nav button { transition: background var(--t-fast), color var(--t-fast); }
+.staff-nav a:active, .staff-bottom-nav a:active, .staff-bottom-nav button:active, .bottom-nav button:active { transform: scale(0.95); }
+.bottom-nav button::before, .staff-bottom-nav a::before, .staff-bottom-nav button::before { transition: transform var(--t-press); }
+.menu-tabs .tab:not(.active):active { transform: scale(0.95); }
+@media (hover: hover) {
+  .record-card:hover { border-color: var(--control); }
+  .menu-tabs .tab:not(.active):hover { color: var(--white); }
+}
+
+/* ---------- the floor ---------- */
+.seats { transition: translate var(--t-press); }
+.attention-chevron { transition: transform var(--t-press); }
+@media (hover: hover) {
+  .tile:hover .seats.top { translate: 0 -3px; }
+  .tile:hover .seats.bottom { translate: 0 3px; }
+  .attention-row:hover .attention-chevron { transform: translateX(var(--s1)); }
+}
+
+/* ---------- details open smoothly (browsers that can animate ::details-content) ---------- */
+:root { interpolate-size: allow-keywords; }
+@supports selector(::details-content) {
+  .disclosure::details-content {
+    block-size: 0;
+    overflow-y: clip;
+    transition: block-size var(--t-slow), content-visibility var(--t-slow) allow-discrete;
+  }
+  .disclosure[open]::details-content { block-size: auto; }
+}
+
+/* ---------- landing page ---------- */
+.landing-ticket { transform-origin: 50% 0; animation: ticket-drop 1000ms var(--ease-out) backwards; }
+.landing-stub::before, .landing-stub::after { animation: notch-pop var(--t-press) 900ms backwards; }
+.landing-stub > div { animation: print 800ms var(--ease-out) backwards; animation-delay: calc(700ms + var(--i) * 160ms); }
+
+/* The title is split into letters (see Landing.jsx), and they drop in one after another. */
+.landing-title .line { display: block; white-space: nowrap; }
+.landing-title .word, .landing-title .ch { display: inline-block; }
+.landing-title .ch { animation: letter-in 900ms var(--ease-spring) backwards; animation-delay: calc(250ms + var(--c) * 42ms); }
+.landing-actions > * { animation: rise var(--t-print) backwards; animation-delay: calc(950ms + var(--i) * 120ms); }
+
+/* The pointer moves the sign and the title a little, in opposite directions. */
+.landing-sign img {
+  scale: 1.08;
+  translate: calc(var(--px, 0) * -16px) calc(var(--py, 0) * -10px);
+  transition: translate 500ms var(--ease-out);
+  animation: sign-settle 1800ms var(--ease-out) backwards;
+}
+.landing-title { translate: calc(var(--px, 0) * 12px) calc(var(--py, 0) * 8px); transition: translate 600ms var(--ease-out); }
+
+.landing-btn { position: relative; isolation: isolate; overflow: hidden; transition: color var(--t-slow), transform var(--t-press); }
+.landing-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--bg);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--t-slow);
+}
+.landing-btn::after {
+  content: '\2192' / '';
+  position: absolute;
+  right: var(--s5);
+  opacity: 0;
+  translate: -12px 0;
+  transition: opacity var(--t-slow), translate var(--t-press);
+}
+.landing-btn:hover { background: var(--brand); }
+.landing-btn:active { transform: scale(0.97); }
+@media (hover: hover) {
+  .landing-btn:hover { color: var(--charcoal); }
+  .landing-btn:hover::before { transform: scaleX(1); }
+  .landing-btn:hover::after { opacity: 1; translate: 0 0; }
+}
+.landing-link { text-decoration-thickness: 1px; transition: text-underline-offset var(--t-slow), text-decoration-thickness var(--t-slow); }
+@media (hover: hover) { .landing-link:hover { text-underline-offset: 9px; text-decoration-thickness: 3px; } }
+
+/* The dining room fades up and drifts as it scrolls into view (browsers with scroll-driven animation). */
+@supports (animation-timeline: view()) {
+  .landing-room { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+  .landing-room img { animation: room-pan linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+}
+
+/* ---------- route changes (View Transitions API, through React Router's viewTransition links) ---------- */
+.staff-top { view-transition-name: staff-top; }
+.staff-nav { view-transition-name: staff-nav; }
+.staff-bottom-nav { view-transition-name: staff-dock; }
+@keyframes vt-in { from { opacity: 0; transform: translateY(var(--s3)); } }
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) { animation: none; mix-blend-mode: normal; }
+  ::view-transition-new(root) { animation: vt-in 380ms var(--ease-out) both; mix-blend-mode: normal; }
+}
+/* The global reduced-motion rule cannot reach these pseudo-elements, so they are switched off here. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+}
+
+/* ---------- login, blocked and forbidden: the ticket drops in, the stamp lands ---------- */
+@keyframes tile-thunk { from { transform: scale(0.95); } 55% { transform: scale(1.03); } }
+.login-ticket, .blocked-ticket { transform-origin: 50% 0; animation: ticket-drop 900ms var(--ease-out) backwards; }
+.login-sign img { scale: 1.06; animation: sign-settle 1600ms var(--ease-out) backwards; }
+.login-card > * { animation: rise var(--t-print) backwards; animation-delay: calc(350ms + var(--i) * 80ms); }
+.blocked-emblem img { animation: sign-settle 1400ms var(--ease-out) backwards; }
+.blocked-code { animation: stamp 700ms var(--ease-spring) 550ms backwards; }
+.blocked-body > * { animation: rise var(--t-print) backwards; animation-delay: calc(300ms + var(--i) * 90ms); }
+.blocked-stub { animation: rise var(--t-print) 560ms backwards; }
+.blocked-action { animation: rise var(--t-print) 680ms backwards; }
+.login-card::before, .login-card::after, .blocked-action::before, .blocked-action::after { animation: notch-pop var(--t-press) 800ms backwards; }
+
+/* ---------- the floor: a table that changes state lands with a small thunk ---------- */
+.tile.dining, .tile.reserved { animation: tile-thunk 480ms var(--ease-spring); }
+.tile-flag { animation: stamp var(--t-press) backwards; }
+.dash-rail > * { animation: rise var(--t-print) backwards; animation-delay: calc(var(--i) * var(--stagger) + 120ms); }
+
+/* ---------- reserve: the photo settles as the sheet arrives ---------- */
+.reserve-photo img { animation: sign-settle 1400ms var(--ease-out) backwards; }

@@ -21,7 +21,7 @@ describe('Forbidden', () => {
     const html = renderToString(<Forbidden />)
 
     expect(html).toContain('Forbidden')
-    expect(html).toContain('/staff/login')
+    expect(html).toContain('403')
     expect(html).not.toContain(STAFF_HOST)
   })
 })

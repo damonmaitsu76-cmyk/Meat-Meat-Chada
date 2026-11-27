@@ -1,0 +1,236 @@
+/* Ticket system, part 2 of 4: what guests see (QR menu, tray, request status, reservation) plus
+   the login card and the full-page messages. A charcoal masthead, one paper sheet, a floating dock. */
+
+/* ---------- shell ---------- */
+.app {
+  padding: var(--s3) var(--s3) calc(var(--s3) + env(safe-area-inset-bottom, 0px));
+  gap: var(--s3);
+  background: transparent;
+}
+.topbar {
+  top: var(--s3);
+  min-height: 60px;
+  padding: var(--s2) var(--s4);
+  border-radius: var(--r-card);
+}
+.topbar .brand { font-size: 1.6rem; line-height: 1; }
+.table-badge {
+  padding: var(--s1) var(--s3);
+  border: 2px dashed var(--control);
+  border-radius: var(--r-chip);
+  font-size: 1.15rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.content {
+  padding: var(--s6) var(--s4) calc(var(--space-content-bottom) + var(--s10));
+  border-radius: var(--r-sheet);
+  background: var(--bg);
+}
+.content.tray-content { padding-bottom: calc(var(--space-tray-bottom) + var(--s4)); }
+.reserve .content { margin-bottom: var(--s3); padding-bottom: var(--s6); }
+
+/* ---------- dock: the three screens float above the sheet ---------- */
+.bottom-nav {
+  bottom: calc(var(--s3) + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - var(--s6));
+  max-width: calc(var(--width-app) - var(--s6));
+  padding: var(--s1);
+  gap: var(--s1);
+  border: 0;
+  border-radius: var(--r-card);
+  background: var(--charcoal);
+  box-shadow: var(--shadow-float);
+}
+.bottom-nav button {
+  position: relative;
+  min-height: calc(var(--size-dock) - var(--s2));
+  border-top: 0;
+  border-radius: var(--r-ctrl);
+  color: var(--neutral-line);
+}
+.bottom-nav button.active { background: var(--ink-line); color: var(--white); }
+.bottom-nav button::before {
+  content: '';
+  position: absolute;
+  top: var(--s1);
+  left: 50%;
+  width: var(--s6);
+  height: 3px;
+  border-radius: var(--r-pill);
+  background: var(--white);
+  transform: translateX(-50%) scaleX(0);
+}
+.bottom-nav button.active::before { transform: translateX(-50%) scaleX(1); }
+.bottom-nav :focus-visible, .topbar :focus-visible { outline-color: var(--white); }
+
+.menu-review, .tray-submit {
+  bottom: calc(var(--s3) * 2 + var(--size-dock) + env(safe-area-inset-bottom, 0px));
+  width: calc(100% - var(--s6));
+  max-width: calc(var(--width-app) - var(--s6));
+  padding: var(--s2);
+  border: 0;
+  border-radius: var(--r-card);
+  background: var(--card);
+  box-shadow: var(--shadow-float);
+}
+
+/* ---------- menu ---------- */
+.menu-tabs {
+  gap: var(--s1);
+  padding: var(--s1);
+  border-bottom: 0;
+  border-radius: var(--r-card);
+  background: var(--charcoal);
+}
+.menu-tabs .tab { min-height: 44px; border-bottom: 0; border-radius: var(--r-ctrl); color: var(--neutral-line); }
+.menu-tabs .tab.active { background: var(--bg); color: var(--text); }
+.menu-tabs :focus-visible { outline-color: var(--white); }
+
+/* A dish is a line on the ticket: name, dotted leader, then the action. */
+.menu-name { display: flex; flex: 1 1 auto; align-items: baseline; gap: var(--s2); }
+.menu-name::after {
+  content: '';
+  flex: 1 1 var(--s5);
+  min-width: var(--s5);
+  translate: 0 -0.28em;
+  border-bottom: 2px dotted var(--neutral-line);
+}
+.menu-row > .row-main { flex: 1 1 auto; }
+.menu-row.unavailable .menu-name::after { border-bottom-style: dashed; }
+.menu-list { border-radius: var(--r-card); }
+
+/* ---------- tray ---------- */
+.customer-title { font-size: 2.1rem; line-height: 0.95; }
+.tray-group-title { color: var(--text-2); font-size: var(--fs-meta); }
+
+/* ---------- request ticket: a receipt with a tear line under its number ---------- */
+.ticket-card { position: relative; }
+.ticket-card .request-head {
+  position: relative;
+  padding-bottom: var(--s3);
+  border-bottom: 2px dashed var(--control);
+  --notch-x: var(--s4);
+  --notch: var(--bg);
+  --notch-bottom: var(--notch-offset);
+}
+.request-head strong { font-size: 1.3rem; letter-spacing: 0.04em; }
+.request-progress li, .request-progress li.filled, .request-progress.served li {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  background: var(--ink-soft);
+}
+.request-progress li::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--charcoal);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.request-progress li.filled::after { transform: scaleX(1); }
+.request-progress.served li::after { background: var(--ok); }
+
+/* ---------- reservation ---------- */
+.reserve h1 { font-size: 2.6rem; line-height: 0.92; }
+.reserve h2 { font-size: 1.7rem; line-height: 1; }
+.reserve .divider { margin: var(--s6) 0 var(--s5); border-top: 2px dashed var(--control); }
+
+.time-option { font-size: var(--fs-row); letter-spacing: 0.02em; }
+.time-option.selected { border-color: var(--charcoal); background: var(--charcoal); color: var(--white); }
+
+.res-card { position: relative; border-radius: var(--r-card); }
+.res-card .res-head {
+  position: relative;
+  margin-bottom: 0;
+  padding-bottom: var(--s3);
+  border-bottom: 2px dashed var(--control);
+  --notch-x: var(--s4);
+  --notch: var(--bg);
+  --notch-bottom: var(--notch-offset);
+}
+.res-code { margin: var(--s5) 0; border: 2px dashed var(--control); }
+.res-code strong { letter-spacing: 0.06em; }
+.res-code.confirmed { border-color: var(--charcoal); background: var(--charcoal); }
+.res-code.confirmed small { color: var(--neutral-line); }
+.res-code.confirmed strong { color: var(--white); font-size: 2.1rem; }
+
+/* ---------- login: the landing page's ticket, the sign on one side and the form on the other ---------- */
+.login-wrap { padding: var(--s4); background: var(--brand); }
+.login-ticket {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 440px;
+  overflow: hidden;
+  border-radius: var(--r-sheet);
+  background: var(--charcoal);
+  color: var(--bg);
+}
+.login-sign { position: relative; margin: 0; aspect-ratio: 16 / 9; background: var(--charcoal); }
+.login-sign img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 66%; }
+.login-card {
+  position: relative;
+  width: auto;
+  max-width: none;
+  padding: var(--s8) var(--s6) var(--s6);
+  border-top: 2px dashed var(--control);
+  border-radius: 0;
+  background: transparent;
+  color: var(--bg);
+}
+.login-card::before, .login-card::after {
+  content: '';
+  position: absolute;
+  top: var(--notch-offset);
+  width: var(--size-notch);
+  height: var(--size-notch);
+  border-radius: var(--r-pill);
+  background: var(--brand);
+}
+.login-card::before { left: calc(var(--size-notch-half) * -1); }
+.login-card::after { right: calc(var(--size-notch-half) * -1); }
+.login-card h1 { margin: 0 0 var(--s5); color: var(--bg); font-size: 3.3rem; line-height: 0.88; }
+.login-card .field { color: var(--neutral-line); }
+.login-card .field:focus-within > span { color: var(--white); }
+.login-card .field input:focus { box-shadow: 0 0 0 3px var(--brand); }
+.login-card :focus-visible { outline-color: var(--white); }
+@media (min-width: 760px) {
+  .login-ticket { max-width: 900px; min-height: 540px; flex-direction: row; }
+  .login-sign { flex: 0 0 46%; aspect-ratio: auto; }
+  .login-card { display: flex; flex: 1; flex-direction: column; justify-content: center; padding: var(--s10); border-top: 0; border-left: 2px dashed var(--control); }
+  .login-card::before { top: calc(var(--size-notch-half) * -1); left: var(--notch-offset); }
+  .login-card::after { top: auto; right: auto; bottom: calc(var(--size-notch-half) * -1); left: var(--notch-offset); }
+  .login-card h1 { font-size: 4.4rem; }
+}
+
+/* ---------- full-page messages (loading, not found, not allowed) ---------- */
+.center-screen {
+  position: relative;
+  width: min(calc(100% - var(--s8)), 440px);
+  max-width: none;
+  margin: max(var(--s8), 12vh) auto var(--s8);
+  padding: var(--s8) var(--s6);
+  border-radius: var(--r-sheet);
+  background: var(--bg);
+}
+.center-screen h1:not(.sr-only) {
+  position: relative;
+  margin: 0 0 var(--s5);
+  padding-bottom: var(--s5);
+  border-bottom: 2px dashed var(--control);
+  font-size: 2.7rem;
+  line-height: 0.9;
+  --notch-x: var(--s6);
+  --notch: var(--brand);
+  --notch-bottom: var(--notch-offset);
+}
+.center-screen > p { margin: 0 0 var(--s4); color: var(--text-2); }
+
+/* ---------- reserve: the dining room across the top of the sheet ---------- */
+.reserve-photo { aspect-ratio: 16 / 7; margin: calc(var(--s6) * -1) calc(var(--s4) * -1) var(--s5); overflow: hidden; border-radius: var(--r-sheet) var(--r-sheet) 0 0; background: var(--charcoal); }
+.reserve-photo img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 38% 55%; }
+.reserve h1 { margin-bottom: var(--s4); }

@@ -374,40 +374,44 @@ export default function Dashboard() {
       {data === null && !error && <p className="hint">Loading floor…</p>}
 
       {data && (
-        <>
-          <AttentionList
-            requests={requests}
-            pendingReservations={pendingReservations}
-            tablesById={tablesById}
-            today={today}
-            now={now}
-          />
+        <div className="dash-grid">
+          <aside className="dash-rail">
+            <AttentionList
+              requests={requests}
+              pendingReservations={pendingReservations}
+              tablesById={tablesById}
+              today={today}
+              now={now}
+            />
 
-          {noShows.length > 0 && (
-            <Notice tone="warn" onDismiss={() => dismiss(noShows.map(noShowKey))}>
-              <strong>Released after the grace period</strong>
-              <ul>
-                {noShows.map((r) => (
-                  <li key={r.reservation_id}>
-                    {displayName(r.customer_name)} (<span className="ticket">{r.reservation_code}</span>), booked for{' '}
-                    {fmtTime(r.reservation_time)}
-                    {tablesById[r.table_id] ? `, Table ${tablesById[r.table_id].table_number} released` : ''}
-                  </li>
-                ))}
-              </ul>
-            </Notice>
-          )}
+            {noShows.length > 0 && (
+              <Notice tone="warn" onDismiss={() => dismiss(noShows.map(noShowKey))}>
+                <strong>Released after the grace period</strong>
+                <ul>
+                  {noShows.map((r) => (
+                    <li key={r.reservation_id}>
+                      {displayName(r.customer_name)} (<span className="ticket">{r.reservation_code}</span>), booked for{' '}
+                      {fmtTime(r.reservation_time)}
+                      {tablesById[r.table_id] ? `, Table ${tablesById[r.table_id].table_number} released` : ''}
+                    </li>
+                  ))}
+                </ul>
+              </Notice>
+            )}
+          </aside>
 
-          <FloorMap
-            tables={tables}
-            sessionByTable={sessionByTable}
-            bookingsByTable={bookingsByTable}
-            requestCountByTable={requestCountByTable}
-            slotMinutes={slotMinutes}
-            now={now}
-            onSelect={selectTable}
-          />
-        </>
+          <div className="dash-floor">
+            <FloorMap
+              tables={tables}
+              sessionByTable={sessionByTable}
+              bookingsByTable={bookingsByTable}
+              requestCountByTable={requestCountByTable}
+              slotMinutes={slotMinutes}
+              now={now}
+              onSelect={selectTable}
+            />
+          </div>
+        </div>
       )}
 
       {selected && (

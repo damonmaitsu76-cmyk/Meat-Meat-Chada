@@ -3,6 +3,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthContext.js'
 import { ADMIN_ROLES, ROLE_LABEL, STAFF_ROLES } from '../../auth/roles.js'
 import Modal from '../../components/Modal.jsx'
+import { withViewTransition } from '../../lib/viewTransition.js'
 import { LiveStatusContext } from '../../components/liveStatus.js'
 import { LiveIndicator } from '../../components/ui.jsx'
 import useRequestAlarm from './useRequestAlarm.js'
@@ -60,7 +61,7 @@ export default function StaffLayout() {
 
         <nav className="staff-nav" aria-label="Staff screens">
           {links.map((item) => (
-            <NavLink key={item.to} to={item.to} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink key={item.to} to={item.to} onClick={withViewTransition(navigate, item.to)} className={({ isActive }) => (isActive ? 'active' : '')}>
               <CountLabel item={item} counts={counts} />
             </NavLink>
           ))}
@@ -70,7 +71,7 @@ export default function StaffLayout() {
 
         <nav className={`staff-bottom-nav ${adminLinks.length ? 'has-more' : ''}`} aria-label="Daily staff screens">
           {dailyLinks.map((item) => (
-            <NavLink key={item.to} to={item.to} aria-label={item.to === '/staff/requests' && counts.requests ? `Requests, ${counts.requests} active` : item.to === '/staff/reservations' && counts.reservations ? `Reservations, ${counts.reservations} pending` : item.label} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink key={item.to} to={item.to} onClick={withViewTransition(navigate, item.to)} aria-label={item.to === '/staff/requests' && counts.requests ? `Requests, ${counts.requests} active` : item.to === '/staff/reservations' && counts.reservations ? `Reservations, ${counts.reservations} pending` : item.label} className={({ isActive }) => (isActive ? 'active' : '')}>
               {item.label}{(item.to === '/staff/requests' ? counts.requests : item.to === '/staff/reservations' ? counts.reservations : 0) > 0 && <span className="nav-count"> · {item.to === '/staff/requests' ? counts.requests : counts.reservations}</span>}
             </NavLink>
           ))}
@@ -81,7 +82,7 @@ export default function StaffLayout() {
           <Modal title="More staff screens" onClose={() => setMoreOpen(false)}>
             <nav className="more-links" aria-label="More staff screens">
               {adminLinks.map((item) => (
-                <NavLink key={item.to} to={item.to} onClick={() => setMoreOpen(false)}>{item.label}</NavLink>
+                <NavLink key={item.to} to={item.to} onClick={(event) => { setMoreOpen(false); withViewTransition(navigate, item.to)(event) }}>{item.label}</NavLink>
               ))}
             </nav>
           </Modal>

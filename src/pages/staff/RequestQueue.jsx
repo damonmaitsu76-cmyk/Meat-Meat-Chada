@@ -196,47 +196,51 @@ export default function RequestQueue() {
       {requests === null && !error && <p className="hint">Loading requests…</p>}
       {requests && !error && activeGroups.length === 0 && <EmptyState>No open requests. New ones show up here as soon as a table sends one.</EmptyState>}
 
-      {activeGroups.map((group) => (
-        <section className="queue-group" key={group.status} aria-labelledby={`queue-${group.status}`}>
-          <div className="queue-group-head">
-            <h2 className="queue-group-heading" id={`queue-${group.status}`}>{group.label} <span>{group.requests.length}</span></h2>
-            {group.requests.length > 1 && (
-              <button className="btn ghost small" type="button" disabled={busyGroup === group.status} onClick={() => advanceAll(group)}>
-                {busyGroup === group.status ? 'Saving…' : NEXT[group.status].bulk}
-              </button>
-            )}
-          </div>
-          <div className="request-grid">
-            {group.requests.map((request) => {
-              const next = NEXT[request.status]
-              const waited = Math.max(0, Math.floor((now - new Date(request.created_at).getTime()) / 60000))
-              const late = request.status === 'sent' && waited >= LATE_MINUTES
-              const items = request.request_items || []
-              const busy = busyId === request.request_id || busyGroup === group.status
-              return (
-                <RecordCard
-                  key={request.request_id}
-                  className={`request-ticket ${late ? 'late' : ''}`.trim()}
-                  title={`Table ${request.restaurant_tables?.table_number ?? '—'}`}
-                  status={<span className="ticket request-age">{late ? 'Waiting ' : ''}{formatDuration(waited)}</span>}
-                  subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span><span> · {plural(totalQuantity(items), 'item', 'items')}</span></>}
-                  actions={next ? (
-                    <>
-                      <button className="btn full" type="button" disabled={busy} onClick={() => advance(request)}>
-                        {busyId === request.request_id ? 'Saving…' : next.label}
-                      </button>
-                      <button className="btn ghost full" type="button" disabled={busy} onClick={() => reject(request)}>Reject</button>
-                    </>
-                  ) : undefined}
-                >
-                  <ItemList items={items} limit={TICKET_ITEM_LIMIT} />
-                  {request.note && <p className="ticket-note"><strong>Note:</strong> {request.note}</p>}
-                </RecordCard>
-              )
-            })}
-          </div>
-        </section>
-      ))}
+      {activeGroups.length > 0 && (
+        <div className="queue-board">
+          {activeGroups.map((group) => (
+            <section className="queue-group" key={group.status} aria-labelledby={`queue-${group.status}`}>
+              <div className="queue-group-head">
+                <h2 className="queue-group-heading" id={`queue-${group.status}`}>{group.label} <span>{group.requests.length}</span></h2>
+                {group.requests.length > 1 && (
+                  <button className="btn ghost small" type="button" disabled={busyGroup === group.status} onClick={() => advanceAll(group)}>
+                    {busyGroup === group.status ? 'Saving…' : NEXT[group.status].bulk}
+                  </button>
+                )}
+              </div>
+              <div className="request-grid">
+                {group.requests.map((request) => {
+                  const next = NEXT[request.status]
+                  const waited = Math.max(0, Math.floor((now - new Date(request.created_at).getTime()) / 60000))
+                  const late = request.status === 'sent' && waited >= LATE_MINUTES
+                  const items = request.request_items || []
+                  const busy = busyId === request.request_id || busyGroup === group.status
+                  return (
+                    <RecordCard
+                      key={request.request_id}
+                      className={`request-ticket ${late ? 'late' : ''}`.trim()}
+                      title={`Table ${request.restaurant_tables?.table_number ?? '—'}`}
+                      status={<span className="ticket request-age">{late ? 'Waiting ' : ''}{formatDuration(waited)}</span>}
+                      subtitle={<><span className="ticket">{request.request_number}</span><span> · {formatTime(request.created_at)}</span><span> · {plural(totalQuantity(items), 'item', 'items')}</span></>}
+                      actions={next ? (
+                        <>
+                          <button className="btn full" type="button" disabled={busy} onClick={() => advance(request)}>
+                            {busyId === request.request_id ? 'Saving…' : next.label}
+                          </button>
+                          <button className="btn ghost full" type="button" disabled={busy} onClick={() => reject(request)}>Reject</button>
+                        </>
+                      ) : undefined}
+                    >
+                      <ItemList items={items} limit={TICKET_ITEM_LIMIT} />
+                      {request.note && <p className="ticket-note"><strong>Note:</strong> {request.note}</p>}
+                    </RecordCard>
+                  )
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      )}
 
       {served.length > 0 && (
         <section className="served-group" aria-labelledby="queue-served">

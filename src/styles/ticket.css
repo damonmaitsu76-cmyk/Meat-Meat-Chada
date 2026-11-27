@@ -1,0 +1,98 @@
+/* Ticket system, part 1 of 4: the ground, the display face, notches and the shared controls.
+   Chili red ground, paper sheets, charcoal mastheads, dashed perforations with notches cut into
+   the edge, and the condensed display face from the landing page's title.
+
+   The four ticket-*.css and motion.css files load after every other stylesheet (see main.jsx), so
+   at equal specificity they win. Colors, sizes and timings all come from tokens.css.
+   Look lives in ticket.css, ticket-customer.css and ticket-staff.css. Movement lives in motion.css. */
+
+:root { background: var(--brand); }
+body { background: var(--brand); }
+::selection { background: var(--charcoal); color: var(--white); }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* The condensed, heavy face that the landing page uses for its title. Anything that names a place
+   (a screen, a table, a section, a big number) wears it, so every page reads like the same ticket. */
+.brand, .customer-title, .reserve h1, .reserve h2, .center-screen h1, .login-card h1,
+.modal-head h2, .modal-title, .attention h2, .floor-heading h2, .mm-section h2, .rep-card h2,
+.set-card h2, .imp-card h2, .page-toolbar > h1.sr-only, .staff-main > h1.sr-only,
+.tile-number, .attention-count, .rep-number, .tm-table-title, .request-ticket .record-title,
+.table-badge, .time-option {
+  font-family: var(--font-ticket);
+  font-weight: 800;
+  font-stretch: 75%;
+  letter-spacing: -0.015em;
+}
+
+/* Small tracked capitals, like the labels on the landing page's stub. */
+.tray-group-title, .tile-label, .q-table th, .activity-day h3, .queue-group-heading, .served-head {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ---------- notches ----------
+   A perforation is a dashed line with a half circle cut out of each end. The host sets
+   --notch-x (distance from the host's edge to the sheet's edge), --notch (the color behind the
+   sheet, so the half circle reads as a hole) and one of --notch-top / --notch-bottom. */
+:is(.center-screen h1:not(.sr-only), .ticket-card .request-head, .res-card .res-head,
+    .request-ticket .record-body, .page-toolbar, .staff-main > h1.sr-only)::before,
+:is(.center-screen h1:not(.sr-only), .ticket-card .request-head, .res-card .res-head,
+    .request-ticket .record-body, .page-toolbar, .staff-main > h1.sr-only)::after {
+  content: '';
+  position: absolute;
+  top: var(--notch-top, auto);
+  bottom: var(--notch-bottom, auto);
+  width: var(--size-notch);
+  height: var(--size-notch);
+  border-radius: var(--r-pill);
+  background: var(--notch, var(--bg));
+  pointer-events: none;
+}
+:is(.center-screen h1:not(.sr-only), .ticket-card .request-head, .res-card .res-head,
+    .request-ticket .record-body, .page-toolbar, .staff-main > h1.sr-only)::before { left: calc(var(--notch-x, 0px) * -1 - var(--size-notch-half)); }
+:is(.center-screen h1:not(.sr-only), .ticket-card .request-head, .res-card .res-head,
+    .request-ticket .record-body, .page-toolbar, .staff-main > h1.sr-only)::after { right: calc(var(--notch-x, 0px) * -1 - var(--size-notch-half)); }
+
+/* ---------- messages ---------- */
+.error { padding: var(--s2) var(--s3); border-radius: var(--r-ctrl); background: var(--brand-soft); }
+.empty-state { margin: var(--s4) 0; padding: var(--s8) var(--s4); border: 2px dashed var(--control); border-radius: var(--r-card); }
+.notice, .success { border-radius: var(--r-card); }
+
+/* ---------- status chips read as stamps ---------- */
+.status-chip, .tag { text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+
+/* ---------- fields ---------- */
+.field:focus-within > span { color: var(--text); }
+.field input:focus, .field select:focus, .field textarea:focus, .search:focus {
+  border-color: var(--charcoal);
+  box-shadow: 0 0 0 3px var(--ink-soft);
+}
+
+/* ---------- dialogs: a printed slip with a dashed tear line under the title ---------- */
+.modal-head h2, .modal-title { font-size: 1.9rem; line-height: 1; }
+.modal-scroll .modal-head { border-bottom: 2px dashed var(--control); }
+.modal-actions { padding-top: var(--s4); }
+
+/* ---------- filter tabs and segmented controls: the underline is a pseudo-element, so it can slide ---------- */
+.filter-tab, .segmented-option { position: relative; }
+.filter-tab::after, .segmented-option::after {
+  content: '';
+  position: absolute;
+  right: var(--s2);
+  bottom: -2px;
+  left: var(--s2);
+  height: 2px;
+  background: var(--charcoal);
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.filter-tab.active::after, .segmented-option[aria-checked='true']::after { transform: scaleX(1); }
+.filter-tab.active, .segmented-option[aria-checked='true'] { border-bottom-color: transparent; }
+
+/* ---------- chips on the import screen ---------- */
+.chip.active { background: var(--charcoal); }
+
+/* ---------- switches: a wider knob while pressed ---------- */
+.switch:active:not(:disabled)::after { width: 26px; }
+.switch[aria-checked='true']:active:not(:disabled)::after { transform: translateX(14px); }

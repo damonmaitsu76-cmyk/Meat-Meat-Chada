@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { siteUrl } from '../lib/hosts.js'
 import Forbidden from './Forbidden.jsx'
+import emblem from '../assets/chada-emblem.webp'
 import './Blocked.css'
 
 function Retired() {
@@ -19,6 +20,10 @@ function Retired() {
           <span className="blocked-brand">Samgyup Chada</span>
           <span className="blocked-code ticket">403</span>
         </header>
+
+        <figure className="blocked-emblem">
+          <img src={emblem} width="720" height="720" alt="" />
+        </figure>
 
         <div className="blocked-body">
           <h1 id="blocked-title">This address is no longer in use</h1>

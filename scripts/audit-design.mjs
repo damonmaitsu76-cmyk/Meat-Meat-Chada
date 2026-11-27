@@ -61,6 +61,14 @@ const pairs = [
   ['control / bg', 'control', 'bg', 3],
   ['ok-line / charcoal', 'ok-line', 'charcoal', 3],
   ['warn-line / charcoal', 'warn-line', 'charcoal', 3],
+  ['bg on chili red ground', 'bg', 'brand', 4.5],
+  ['white on chili red ground', 'white', 'brand', 4.5],
+  ['neutral-line / charcoal', 'neutral-line', 'charcoal', 4.5],
+  ['white / ink-line (active dock and nav)', 'white', 'ink-line', 4.5],
+  ['neutral-line / ink-line', 'neutral-line', 'ink-line', 4.5],
+  ['bg / charcoal (landing, login, blocked)', 'bg', 'charcoal', 4.5],
+  ['control / charcoal (perforations)', 'control', 'charcoal', 3],
+  ['brand ground / bg (sheet edge)', 'brand', 'bg', 3],
 ]
 
 let failures = 0
