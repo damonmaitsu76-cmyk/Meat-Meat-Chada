@@ -12,10 +12,10 @@ The landing page is the reference, and every screen follows it. The page ground 
 
 Layouts follow the job, not a template:
 
-- Guest on a phone mid-meal (`QRMenu`, `Reserve`): one thumb. A rounded masthead with a table stamp, one paper sheet, a floating charcoal dock for Menu, Tray and Status, and a paper bar above it with the one primary action. Dishes are ticket lines with a dotted leader. A request prints as a receipt with a tear line, and its progress bar fills as staff act. The approved reservation ID prints onto a charcoal stub.
+- Guest on a phone mid-meal (`QRMenu`, `Reserve`): one thumb. A rounded masthead with a table stamp, one paper sheet, a floating charcoal dock for Menu, Tray and Status, and a paper bar above it with the one primary action. Dishes are ticket lines with a dotted leader. A request prints as a receipt with a tear line, and its progress bar fills as staff act. The approved reservation ID prints onto a charcoal stub. `Reserve` reads top to bottom as When (guests, a strip of the next seven days, every time of the day on one board with full times struck through) then Who (name and number), ending in a slip that says the booking in words beside a small clock showing the chosen time. A clock is not the control: reservations pick from the times that are actually open, and a dial cannot show which ones are full. Below the form, the lookup for an existing booking is a charcoal stub torn off along a perforation. Once a reservation exists, its ticket sits straight on the red ground with no paper sheet behind it.
 - Staff at the floor (`Dashboard`): the floor plan leads and "Needs attention" is a rail beside it on screens 1000px and wider. On a phone the rail comes first.
 - Staff in the kitchen (`RequestQueue`): a rail of columns (New, Accepted, Ready), tickets stacked in each. On a phone the columns stack.
-- Manager at a desk: `Reports` opens with a charcoal tape of headline figures. `TableManagement` shows each table as a table tent with its number big. `MenuManagement` is a ledger with dotted leaders. The rest are ledgers and cards on the same sheet.
+- Manager at a desk: `Reports` opens with a charcoal tape of headline figures. `TableManagement` shows each table as a ticket: a charcoal stub with the number and seat count, a dashed tear line with a notch at each end, then a little plan of the table with its chairs and the QR code and Edit buttons. `MenuManagement` is a ledger with dotted leaders. The rest are ledgers and cards on the same sheet.
 - Login, Blocked and Forbidden are tickets on the ground. The sign photo, the dining-room photo and the emblem come from `src/assets`; no stock images. The emblem is on black, so it sits on charcoal with `mix-blend-mode: lighten`.
 
 ## Tokens and layout
@@ -40,7 +40,8 @@ Motion makes state changes and arrivals feel physical. It is allowed to be big, 
 - Entrances: a ticket drops in, sheets and lists rise, rows arrive one after another (`--i`, the position among siblings, times `--stagger`), tables on the floor are dealt, receipts and request tickets print from the top, and notches pop open after their ticket lands.
 - State changes: a status chip stamps in, an active tab pops, a table that changes state thunks, a progress bar fills from the left, an error shakes once.
 - Controls are tactile: buttons fill with ink from the left on hover and squash on press, switches widen under a finger, steppers and chips spring, chairs on a floor tile slide out on hover. Nothing lifts or glows.
-- Route changes use the browser's View Transitions API through React Router's `viewTransition` links. The masthead and the dock keep their own names so they stay still while the page changes.
+- Route changes use the browser's View Transitions API through `withViewTransition` in `src/lib/viewTransition.js`. The masthead and the dock keep their own names so they stay still while the page changes. While a view transition waits for the page to update, the browser stops painting, and `requestAnimationFrame` stops with it. Never wait for an animation frame inside that callback: the page freezes and, after 4 seconds, the browser throws `TimeoutError: Transition was aborted because of timeout in DOM update`. Handle every promise the transition returns.
+- Exits are quicker than entrances (`--t-exit`) and play once. A dialog that closes plays the reverse of printing in: the slip rolls back up (a sheet slides down on a phone). React removes a closed dialog at once, so `src/lib/exitGhost.js` keeps a copy on screen, marked `[data-leaving]`, while it plays. Use `useLeaveAsGhost` in any new dialog. A dismissed `Notice` folds away before it tells its screen. A form that turns into its ticket cross-fades (`showTransition`).
 - Nothing loops. No infinite animation, no pulsing, no marquee. The audit script fails on `infinite`.
 - Everything respects `prefers-reduced-motion`: `global.css` switches off every animation and transition, `motion.css` switches off the view transition, and the landing page's pointer effect is not attached. Content must read correctly with no motion.
 
@@ -67,11 +68,11 @@ Use sentence case and concrete action labels. Short labels have no terminal peri
 
 ## Do not
 
-Do not change Supabase schema, RLS, RPC names, route paths, host logic (`src/lib/hosts.js`), authentication logic, realtime channel logic, import rules, QR URLs, print behavior, or product names. Do not add runtime dependencies, fonts, icon packs, stock images, invented data, gradients, blur, glows, colored shadows, emoji, looping or infinite animation, `transition: all`, hover lift, or decoration without a purpose. Do not show state by color alone. Do not put raw color values anywhere but `tokens.css` (the two static pages in `public/` are the exception, because they must stand alone).
+Do not change Supabase schema, RLS, RPC names, route paths, host logic (`src/lib/hosts.js`), authentication logic, realtime channel logic, import rules, QR URLs, print behavior, or product names. Do not add runtime dependencies, fonts, icon packs, stock images, invented data, gradients (a gradient inside a `mask` that cuts a notch out of a dialog is fine: it paints nothing), blur, glows, colored shadows, emoji, looping or infinite animation, `transition: all`, hover lift, or decoration without a purpose. Do not show state by color alone. Do not put raw color values anywhere but `tokens.css` (the two static pages in `public/` are the exception, because they must stand alone).
 
 ## Checks
 
-`node scripts/audit-design.mjs` checks the contrast of every token pair the design uses (including text on chili red and on charcoal) and counts raw colors, gradients, blur, infinite animation, `transition: all`, wide colored borders and duplicated input styles. `npm test` and `npm run lint` must pass.
+`node scripts/audit-design.mjs` checks the contrast of every token pair the design uses (including text on chili red and on charcoal) and counts raw colors, gradients (outside `mask` declarations), blur, infinite animation, `transition: all`, wide colored borders and duplicated input styles. `npm test` and `npm run lint` must pass.
 
 ## Recon audit
 

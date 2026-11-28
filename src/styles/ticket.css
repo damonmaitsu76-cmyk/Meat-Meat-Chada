@@ -17,8 +17,8 @@ html { scroll-behavior: smooth; }
 .brand, .customer-title, .reserve h1, .reserve h2, .center-screen h1, .login-card h1,
 .modal-head h2, .modal-title, .attention h2, .floor-heading h2, .mm-section h2, .rep-card h2,
 .set-card h2, .imp-card h2, .page-toolbar > h1.sr-only, .staff-main > h1.sr-only,
-.tile-number, .attention-count, .rep-number, .tm-table-title, .request-ticket .record-title,
-.table-badge, .time-option {
+.tile-number, .attention-count, .rep-number, .tm-number, .request-ticket .record-title,
+.table-badge, .slot {
   font-family: var(--font-ticket);
   font-weight: 800;
   font-stretch: 75%;
@@ -69,10 +69,25 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 0 0 3px var(--ink-soft);
 }
 
-/* ---------- dialogs: a printed slip with a dashed tear line under the title ---------- */
+/* ---------- dialogs: a printed slip with a dashed tear line under the title ----------
+   The title bar and the body are two pieces of paper meeting at the perforation. Each piece has a
+   half circle cut out of its edge there (a mask, so the page behind the scrim shows through the
+   hole instead of a painted dot). The mask only uses the alpha of its colour. */
 .modal-head h2, .modal-title { font-size: 1.9rem; line-height: 1; }
-.modal-scroll .modal-head { border-bottom: 2px dashed var(--control); }
 .modal-actions { padding-top: var(--s4); }
+.modal.modal-scroll { background: transparent; }
+.modal-scroll .modal-head, .modal-scroll .modal-body { background: var(--card); }
+.modal-scroll .modal-head {
+  border-bottom: 2px dashed var(--control);
+  mask:
+    radial-gradient(circle var(--size-notch-half) at 0 calc(100% - 1px), transparent calc(var(--size-notch-half) - 0.5px), var(--charcoal) var(--size-notch-half)) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--size-notch-half) at 100% calc(100% - 1px), transparent calc(var(--size-notch-half) - 0.5px), var(--charcoal) var(--size-notch-half)) right / 51% 100% no-repeat;
+}
+.modal-scroll .modal-body {
+  mask:
+    radial-gradient(circle var(--size-notch-half) at 0 -1px, transparent calc(var(--size-notch-half) - 0.5px), var(--charcoal) var(--size-notch-half)) left / 51% 100% no-repeat,
+    radial-gradient(circle var(--size-notch-half) at 100% -1px, transparent calc(var(--size-notch-half) - 0.5px), var(--charcoal) var(--size-notch-half)) right / 51% 100% no-repeat;
+}
 
 /* ---------- filter tabs and segmented controls: the underline is a pseudo-element, so it can slide ---------- */
 .filter-tab, .segmented-option { position: relative; }

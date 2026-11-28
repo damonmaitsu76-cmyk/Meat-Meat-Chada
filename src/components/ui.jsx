@@ -50,13 +50,42 @@ export function StatusChip({ status, children, className = '' }) {
   return <span className={`status-chip ${tone} ${className}`.trim()}>{children || label}</span>
 }
 
+const NOTICE_EXIT_MS = 200 // keep in step with --t-exit in tokens.css
+
 export function Notice({ tone = 'info', action, onDismiss, children, className = '' }) {
+  const ref = useRef(null)
+  const done = useRef(false)
+  const [leaveHeight, setLeaveHeight] = useState(null) // set while the notice folds away
+
+  function finish() {
+    if (done.current) return
+    done.current = true
+    onDismiss()
+  }
+
+  // Fold away first, then tell the screen. Without motion, tell it at once.
+  function dismiss() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      finish()
+      return
+    }
+    setLeaveHeight(ref.current?.offsetHeight ?? 0)
+    setTimeout(finish, NOTICE_EXIT_MS + 80) // in case the animation never reports that it ended
+  }
+
+  const leaving = leaveHeight !== null
   return (
-    <div className={`notice notice-${tone} ${className}`.trim()} role="status">
+    <div
+      ref={ref}
+      className={`notice notice-${tone} ${leaving ? 'leaving' : ''} ${className}`.replace(/\s+/g, ' ').trim()}
+      role="status"
+      style={leaving ? { '--leave-height': `${leaveHeight}px` } : undefined}
+      onAnimationEnd={(event) => { if (leaving && event.target === event.currentTarget) finish() }}
+    >
       <div>{children}</div>
       {action}
       {onDismiss && (
-        <button type="button" className="notice-dismiss" aria-label="Dismiss" onClick={onDismiss}>
+        <button type="button" className="notice-dismiss" aria-label="Dismiss" disabled={leaving} onClick={dismiss}>
           ×
         </button>
       )}

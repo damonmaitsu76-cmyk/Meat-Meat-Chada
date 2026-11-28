@@ -42,6 +42,16 @@
   to { opacity: 1; clip-path: inset(0 0 0 0 round var(--r-sheet)); transform: translate(-50%, -50%); }
 }
 @keyframes sheet-rise { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes fade-out { to { opacity: 0; } }
+@keyframes modal-leave {
+  from { opacity: 1; clip-path: inset(0 0 0 0 round var(--r-sheet)); transform: translate(-50%, -50%); }
+  to { opacity: 0; clip-path: inset(0 0 100% 0 round var(--r-sheet)); transform: translate(-50%, calc(-50% - var(--s4))); }
+}
+@keyframes sheet-leave { to { transform: translateY(100%); } }
+@keyframes notice-leave {
+  from { height: var(--leave-height); }
+  to { height: 0; margin-block: 0; padding-block: 0; opacity: 0; }
+}
 @keyframes ticket-drop { from { opacity: 0; transform: translateY(-64px) rotate(-1.4deg); } }
 @keyframes letter-in { from { opacity: 0; transform: translateY(0.7em) rotate(7deg) scale(0.7); } }
 @keyframes sign-settle { from { transform: scale(1.25); } }
@@ -61,9 +71,21 @@
   .modal { animation-name: sheet-rise; }
 }
 
+/* ---------- things leave ----------
+   Exits are quicker than entrances and play once. A closed dialog is a copy of the dialog marked
+   [data-leaving] (see src/lib/exitGhost.js). The reverse of printing in: the slip rolls back up. */
+.backdrop[data-leaving] { animation: fade-out var(--t-exit) forwards; }
+.modal[data-leaving] { animation: modal-leave var(--t-exit) forwards; }
+@media (max-width: 560px) {
+  .modal[data-leaving] { animation-name: sheet-leave; }
+}
+/* A dismissed notice folds away and the content below slides up to meet it. --leave-height is its
+   own height, set by Notice, because a height cannot animate from auto in every browser. */
+.notice.leaving { overflow: hidden; animation: notice-leave var(--t-exit) forwards; }
+
 /* ---------- lists and grids: each row arrives a beat after the one before ---------- */
 .menu-list > li, .mm-list > li, .tm-list > li, .attention-list > li, .rep-list > li,
-.activity-list > li, .served-list > li, .record-cards > *, .time-grid > *, .tray-group,
+.activity-list > li, .served-list > li, .record-cards > *, .board-slots > *, .tray-group,
 .set-form > *, .rep-summary-tier > *, .imp-card, .rep-card, .queue-group, .q-table tbody tr {
   animation: rise var(--t-print) backwards;
   animation-delay: calc(var(--i) * var(--stagger));
@@ -87,7 +109,7 @@
 
 /* ---------- state changes ---------- */
 .status-chip, .tag { animation: stamp var(--t-press) backwards; }
-.filter-tab.active, .chip.active, .radio-card.selected, .time-option.selected, .menu-tabs .tab.active,
+.filter-tab.active, .chip.active, .radio-card.selected, .day.selected, .slot.selected, .menu-tabs .tab.active,
 .bottom-nav button.active, .staff-bottom-nav a.active, .staff-bottom-nav button.active, .staff-nav a.active,
 .stepper { animation: pop var(--t-press); }
 .error { animation: shake var(--t-slow); }
@@ -129,8 +151,8 @@
 .field > span, .field input, .field select, .field textarea, .search { transition: color var(--t-fast), border-color var(--t-fast), box-shadow var(--t-fast); }
 .filter-tab, .segmented-option { transition: color var(--t-fast); }
 .filter-tab::after, .segmented-option::after { transition: transform var(--t-slow); }
-.radio-card, .time-option, .chip, .tab { transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-press); }
-.radio-card:active, .time-option:active:not(:disabled), .chip:active { transform: scale(0.97); }
+.radio-card, .day, .slot, .chip, .tab { transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-press); }
+.radio-card:active, .day:active, .slot:active:not(:disabled), .chip:active { transform: scale(0.97); }
 .stepper button { transition: transform var(--t-press), background var(--t-fast); }
 .stepper button:active:not(:disabled) { transform: scale(0.84); }
 .switch::after { transition: transform var(--t-press), width var(--t-fast); }
@@ -252,5 +274,6 @@
 .tile-flag { animation: stamp var(--t-press) backwards; }
 .dash-rail > * { animation: rise var(--t-print) backwards; animation-delay: calc(var(--i) * var(--stagger) + 120ms); }
 
-/* ---------- reserve: the photo settles as the sheet arrives ---------- */
+/* ---------- reserve: the photo settles as the sheet arrives; the clock hands swing to the chosen time ---------- */
 .reserve-photo img { animation: sign-settle 1400ms var(--ease-out) backwards; }
+.clock-hand { transition: transform 700ms var(--ease-spring), stroke var(--t-fast); }

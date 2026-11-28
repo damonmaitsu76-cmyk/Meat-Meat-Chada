@@ -197,7 +197,7 @@ export default function Settings() {
             </label>
           </section>
 
-          <section className="set-card">
+          <section className="set-card set-hours">
             <h2>Opening hours</h2>
             <div className="set-row">
               <label className="field">

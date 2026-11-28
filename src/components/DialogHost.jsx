@@ -1,11 +1,13 @@
 import { useState, useSyncExternalStore } from 'react'
 import * as AlertDialog from '@radix-ui/react-alert-dialog'
 import * as Dialog from '@radix-ui/react-dialog'
+import { useLeaveAsGhost } from '../lib/exitGhost.js'
 import { closeCurrent, getCurrent, subscribe } from './dialogs.js'
 
 // Mount once, next to <App />. It shows whatever confirmDialog() / promptDialog() asked for.
 
 function Confirm({ spec }) {
+  const { overlayRef, contentRef } = useLeaveAsGhost()
   const noMessage = spec.message ? {} : { 'aria-describedby': undefined }
   return (
     <AlertDialog.Root
@@ -15,8 +17,8 @@ function Confirm({ spec }) {
       }}
     >
       <AlertDialog.Portal>
-        <AlertDialog.Overlay className="backdrop" />
-        <AlertDialog.Content className="modal modal-small" {...noMessage}>
+        <AlertDialog.Overlay ref={overlayRef} className="backdrop" />
+        <AlertDialog.Content ref={contentRef} className="modal modal-small" {...noMessage}>
           <AlertDialog.Title className="modal-title">{spec.title}</AlertDialog.Title>
           {spec.message && (
             <AlertDialog.Description className="modal-text">{spec.message}</AlertDialog.Description>
@@ -40,6 +42,7 @@ function Confirm({ spec }) {
 }
 
 function Prompt({ spec }) {
+  const { overlayRef, contentRef } = useLeaveAsGhost()
   const [value, setValue] = useState('')
   return (
     <Dialog.Root
@@ -49,8 +52,8 @@ function Prompt({ spec }) {
       }}
     >
       <Dialog.Portal>
-        <Dialog.Overlay className="backdrop" />
-        <Dialog.Content className="modal modal-small" aria-describedby={undefined}>
+        <Dialog.Overlay ref={overlayRef} className="backdrop" />
+        <Dialog.Content ref={contentRef} className="modal modal-small" aria-describedby={undefined}>
           <Dialog.Title className="modal-title">{spec.title}</Dialog.Title>
           <form
             onSubmit={(e) => {

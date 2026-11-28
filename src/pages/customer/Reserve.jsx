@@ -1,10 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient.js'
 import { confirmDialog } from '../../components/dialogs.js'
-import { Field, Segmented, StatusChip, Stepper } from '../../components/ui.jsx'
+import { Field, StatusChip, Stepper } from '../../components/ui.jsx'
 import { fmtDate, fmtTime, manilaDate, shiftDate } from '../../lib/dates.js'
 import { friendlyError } from '../../lib/errors.js'
 import { normalizePhone } from '../../lib/phone.js'
+import { showTransition } from '../../lib/viewTransition.js'
+import DayStrip from './DayStrip.jsx'
+import Slip from './Slip.jsx'
+import TimeBoard from './TimeBoard.jsx'
 import diningRoom from '../../assets/chada-dining-room.webp'
 import './Reserve.css'
 
@@ -51,7 +55,6 @@ function ReservationForm({ onCreated }) {
   const [guests, setGuests] = useState(2)
   const [date, setDate] = useState(today)
   const [time, setTime] = useState('')
-  const [period, setPeriod] = useState('')
   const [tick, setTick] = useState(0)
   const [slotResult, setSlotResult] = useState(null)
   const [fieldErrors, setFieldErrors] = useState({})
@@ -72,19 +75,11 @@ function ReservationForm({ onCreated }) {
 
   const loaded = slotsKey && slotResult?.key === slotsKey ? slotResult : null
   const slotsLoading = Boolean(slotsKey) && !loaded
-  const slots = loaded?.slots || []
-  const openSlots = slots.filter((slot) => slot.is_open)
+  // While new times load, the board keeps showing the old ones (switched off) so the page does not jump.
+  const slots = (loaded ?? slotResult)?.slots || []
+  const openSlots = (loaded?.slots || []).filter((slot) => slot.is_open)
   const chosenTime = openSlots.some((slot) => slot.slot_time === time) ? time : ''
   const noOpenSlots = loaded && !loaded.error && openSlots.length === 0
-  const periodForTime = (slotTime) => slotTime < '14:00:00' ? 'lunch' : slotTime < '17:00:00' ? 'afternoon' : 'dinner'
-  const periods = [
-    { key: 'lunch', label: 'Lunch', slots: openSlots.filter((slot) => periodForTime(slot.slot_time) === 'lunch') },
-    { key: 'afternoon', label: 'Afternoon', slots: openSlots.filter((slot) => periodForTime(slot.slot_time) === 'afternoon') },
-    { key: 'dinner', label: 'Dinner', slots: openSlots.filter((slot) => periodForTime(slot.slot_time) === 'dinner') },
-  ].filter((item) => item.slots.length > 0)
-  const selectedPeriod = periods.some((item) => item.key === period)
-    ? period
-    : chosenTime ? periodForTime(chosenTime) : periods[0]?.key || ''
 
   function updateField(field, setter, value) {
     setter(value)
@@ -124,85 +119,73 @@ function ReservationForm({ onCreated }) {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form className="reserve-form" onSubmit={onSubmit} noValidate>
       <figure className="reserve-photo">
         <img src={diningRoom} width="1568" height="673" alt="The Samgyup Chada dining room: black marble tables with tabletop grills and a neon-lit counter" />
       </figure>
       <h1>Reserve a table</h1>
 
-      <Field
-        id="reservation-name"
-        label="Your name"
-        type="text"
-        required
-        maxLength={80}
-        autoComplete="name"
-        value={name}
-        onChange={(event) => updateField('name', setName, event.target.value)}
-        error={fieldErrors.name}
-      />
-      <Field
-        id="reservation-contact"
-        label="Contact number"
-        type="tel"
-        required
-        maxLength={20}
-        autoComplete="tel"
-        inputMode="tel"
-        placeholder="0917 123 4567"
-        hint={fieldErrors.contact ? undefined : 'Philippine mobile number only.'}
-        value={contact}
-        onChange={(event) => updateField('contact', setContact, event.target.value.replace(/[^\d+\s().-]/g, ''))}
-        error={fieldErrors.contact}
-      />
+      <section className="part" aria-labelledby="part-when">
+        <h2 className="part-title" id="part-when"><span>When</span><span className="leader" aria-hidden="true" /></h2>
 
-      <div className="field-row">
-        <div className="field">
-          <span id="reservation-guests-label">Guests</span>
+        <div className="guests" role="group" aria-labelledby="reservation-guests-label">
+          <span id="reservation-guests-label" className="block-label">Guests</span>
           <Stepper value={guests} min={1} max={50} label="guests" onChange={(delta) => updateField('guests', setGuests, Math.min(50, Math.max(1, guests + delta)))} />
-          {fieldErrors.guests && <small className="field-error" role="alert">{fieldErrors.guests}</small>}
         </div>
+        {fieldErrors.guests && <small className="field-error block-error" role="alert">{fieldErrors.guests}</small>}
+
+        <div className="block">
+          <span id="reservation-date-label" className="block-label">Date</span>
+          <DayStrip
+            today={today}
+            max={shiftDate(today, MAX_DAYS_AHEAD)}
+            value={date}
+            labelledBy="reservation-date-label"
+            onChange={(next) => { updateField('date', setDate, next); setTime('') }}
+          />
+          {fieldErrors.date && <small className="field-error block-error" role="alert">{fieldErrors.date}</small>}
+        </div>
+
+        <fieldset className="block" aria-invalid={fieldErrors.time ? 'true' : undefined} aria-describedby={fieldErrors.time ? 'reservation-time-error' : undefined}>
+          <legend className="block-label">Time</legend>
+          {loaded?.error && <div className="time-error"><p className="error">{loaded.error}</p><button type="button" className="btn secondary small" onClick={() => setTick((value) => value + 1)}>Try again</button></div>}
+          {slots.length > 0 && <TimeBoard slots={slots} loading={slotsLoading} chosen={chosenTime} onChoose={(slotTime) => updateField('time', setTime, slotTime)} />}
+          {slotsLoading && slots.length === 0 && <p className="field-hint">Loading times…</p>}
+          {noOpenSlots && <p className="hint">No tables are open for this party size on this date. Try another date.</p>}
+          {fieldErrors.time && <small className="field-error block-error" id="reservation-time-error" role="alert">{fieldErrors.time}</small>}
+        </fieldset>
+      </section>
+
+      <section className="part" aria-labelledby="part-who">
+        <h2 className="part-title" id="part-who"><span>Who</span><span className="leader" aria-hidden="true" /></h2>
         <Field
-          id="reservation-date"
-          label="Date"
-          type="date"
+          id="reservation-name"
+          label="Your name"
+          type="text"
           required
-          min={today}
-          max={shiftDate(today, MAX_DAYS_AHEAD)}
-          value={date}
-          onChange={(event) => { updateField('date', setDate, event.target.value); setTime('') }}
-          error={fieldErrors.date}
+          maxLength={80}
+          autoComplete="name"
+          value={name}
+          onChange={(event) => updateField('name', setName, event.target.value)}
+          error={fieldErrors.name}
         />
-      </div>
+        <Field
+          id="reservation-contact"
+          label="Contact number"
+          type="tel"
+          required
+          maxLength={20}
+          autoComplete="tel"
+          inputMode="tel"
+          placeholder="0917 123 4567"
+          hint={fieldErrors.contact ? undefined : 'Philippine mobile number only.'}
+          value={contact}
+          onChange={(event) => updateField('contact', setContact, event.target.value.replace(/[^\d+\s().-]/g, ''))}
+          error={fieldErrors.contact}
+        />
+      </section>
 
-      <fieldset className="time-field" aria-invalid={fieldErrors.time ? 'true' : undefined} aria-describedby={fieldErrors.time ? 'reservation-time-error' : undefined}>
-        <legend>Time</legend>
-        {slotsLoading && <p className="field-hint">Loading times…</p>}
-        {loaded?.error && <div className="time-error"><p className="error">{loaded.error}</p><button type="button" className="btn secondary small" onClick={() => setTick((value) => value + 1)}>Try again</button></div>}
-        {openSlots.length > 0 && (
-          <>
-            {periods.length > 1 && <Segmented label="Time of day" items={periods.map(({ key, label }) => ({ key, label }))} value={selectedPeriod} onChange={setPeriod} />}
-            <div className="time-grid">
-              {periods.find((item) => item.key === selectedPeriod)?.slots.map((slot) => (
-                <button
-                  key={slot.slot_time}
-                  type="button"
-                  className={`time-option ${chosenTime === slot.slot_time ? 'selected' : ''}`}
-                  disabled={slotsLoading}
-                  aria-label={fmtTime(slot.slot_time)}
-                  aria-pressed={chosenTime === slot.slot_time}
-                  onClick={() => { setPeriod(periodForTime(slot.slot_time)); updateField('time', setTime, slot.slot_time) }}
-                >
-                  {fmtTime(slot.slot_time)}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-        {fieldErrors.time && <small className="field-error" id="reservation-time-error" role="alert">{fieldErrors.time}</small>}
-      </fieldset>
-
-      {noOpenSlots && <p className="hint">No tables are open for this party size on this date. Try another date.</p>}
+      <Slip date={date} time={chosenTime} guests={guests} />
       {error && <p className="error" role="alert">{error}</p>}
       <p className="hint">We use your name and number only to confirm your booking, and we remove your number from our records after 60 days.</p>
       <button className="btn full" type="submit" disabled={submitting}>
@@ -239,7 +222,7 @@ function LookupForm({ onFound }) {
   }
 
   return (
-    <form onSubmit={onSubmit} noValidate>
+    <form className="lookup-stub" onSubmit={onSubmit} noValidate>
       <h2>Have a reservation ID?</h2>
       <div className="lookup">
         <label className="field lookup-field" htmlFor="lookup-code">
@@ -314,8 +297,8 @@ function StatusCard({ code, last4, onReset }) {
   }
 
   const reservation = state?.code === code ? state.data : undefined
-  if (reservation === undefined) return error ? <div><p className="error" role="alert">{error}</p><button className="btn secondary" type="button" onClick={load}>Try again</button></div> : <p className="hint">Loading reservation…</p>
-  if (reservation === null) return <div className="empty-state"><p>We could not find this reservation.</p><button className="btn" type="button" onClick={onReset}>Start over</button></div>
+  if (reservation === undefined) return <div className="res-card">{error ? <><p className="error" role="alert">{error}</p><button className="btn secondary" type="button" onClick={load}>Try again</button></> : <p className="hint">Loading reservation…</p>}</div>
+  if (reservation === null) return <div className="res-card"><div className="empty-state"><p>We could not find this reservation.</p><button className="btn" type="button" onClick={onReset}>Start over</button></div></div>
 
   const info = STATUS[reservation.status] || { label: reservation.status, text: '' }
   const showCode = reservation.status === 'approved' || reservation.status === 'arrived'
@@ -348,13 +331,15 @@ function StatusCard({ code, last4, onReset }) {
 
 export default function Reserve() {
   const [saved, setSaved] = useState(readStored)
-  function show(next) { store(next); setSaved(next) }
+  // The form and the ticket swap places with a short cross-fade.
+  function show(next) { store(next); showTransition(() => setSaved(next)) }
 
   return (
     <div className="app reserve">
       <header className="topbar"><span className="brand">Samgyup Chada</span></header>
-      <main className="content">
-        {saved ? <><h1 className="sr-only">Reservation status</h1><StatusCard code={saved.code} last4={saved.last4} onReset={() => show(null)} /></> : <><ReservationForm onCreated={show} /><hr className="divider" /><LookupForm onFound={show} /></>}
+      {/* The form sits on a paper sheet. The ticket does not: it sits straight on the red. */}
+      <main className={`content ${saved ? 'content-bare' : ''}`.trim()}>
+        {saved ? <><h1 className="sr-only">Reservation status</h1><StatusCard code={saved.code} last4={saved.last4} onReset={() => show(null)} /></> : <><ReservationForm onCreated={show} /><LookupForm onFound={show} /></>}
       </main>
     </div>
   )

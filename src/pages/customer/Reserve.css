@@ -1,20 +1,58 @@
 /* Reservation form and status ticket. Shared fields and buttons live in components.css. */
 .reserve h1 { margin: 0 0 var(--s2); font-size: var(--fs-title-lg); }
 .reserve h2 { margin: 0 0 var(--s2); font-size: var(--fs-title); }
-.reserve .field-row { align-items: start; gap: var(--s3); }
-.reserve .divider { margin: var(--s6) 0 var(--s4); border: 0; border-top: 1px solid var(--line); }
-.reserve .lookup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); align-items: start; }
+
+/* The form has two parts, When and Who. A title runs a dotted line out to the edge. */
+.part { min-width: 0; margin: 0 0 var(--s6); }
+.part-title, .board-heading { display: flex; align-items: baseline; gap: var(--s2); }
+.part-title { margin: 0 0 var(--s4); }
+.leader { flex: 1 1 var(--s5); min-width: var(--s5); translate: 0 -0.28em; border-bottom: 2px dotted var(--neutral-line); }
+.part .field:last-child { margin-bottom: 0; }
+
+.block { min-width: 0; margin: 0 0 var(--s5); padding: 0; border: 0; }
+.block:last-child { margin-bottom: 0; }
+.block-label { display: block; margin-bottom: var(--s2); padding: 0; color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; }
+.block-error { display: block; margin-top: var(--s2); }
+.guests { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin: 0 0 var(--s5); }
+.guests .block-label { margin: 0; }
+
+/* Dates: a strip you swipe sideways. It runs to the edges of the sheet so the next tile peeks in. */
+.day-strip { display: flex; gap: var(--s2); margin-inline: calc(var(--s4) * -1); padding: var(--s1) var(--s4); overflow-x: auto; scroll-snap-type: x proximity; scroll-padding-inline: var(--s4); scrollbar-width: none; }
+.day-strip::-webkit-scrollbar { display: none; }
+.day-more { position: relative; display: flex; flex: 0 0 4.25rem; scroll-snap-align: start; }
+.day { flex: 0 0 4.25rem; display: grid; justify-items: center; align-content: center; gap: 2px; min-height: 5.5rem; padding: var(--s2) var(--s1); scroll-snap-align: start; }
+.day-more .day { flex: 1 1 auto; }
+.day-number { font-size: 1.9rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.day-name, .day-month { font-size: var(--fs-meta); line-height: 1.2; }
+.day-icon { width: 1.9rem; height: 1.9rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Times: every time of the day on one board, in three parts. */
+.board { display: grid; gap: var(--s4); }
+.board-heading { margin: 0 0 var(--s2); font-size: 1.25rem; line-height: 1.2; }
+.board-heading small { color: var(--text-3); font-size: var(--fs-meta); font-weight: 500; white-space: nowrap; }
+.board-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.25rem, 1fr)); gap: var(--s2); }
+.slot { min-height: 48px; padding: var(--s2); font: inherit; font-variant-numeric: tabular-nums; }
+.time-error { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.time-error .error { margin: 0; }
+
+/* The slip: what the booking will say, with a clock that shows the time. */
+.slip { display: flex; align-items: center; gap: var(--s4); margin: 0 0 var(--s4); padding: var(--s3) var(--s4); }
+.slip-text { display: grid; gap: var(--s1); min-width: 0; }
+.clock { flex: 0 0 3.25rem; width: 3.25rem; height: 3.25rem; }
+.clock-tick, .clock-hand { transform-origin: 24px 24px; }
+
+/* Below the form, the stub of the ticket: look up a booking you already made. */
+/* On a tall screen the sheet stretches, and the stub stays at its bottom edge. */
+.reserve .content:not(.content-bare) { display: flex; flex-direction: column; }
+.reserve-form { margin-bottom: var(--s6); }
+.lookup-stub { margin: auto calc(var(--s4) * -1) calc(var(--s6) * -1); padding: var(--s5) var(--s4) var(--s6); }
+.reserve .lookup { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); align-items: end; }
 .lookup-field { min-width: 0; margin-bottom: 0; }
 .lookup-field input { text-transform: uppercase; }
 .lookup .btn { grid-column: 1 / -1; width: 100%; }
-.time-field { min-width: 0; margin: 0 0 var(--s4); padding: 0; border: 0; }
-.time-field legend { margin-bottom: var(--s2); color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; }
-.time-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); align-content: start; gap: var(--s2); max-height: 168px; margin-top: var(--s3); overflow-y: auto; }
-.time-option { min-height: 48px; display: grid; place-content: center; gap: var(--s1); padding: var(--s2); border: 1px solid var(--control); border-radius: var(--r-ctrl); background: var(--card); color: var(--text); font: inherit; font-weight: 600; font-variant-numeric: tabular-nums; }
-.time-option.selected { border: 2px solid var(--charcoal); background: var(--ink-soft); }
-.time-option:disabled { color: var(--text-2); background: var(--ink-soft); border-color: var(--line); cursor: not-allowed; }
-.time-error { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
-.time-error .error { margin: 0; }
+
+/* The ticket needs no sheet behind it; it sits straight on the red ground. */
+.content-bare { padding: 0; }
 
 .res-card { padding: var(--s5) var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
 .res-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-bottom: var(--s3); }

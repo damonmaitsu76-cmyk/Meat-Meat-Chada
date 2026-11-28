@@ -81,7 +81,9 @@ for (const [label, foreground, background, minimum] of pairs) {
 }
 
 const rawColors = sources.reduce((count, source) => count + (source.file === tokenFile ? 0 : [...source.text.matchAll(/#[\da-f]{3,8}\b|rgba?\(/gi)].length), 0)
-const forbidden = sources.reduce((count, source) => count + [...source.text.matchAll(/(?:linear|radial|conic)-gradient\b|backdrop-filter|animation\s*:[^;{}]*\binfinite\b|transition\s*:\s*all\b/gi)].length, 0)
+// A gradient inside a mask only shapes the cutouts (notches); it paints nothing, so it is not counted.
+const withoutMasks = (text) => text.replace(/(?:-webkit-)?mask(?:-image)?\s*:[^;{}]*;?/gi, '')
+const forbidden = sources.reduce((count, source) => count + [...withoutMasks(source.text).matchAll(/(?:linear|radial|conic)-gradient\b|backdrop-filter|animation\s*:[^;{}]*\binfinite\b|transition\s*:\s*all\b/gi)].length, 0)
 const wideAccentBorders = sources.reduce((count, source) => count + [...source.text.matchAll(/\bborder(?:-(?:top|bottom|left|right))?\s*:\s*(?:[2-9]|[1-9]\d+)px\s+[^;{}]*(?:var\(--(?:brand|danger|warn|ok)\))/gi)].length, 0)
 const disabledRemovedOpacity = sources.reduce((count, source) => count + [...source.text.matchAll(/(?:button:disabled|\.acc-off\b|\.tm-removed\b)[^{]*\{[^}]*\bopacity\s*:/gi)].length, 0)
 const duplicateInputStyles = sources.reduce((count, source) => {

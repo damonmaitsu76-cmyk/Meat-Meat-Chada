@@ -1,9 +1,22 @@
-/* Reservation and opening-hour settings. Shared fields and buttons live in components.css. */
-.set-form { display: grid; gap: var(--s4); max-width: 560px; }
-.set-card { padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+/* Reservation and opening-hour settings. Shared fields and buttons live in components.css.
+   The cards use the width of the sheet: one column on a phone, two on a tablet (opening hours
+   across the bottom), three on a desktop. */
+.set-form { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: var(--s4); }
+.set-card { container-type: inline-size; padding: var(--s4); border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
 .set-card h2 { margin: 0 0 var(--s3); font-size: var(--fs-title); }
 .set-card .field { margin: 0 0 var(--s2); }
 .set-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
-.set-actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.set-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: var(--s2); }
 
-@media (max-width: 360px) { .set-row { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 720px) {
+  .set-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .set-hours { grid-column: 1 / -1; }
+  .set-hours .set-row { max-width: 30rem; }
+}
+@media (min-width: 1000px) {
+  .set-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .set-hours { grid-column: auto; }
+  .set-hours .set-row { max-width: none; }
+}
+/* A card too narrow for two time fields side by side stacks them. */
+@container (max-width: 17rem) { .set-row { grid-template-columns: minmax(0, 1fr); } }

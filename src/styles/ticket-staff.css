@@ -14,7 +14,11 @@
   border-radius: var(--r-sheet) var(--r-sheet) 0 0;
 }
 .staff-top .brand { font-size: 1.6rem; line-height: 1; white-space: nowrap; }
-/* The notches sit where the header meets the nav, on the dashed tear line. */
+.staff-top .btn-link { white-space: nowrap; }
+/* The notches sit where the header meets the nav, on the dashed tear line. The header is its own
+   layer (it has a view-transition-name), so it is raised above the nav; otherwise the nav paints
+   over the lower half of each notch and the cutout looks half finished. */
+.staff-top { z-index: 2; }
 .staff-top::before, .staff-top::after {
   content: '';
   position: absolute;
@@ -113,10 +117,9 @@
 
 /* ---------- menu, tables, settings, reports, import ---------- */
 .mm-section h2, .rep-card h2, .set-card h2, .imp-card h2 { font-size: 1.7rem; line-height: 1; }
-.mm-name { display: flex; flex: 1 1 auto; align-items: baseline; gap: var(--s2); }
+.mm-name { display: flex; flex: 1 1 auto; align-items: baseline; align-items: last baseline; gap: var(--s2); }
 .mm-name::after { content: ''; flex: 1 1 var(--s5); min-width: var(--s5); translate: 0 -0.28em; border-bottom: 2px dotted var(--neutral-line); }
 .mm-off .mm-name::after { border-bottom-style: dashed; }
-.tm-table-title { font-size: 1.6rem; line-height: 1; }
 .set-card h2 { padding-bottom: var(--s3); border-bottom: 2px dashed var(--control); }
 .rep-number { font-size: 2.6rem; }
 .rep-summary-tier.secondary .rep-number { font-size: 1.9rem; }
@@ -191,14 +194,41 @@
 .queue-board .request-grid { grid-template-columns: minmax(0, 1fr); }
 .queue-board .request-ticket .record-body { --notch: var(--ink-soft); }
 
-/* ---------- tables and QR: each table is a table tent, with its number big ---------- */
-.tm-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--s3); max-width: none; padding: 0; border: 0; background: transparent; }
-.tm-row, .tm-row:last-child { flex-direction: column; align-items: stretch; justify-content: space-between; gap: var(--s4); min-height: 150px; padding: var(--s4); border: 2px dashed var(--control); border-radius: var(--r-card); background: var(--card); }
-.tm-row-main { gap: var(--s2); }
-.tm-table-title { font-size: 2.3rem; white-space: nowrap; }
-.tm-actions { flex-wrap: wrap; }
-.tm-row.editing { grid-column: 1 / -1; min-height: 0; }
-.tm-row.tm-removed { border-style: dotted; background: var(--ink-soft); }
+/* ---------- tables and QR: every table is a ticket, and the number is the stub ----------
+   A charcoal stub with the table number, a dashed tear line with a half circle cut out of the top
+   and the bottom, then the little plan of the table and its two buttons. */
+.tm-row { position: relative; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--card); }
+.tm-stub {
+  position: relative;
+  padding: var(--s3) var(--s2);
+  border-right: 2px dashed var(--control);
+  border-radius: calc(var(--r-card) - 1px) 0 0 calc(var(--r-card) - 1px);
+  background: var(--charcoal);
+  color: var(--white);
+}
+.tm-stub::before, .tm-stub::after {
+  content: '';
+  position: absolute;
+  right: var(--notch-offset);
+  width: var(--size-notch);
+  height: var(--size-notch);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+}
+.tm-stub::before { top: calc(var(--size-notch-half) * -1 - 0.5px); }
+.tm-stub::after { bottom: calc(var(--size-notch-half) * -1 - 0.5px); }
+.tm-stub-label { color: var(--neutral-line); font-size: var(--fs-meta); line-height: 1; letter-spacing: 0.08em; text-transform: uppercase; }
+.tm-number { font-size: 2.6rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.tm-chair { border: 1px solid var(--control); background: var(--bg); }
+.tm-chair.top { border-bottom: 0; border-radius: var(--r-seat) var(--r-seat) 0 0; }
+.tm-chair.bottom { border-top: 0; border-radius: 0 0 var(--r-seat) var(--r-seat); }
+.tm-surface { border: 2px dashed var(--control); border-radius: var(--r-ctrl); }
+.tm-plan { margin-block: var(--s1); }
+.tm-capacity { color: var(--neutral-line); font-size: var(--fs-meta); line-height: 1; white-space: nowrap; }
+/* A removed table is greyed out, and its stub goes a shade lighter. */
+.tm-row.tm-removed { background: var(--ink-soft); border-style: dashed; }
+.tm-removed .tm-stub { background: var(--ink-line); }
+.tm-removed .tm-stub::before, .tm-removed .tm-stub::after { display: none; }
 
 /* ---------- reports: the headline figures sit on a charcoal tape ---------- */
 .rep-summary { overflow: hidden; border-radius: var(--r-card); background: var(--card); box-shadow: 0 0 0 1px var(--line); }

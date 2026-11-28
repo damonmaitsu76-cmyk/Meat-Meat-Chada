@@ -17,8 +17,11 @@
 
 @media (max-width: 560px) {
   .mm-list { padding-inline: var(--s3); }
-  .mm-row { flex-wrap: wrap; }
+  /* A long name wraps inside its own column; the switch and Edit stay put on the right.
+     The Unavailable label sits above the switch so the name keeps as much width as possible. */
+  .mm-name { flex: 1 1 0; }
   .mm-row-actions { gap: var(--s2); }
+  .mm-avail { flex-direction: column-reverse; align-items: flex-end; gap: var(--s1); }
   .mm-edit { grid-template-columns: minmax(0, 1fr); }
   .mm-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .mm-actions .btn { padding-inline: var(--s2); }

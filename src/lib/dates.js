@@ -31,6 +31,18 @@ export function fmtDate(ymd) {
   })
 }
 
+// '2026-12-01' -> 'Tuesday, December 1'
+export function fmtDay(ymd) {
+  return new Date(`${ymd}T00:00:00`).toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric' })
+}
+
+// '2026-12-01' -> { weekday: 'Tue', day: '1', month: 'Dec' }, for the small date tiles.
+export function dayParts(ymd) {
+  const date = new Date(`${ymd}T00:00:00`)
+  const part = (options) => date.toLocaleDateString('en-PH', options)
+  return { weekday: part({ weekday: 'short' }), day: part({ day: 'numeric' }), month: part({ month: 'short' }) }
+}
+
 // Short label for lists: 'Today', 'Tomorrow', or 'Sun, Nov 22'.
 export function dayLabel(ymd, today) {
   if (ymd === today) return 'Today'

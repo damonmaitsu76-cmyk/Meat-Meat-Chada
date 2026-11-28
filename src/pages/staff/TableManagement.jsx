@@ -4,6 +4,7 @@ import { supabase } from '../../supabaseClient.js'
 import Modal from '../../components/Modal.jsx'
 import { confirmDialog } from '../../components/dialogs.js'
 import { Field, Notice, PageToolbar, StatusChip } from '../../components/ui.jsx'
+import { seatLayout } from '../../lib/floor.js'
 import { getSiteBaseUrl, isLocalAddress } from '../../lib/siteUrl.js'
 import { newToken } from '../../lib/token.js'
 import './TableManagement.css'
@@ -34,6 +35,19 @@ async function removalBlocker(t) {
     return `Table ${t.table_number} still has approved bookings (${codes}). Remove it once they are done.`
   }
   return ''
+}
+
+// A little plan of the table: chairs along both long sides, like the floor view. Decorative: the
+// seat count is also written out next to it.
+function Plan({ capacity }) {
+  const { top, bottom } = seatLayout(capacity, 0)
+  return (
+    <span className="tm-plan" aria-hidden="true">
+      <span className="tm-chairs">{top.map((_, index) => <span key={index} className="tm-chair top" />)}</span>
+      <span className="tm-surface" />
+      <span className="tm-chairs">{bottom.map((_, index) => <span key={index} className="tm-chair bottom" />)}</span>
+    </span>
+  )
 }
 
 function AddTableModal({ suggested, adding, onClose, onAdd }) {
@@ -332,31 +346,35 @@ export default function TableManagement() {
                 const busy = busyId === table.table_id
                 return (
                   <li key={table.table_id} className={`tm-row ${table.is_active ? '' : 'tm-removed'} ${editing ? 'editing' : ''}`.trim()}>
-                    <div className="tm-row-main">
-                      {editing ? (
-                        <div className="tm-edit">
-                          <label className="field"><span>Table number</span><input className="tm-edit-input" type="number" min={1} aria-label="Table number" value={edit.number} onChange={(event) => setEdit({ ...edit, number: event.target.value })} /></label>
-                          <label className="field"><span>Seats</span><input className="tm-edit-input" type="number" min={1} aria-label="Seats" value={edit.seats} onChange={(event) => setEdit({ ...edit, seats: event.target.value })} /></label>
-                        </div>
-                      ) : <>
-                        <strong className="tm-table-title">Table {table.table_number}</strong>
-                        <span className="tm-meta">
-                          <span className="tm-capacity">{table.capacity} {table.capacity === 1 ? 'seat' : 'seats'}</span>
-                          {!table.is_active && <StatusChip status="muted">Removed</StatusChip>}
-                        </span>
-                      </>}
+                    <div className="tm-stub">
+                      <span className="tm-stub-label">Table</span>
+                      <strong className="tm-number">{table.table_number}</strong>
+                      <span className="tm-capacity">{table.capacity} {table.capacity === 1 ? 'seat' : 'seats'}</span>
                     </div>
-                    <div className="tm-actions">
-                      {editing && <>
-                        <button className="btn small" type="button" disabled={busy} onClick={saveEdit}>Save</button>
-                        <button className="btn small secondary" type="button" disabled={busy} onClick={() => setEdit(null)}>Cancel</button>
-                        {table.is_active && <button className="btn small danger" type="button" disabled={busy} onClick={() => setActive(table, false)}>Remove</button>}
-                      </>}
-                      {!editing && table.is_active && <>
-                        <button className="btn small secondary" type="button" aria-label={`Show QR code for Table ${table.table_number}`} onClick={() => setQrTable(table)}>QR code</button>
-                        <button className="btn small secondary" type="button" aria-label={`Edit Table ${table.table_number}`} disabled={busy} onClick={() => setEdit({ id: table.table_id, number: String(table.table_number), seats: String(table.capacity) })}>Edit</button>
-                      </>}
-                      {!editing && !table.is_active && <button className="btn small secondary" type="button" aria-label={`Restore Table ${table.table_number}`} disabled={busy} onClick={() => setActive(table, true)}>Restore</button>}
+                    <div className="tm-body">
+                      <div className="tm-row-main">
+                        {editing ? (
+                          <div className="tm-edit">
+                            <label className="field"><span>Table number</span><input className="tm-edit-input" type="number" min={1} aria-label="Table number" value={edit.number} onChange={(event) => setEdit({ ...edit, number: event.target.value })} /></label>
+                            <label className="field"><span>Seats</span><input className="tm-edit-input" type="number" min={1} aria-label="Seats" value={edit.seats} onChange={(event) => setEdit({ ...edit, seats: event.target.value })} /></label>
+                          </div>
+                        ) : <>
+                          <Plan capacity={table.capacity} />
+                          {!table.is_active && <StatusChip status="muted">Removed</StatusChip>}
+                        </>}
+                      </div>
+                      <div className="tm-actions">
+                        {editing && <>
+                          <button className="btn small" type="button" disabled={busy} onClick={saveEdit}>Save</button>
+                          <button className="btn small secondary" type="button" disabled={busy} onClick={() => setEdit(null)}>Cancel</button>
+                          {table.is_active && <button className="btn small danger" type="button" disabled={busy} onClick={() => setActive(table, false)}>Remove</button>}
+                        </>}
+                        {!editing && table.is_active && <>
+                          <button className="btn small secondary" type="button" aria-label={`Show QR code for Table ${table.table_number}`} onClick={() => setQrTable(table)}>QR code</button>
+                          <button className="btn small secondary" type="button" aria-label={`Edit Table ${table.table_number}`} disabled={busy} onClick={() => setEdit({ id: table.table_id, number: String(table.table_number), seats: String(table.capacity) })}>Edit</button>
+                        </>}
+                        {!editing && !table.is_active && <button className="btn small secondary" type="button" aria-label={`Restore Table ${table.table_number}`} disabled={busy} onClick={() => setActive(table, true)}>Restore</button>}
+                      </div>
                     </div>
                   </li>
                 )

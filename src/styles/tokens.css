@@ -101,6 +101,7 @@
   --t-press: 260ms var(--ease-spring);
   --t-slow: 420ms var(--ease-out);
   --t-print: 680ms var(--ease-out);
+  --t-exit: 200ms cubic-bezier(0.4, 0, 1, 1);
   --stagger: 46ms;
   --size-notch: 28px;
   --size-notch-half: 14px;
